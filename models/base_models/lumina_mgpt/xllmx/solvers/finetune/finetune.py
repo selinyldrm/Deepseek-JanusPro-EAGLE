@@ -86,8 +86,8 @@ class FinetuneSolverBase(ABC):
         dist.barrier()
 
         if args.precision == "tf32":
-            torch.backends.cuda.matmul.allow_tf32 = True
-            torch.backends.cudnn.allow_tf32 = True
+            torch.backends.cuda.matmul.allow_tf32 = False
+            torch.backends.cudnn.allow_tf32 = False
 
         self.logger.info("work dir: {}".format(os.path.dirname(os.path.realpath(__file__))))
         self.logger.info("{}".format(self.args).replace(", ", ",\n"))

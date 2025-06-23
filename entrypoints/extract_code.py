@@ -103,7 +103,7 @@ def generate_data_llamagen(vq_model, t5_model, data):
     img = img.to(t5_model.device)
     _, _, [_, _, indices] = vq_model.encode(img)
     codes = indices.reshape(img.shape[0], -1)
-    codes = codes.detach().cpu().numpy()
+    # codes = codes.detach().cpu().numpy()
     return {
         'caption_emb': caption_embs,
         'codes': codes
@@ -161,7 +161,8 @@ def run_extract_code(args):
             local_cache=True,
             cache_dir='ckpts/llamagen/t5',
             dir_or_name='flan-t5-xl',
-            torch_dtype=torch.float16,
+            # torch_dtype=torch.float16,
+            torch_dtype=torch.float32,
             model_max_length=120
         )
         if not os.path.exists(args.output_dir):

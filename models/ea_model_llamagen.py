@@ -140,7 +140,7 @@ class EaModel(nn.Module):
         self.ea_layer.to(self.base_model.dtype).to(device)
         self.ea_layer.init_tree()
         ea_model_dir = os.path.dirname(ea_model_path)
-        self.nearest_latents = np.load("ckpts/llamagen/vq_distances/top_16383_indices.npy")
+        self.nearest_latents = np.load("/home/syildiri/LANTERN/entrypoints/top_16383_indices.npy")
 
     # def get_tokenizer(self):
     #     """Get the tokenizer of the base model.
@@ -493,12 +493,13 @@ class EaModel(nn.Module):
             # Adjust xi to have valid indices for indexing operations
             xi_valid = xi.clone()
             xi_valid[~valid_mask] = 0  # Replace invalid indices with 0 (or any valid index)
-
             # Gather probabilities of xi
             px = gtp.gather(dim=-1, index=xi_valid.unsqueeze(-1)).squeeze(-1)  # Shape: (batch_size, seq_len)
             px = px * valid_mask  
             if isinstance(self.nearest_latents, np.ndarray):
-                self.nearest_latents = torch.from_numpy(self.nearest_latents).to(device)
+                self.nearest_latents = torch.from_numpy(self.nearest_latents).to(torch.int64).to(device)
+            elif isinstance(self.nearest_latents, torch.Tensor) and self.nearest_latents.dtype != torch.int64:
+                self.nearest_latents = self.nearest_latents.to(torch.int64)
             if not lantern:
                 # Greedy decoding
                 top_tokens = torch.argmax(logits[:, :-1], dim=-1)  # Shape: (batch_size, seq_len)
@@ -506,6 +507,7 @@ class EaModel(nn.Module):
                 candidates_accept_length = torch.cumprod(posterior_mask, dim=1).sum(dim=1)
                 accept_length = candidates_accept_length.max()
             else:
+
                 # Adaptive decoding with nearest latent tokens
                 search_space = lantern_k
                 nearest_indices = self.nearest_latents[xi_valid]  # Shape: (batch_size, seq_len, k)
@@ -818,6 +820,7 @@ class EaModel(nn.Module):
             else:
                 # Adaptive decoding with nearest latent tokens
                 search_space = lantern_k
+                self.nearest_latents = self.nearest_latents.to(torch.int64)
                 nearest_indices = self.nearest_latents[xi_valid]  # Shape: (batch_size, seq_len, k)
                 nearest_indices = nearest_indices[:, :, :search_space]  # Limit search space
 

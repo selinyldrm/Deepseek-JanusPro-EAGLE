@@ -44,7 +44,7 @@ def run_generate_codebook(args):
     elif args.model == "llamagen":
         from models.base_models.llamagen.vq_model import VQ_16
         vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
-        checkpoint = torch.load('ckpts/llamagen/vq_ds16_t2i.pt')
+        checkpoint = torch.load('/home/syildiri/LANTERN/entrypoints/vq_ds16_t2i.pt')
         vq_model.load_state_dict(checkpoint['model'])
 
     else:

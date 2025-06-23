@@ -264,6 +264,8 @@ class VectorQuantizer(nn.Module):
             embedding = F.normalize(self.embedding.weight, p=2, dim=-1)
         else:
             embedding = self.embedding.weight
+        # if indices.device !=  embedding.device:
+        #     indices = indices.to(embedding.device)
         z_q = embedding[indices]  # (b*h*w, c)
 
         if shape is not None:

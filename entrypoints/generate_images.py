@@ -73,10 +73,10 @@ def parse_args():
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
-
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
+    torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.benchmark = False
 
 def load_model(args):
@@ -135,7 +135,8 @@ def load_model(args):
         
         elif args.model_type == 'base':
             from models.kv_variants.modeling_llamagen_kv import LlamaForCausalLM
-            dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+            # dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+            dtype = torch.float32
             model = LlamaForCausalLM.from_pretrained(args.model_path).to(dtype=dtype, device='cuda')
             model.eval()
         
@@ -153,52 +154,78 @@ def load_model(args):
 
 def load_prompts(args):
     prompts = []
-    if args.prompt == "PartiPrompts":
-        with open('data/prompts/PartiPrompts.tsv', 'r') as f:
-            tsv_reader = csv.DictReader(f, delimiter='\t')
-            for row in tsv_reader:
-                prompts.append(row['Prompt'])
-    elif args.prompt == "MSCOCO2017Val":
-        with open('data/prompts/captions_val2017_longest.json', 'r') as f:
-            captions = json.load(f)
-            for caption in captions:
-                prompts.append(caption)
-    elif args.prompt == "MSCOCO2014Val":
-        with open('data/prompts/captions_val_2014.json', 'r') as f:
-            captions = json.load(f)
-            for caption in captions:
-                prompts.append(caption)
-    elif args.prompt == "MSCOCO2017Train":
-        with open('data/prompts/captions_train2017_extracted.json', 'r') as f:
-            captions = json.load(f)
-            for caption in captions:
-                prompts.append(caption['caption'])
-    elif args.prompt == "SJDPrompts":
-        with open('data/prompts/SJDPrompts.tsv', 'r') as f:
-            tsv_reader = csv.DictReader(f, delimiter='\t')
-            for row in tsv_reader:
-                prompts.append(row['Prompt'])
-    else:
-        # Single prompt input
-        prompts = [args.prompt] * args.num_images
+    # if args.prompt == "PartiPrompts":
+    #     with open('data/prompts/PartiPrompts.tsv', 'r') as f:
+    #         tsv_reader = csv.DictReader(f, delimiter='\t')
+    #         for row in tsv_reader:
+    #             prompts.append(row['Prompt'])
+    # elif args.prompt == "MSCOCO2017Val":
+    #     with open('data/prompts/captions_val2017_longest.json', 'r') as f:
+    #         captions = json.load(f)
+    #         for caption in captions:
+    #             prompts.append(caption)
+    # elif args.prompt == "MSCOCO2014Val":
+    #     with open('data/prompts/captions_val_2014.json', 'r') as f:
+    #         captions = json.load(f)
+    #         for caption in captions:
+    #             prompts.append(caption)
+    # elif args.prompt == "MSCOCO2017Train":
+    #     with open('data/prompts/captions_train2017_extracted.json', 'r') as f:
+    #         captions = json.load(f)
+    #         for caption in captions:
+    #             prompts.append(caption['caption'])
+    # elif args.prompt == "SJDPrompts":
+    #     with open('data/prompts/SJDPrompts.tsv', 'r') as f:
+    #         tsv_reader = csv.DictReader(f, delimiter='\t')
+    #         for row in tsv_reader:
+    #             prompts.append(row['Prompt'])
+    # else:
+    #     # Single prompt input
+    #     prompts = [args.prompt] * args.num_images
 
-    if args.slice is not None:
-        assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
+    # if args.slice is not None:
+    #     assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
 
-        start, end = map(int, args.slice.split('-'))
-        assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
-        assert start >= 0 and end >= 0, "Slice values must be non-negative."
+    #     start, end = map(int, args.slice.split('-'))
+    #     assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
+    #     assert start >= 0 and end >= 0, "Slice values must be non-negative."
 
-        prompts = prompts[start:end]
+    #     prompts = prompts[start:end]
     
-    if args.num_images < len(prompts):
-        print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
-        prompts = random.sample(prompts, args.num_images)
-    else:
-        print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
-        pass
-    
-    return prompts
+    # if args.num_images < len(prompts):
+    #     print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
+    #     prompts = random.sample(prompts, args.num_images)
+    # else:
+    #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
+    #     pass
+
+    # benchmark 30k
+    # with open("/groups/aig_models_lu_tian/syildiri/LANTERN/LlamaGen-T2I-2/lantern-imgs/global_statistics_0_10000.json", "r") as f:
+    #benchmark 5 prompts only
+    with open("/groups/aig_models_lu_tian/syildiri/LANTERN/LlamaGen-T2I-2/lantern-imgs/global_statistics_0_10000.json", "r") as f:
+        data = json.load(f)
+    # with open("/home/syildiri/LANTERN/eagle-imgs/global_statistics_0_10000.json", "r") as f2:
+    #     data2 = json.load(f2)
+    # with open("/home/syildiri/LANTERN/base-images/global_statistics_0_10000.json", "r") as f3:
+    #     data3 = json.load(f3)
+
+    # Extract prompt fields
+    prompts = [entry["prompt"] for entry in data.values()]
+    # # latency1 = [entry1["latency"] for entry1 in data.values()] # lantern
+    # # latency2 = [entry2["latency"] for entry2 in data2.values()] # eagle
+    # # latency3 = [entry3["latency"] for entry3 in data3.values()] # base
+    # # lantern_speedup = [latency_base/latency_lantern  for latency_lantern, latency_base in zip(latency1, latency3)]
+    # # eagle_speedup = [latency_base/latency_eagle  for latency_eagle, latency_base in zip(latency2, latency3)]
+    # # import statistics
+    # # # Output the list
+    # # # print("latency1.avg: ", statistics.mean(latency1))
+    # # # print("latency2.avg: ", statistics.mean(latency2))
+    # # print("lantern speedup.avg: ",statistics.mean(lantern_speedup))
+    # # print("lantern speedup.max: ", max(lantern_speedup))
+    # # print("eagle_speedup.avg: ",statistics.mean(eagle_speedup))
+    # # print("eagle_speedup.max: ", max(eagle_speedup))
+    # # input()
+    return prompts[:1]
 
 def generate_and_save_image(model, model_name, prompt, img_save_path, **kwargs):
     # print(f"Generating image for prompt: {prompt}")
@@ -237,8 +264,13 @@ def generate_and_save_image(model, model_name, prompt, img_save_path, **kwargs):
         generate_params["tree_choices"] = kwargs["tree_choices"]
         generate_params["drafter_top_k"] = kwargs["drafter_top_k"]
 
+    import time
+    start_time = time.time()
+
     generated_tokens, step_compression, latency = model.generate(**generate_params)
     _, generated_image = model.decode_ids(generated_tokens)
+    end_time = time.time()
+    print(f"generate time={end_time - start_time:.2f} seconds")
 
     if model_name in ["lumina_mgpt", "anole"]:
         generated_image[0].save(img_save_path, "png")
@@ -253,14 +285,54 @@ def run_generate_image(args):
     if args.set_seed:
         set_seed(args.random_seed)
     
-    model = load_model(args)
     prompts = load_prompts(args)
+    # global_statistics = {}  
+    # for idx, prompt in tqdm(enumerate(prompts), total=len(prompts)):
+    #     statistics = {
+    #             "prompt": prompt,
+    #         }
+    #     global_statistics[f"prompt_{idx}"] = statistics
+    # with open(f"{args.output_dir}/global_statistics_{args.start_idx}_{args.end_idx}.json", "w") as f:
+    #     json.dump(global_statistics, f, indent=4)
+    
+
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
+    # batch_sz = int((len(prompts)-args.start_idx) / 6.0 + 0.5) 
+    # batch_start = [args.start_idx + (b_idx)*batch_sz for b_idx in range(6)]
+    # batch_end = [bs_idx + batch_sz for bs_idx in batch_start]
+    # if batch_end[-1] > len(prompts):
+    #     batch_end[-1] = len(prompts)
+    # import torch.multiprocessing as mp
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6"
+
+    # mp.spawn(worker, args=(batch_start,batch_end,args,prompts), nprocs=6, join=True)
+    worker(0, 0,len(prompts),args,prompts)
+    
+
+def worker(rank, start_idx,end_idx,args,prompts):
+    # torch.cuda.set_device(f"cuda:{rank}")
+    model = load_model(args)
+
+    # os.environ['MASTER_ADDR'] = 'localhost'
+    # os.environ['MASTER_PORT'] = '12355'
+    # torch.distributed.init_process_group("nccl", rank=rank, world_size=6)
+    # model = model.to(rank)
+    # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank], output_device=rank).module
+    # model.base_model = torch.nn.parallel.DistributedDataParallel(model.base_model, device_ids=[rank], output_device=rank).module
+    # model.base_model.t5_model.model = torch.nn.parallel.DistributedDataParallel(model.base_model.t5_model.model, device_ids=[rank], output_device=rank).module
+    
+    # model = model.clone().to(f"cuda:{rank}")
+    # start_idx = start_idx[rank]
+    # end_idx = end_idx[rank]
     global_statistics = {}  
+    args.start_idx = start_idx
+    args.end_idx = end_idx
+    print(f"Starting worker for prompts {start_idx} to {end_idx} on Rank {rank}")
+
     for idx, prompt in tqdm(enumerate(prompts), total=len(prompts)):
-        if idx < args.start_idx or idx >= args.end_idx:
+        if idx < start_idx or idx >= end_idx:
             continue
         if args.model == "lumina_mgpt":
             q1 = f"Generate an image of 768x768 according to the following prompt:\n{prompt}"
@@ -302,10 +374,10 @@ def run_generate_image(args):
 
         global_statistics[f"prompt_{idx}"] = statistics
 
-    with open(f"{args.output_dir}/global_statistics_{args.start_idx}_{args.end_idx}.json", "w") as f:
+    with open(f"{args.output_dir}/global_statistics_{rank}_{start_idx}_{end_idx}.json", "w") as f:
         json.dump(global_statistics, f, indent=4)
 
-    with open(f"{args.output_dir}/generation_configs.json", "w") as f:
+    with open(f"{args.output_dir}/generation_configs_{rank}.json", "w") as f:
         json.dump(vars(args), f, indent=4)
 
 if __name__ == "__main__":

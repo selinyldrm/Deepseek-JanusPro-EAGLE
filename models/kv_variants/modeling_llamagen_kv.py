@@ -1214,9 +1214,10 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         self.t5_model = T5Embedder(
             device = 'cuda',
             local_cache=True,
-            cache_dir='ckpts/llamagen/t5',
+            cache_dir='/groups/aig_models_lu_tian/syildiri/LANTERN/',
             dir_or_name='flan-t5-xl',
-            torch_dtype=torch.bfloat16,
+            # torch_dtype=torch.bfloat16,
+            torch_dtype=torch.float32,
             model_max_length=120
         )
 
@@ -1425,7 +1426,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                 attention_mask = torch.cat([c_emb_masks, c_emb_masks])
             else:
                 attention_mask = c_emb_masks
-        cond_combined = cond_combined.to(self.dtype)
+        cond_combined = cond_combined.to(dtype=self.dtype, device="cuda")
         seq = torch.empty((max_batch_size, max_length), dtype=torch.long, device=c_indices.device)
         output = self.forward(cond_idx=cond_combined, attention_mask=attention_mask, past_key_values=past_key_values)
         combined_logits = output.logits
@@ -1448,7 +1449,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         if not hasattr(self, 'vq_model'):
             self.vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
             self.vq_model = self.vq_model.to(self.model.device)
-            checkpoint = torch.load('ckpts/llamagen/vq_ds16_t2i.pt')
+            checkpoint = torch.load('/home/syildiri/LANTERN/entrypoints/vq_ds16_t2i.pt')
             self.vq_model.load_state_dict(checkpoint['model'])
             self.vq_model.eval()
             del checkpoint

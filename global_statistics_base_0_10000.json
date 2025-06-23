@@ -1,0 +1,5002 @@
+{
+    "prompt_0": {
+        "prompt": "A crowd of people standing next to each other.",
+        "step_compression": 1.0,
+        "latency": 13.512455701828003
+    },
+    "prompt_1": {
+        "prompt": "a number of items laying on a surface near one another",
+        "step_compression": 1.0,
+        "latency": 13.028307914733887
+    },
+    "prompt_2": {
+        "prompt": "Four cows standing in the grass near mountains.",
+        "step_compression": 1.0,
+        "latency": 13.016176700592041
+    },
+    "prompt_3": {
+        "prompt": "A view of a street at night shows a yellow fire hydrant.",
+        "step_compression": 1.0,
+        "latency": 13.05866026878357
+    },
+    "prompt_4": {
+        "prompt": "a person standing on top of skis holding ski poles.",
+        "step_compression": 1.0,
+        "latency": 13.212992668151855
+    },
+    "prompt_5": {
+        "prompt": "A fire station with a flag pole in front of it.",
+        "step_compression": 1.0,
+        "latency": 13.099990606307983
+    },
+    "prompt_6": {
+        "prompt": "A road filled with traffic led by a big blue bus.",
+        "step_compression": 1.0,
+        "latency": 12.397623538970947
+    },
+    "prompt_7": {
+        "prompt": "A very thick pizza is on a plate with one piece taken.",
+        "step_compression": 1.0,
+        "latency": 12.377327680587769
+    },
+    "prompt_8": {
+        "prompt": "Few people playing with Frisbee in the park.",
+        "step_compression": 1.0,
+        "latency": 12.88719916343689
+    },
+    "prompt_9": {
+        "prompt": "A red stop sign and some tall grass.",
+        "step_compression": 1.0,
+        "latency": 13.258511304855347
+    },
+    "prompt_10": {
+        "prompt": "Two zebras standing together while one zebra swishes his tail.",
+        "step_compression": 1.0,
+        "latency": 12.776988506317139
+    },
+    "prompt_11": {
+        "prompt": "A breakfast plate with toast, vegetables, eggs and meat.",
+        "step_compression": 1.0,
+        "latency": 12.37287163734436
+    },
+    "prompt_12": {
+        "prompt": "A bedroom with open doors to a bathroom.",
+        "step_compression": 1.0,
+        "latency": 12.50207805633545
+    },
+    "prompt_13": {
+        "prompt": "A computer desk topped with a laptop and a monitor.",
+        "step_compression": 1.0,
+        "latency": 12.381613731384277
+    },
+    "prompt_14": {
+        "prompt": "A long train sitting on a railroad track.",
+        "step_compression": 1.0,
+        "latency": 12.9324369430542
+    },
+    "prompt_15": {
+        "prompt": "A dog catches a firsbee in the middle of the air.",
+        "step_compression": 1.0,
+        "latency": 12.91248106956482
+    },
+    "prompt_16": {
+        "prompt": "a number of people on a beach with a kite flying above",
+        "step_compression": 1.0,
+        "latency": 12.960846662521362
+    },
+    "prompt_17": {
+        "prompt": "A family sitting at a dinner table with bowls of soup.",
+        "step_compression": 1.0,
+        "latency": 12.915647983551025
+    },
+    "prompt_18": {
+        "prompt": "Two toothbrushes sit inside a cup next to tooth paste.",
+        "step_compression": 1.0,
+        "latency": 12.994975805282593
+    },
+    "prompt_19": {
+        "prompt": "A humorous street sign is pictured in this image.",
+        "step_compression": 1.0,
+        "latency": 12.916258096694946
+    },
+    "prompt_20": {
+        "prompt": "A blue and red vase on a table top.",
+        "step_compression": 1.0,
+        "latency": 13.380460739135742
+    },
+    "prompt_21": {
+        "prompt": "A grey and white bird in a swampy marsh.",
+        "step_compression": 1.0,
+        "latency": 12.727105379104614
+    },
+    "prompt_22": {
+        "prompt": "Large tree with wooden picnic bench in wilderness area",
+        "step_compression": 1.0,
+        "latency": 12.629035711288452
+    },
+    "prompt_23": {
+        "prompt": "This laptop and monitor are surrounded by many wires",
+        "step_compression": 1.0,
+        "latency": 13.102018117904663
+    },
+    "prompt_24": {
+        "prompt": "a small white plate with a slice of pizza on it",
+        "step_compression": 1.0,
+        "latency": 13.065244913101196
+    },
+    "prompt_25": {
+        "prompt": "a person sleeping on a side walk near a fire hydrant",
+        "step_compression": 1.0,
+        "latency": 13.183998107910156
+    },
+    "prompt_26": {
+        "prompt": "Two young elephants stand next to a wooden fence.",
+        "step_compression": 1.0,
+        "latency": 13.287146806716919
+    },
+    "prompt_27": {
+        "prompt": "A picture of different types of herbs and vegetables available from the CSA.",
+        "step_compression": 1.0,
+        "latency": 13.01237940788269
+    },
+    "prompt_28": {
+        "prompt": "A giant Amoco sign sitting above a gas station.",
+        "step_compression": 1.0,
+        "latency": 13.153684616088867
+    },
+    "prompt_29": {
+        "prompt": "a group of people and a car passing under a bridge",
+        "step_compression": 1.0,
+        "latency": 13.099231958389282
+    },
+    "prompt_30": {
+        "prompt": "A white gazebo surrounded by landscaping and trees.",
+        "step_compression": 1.0,
+        "latency": 12.994431257247925
+    },
+    "prompt_31": {
+        "prompt": "The blender is set on the refrigerator near two baskets.",
+        "step_compression": 1.0,
+        "latency": 13.249123811721802
+    },
+    "prompt_32": {
+        "prompt": "An animal that is in the snow by themselves.",
+        "step_compression": 1.0,
+        "latency": 13.323567152023315
+    },
+    "prompt_33": {
+        "prompt": "A small black dog sitting in front of a TV.",
+        "step_compression": 1.0,
+        "latency": 12.606687068939209
+    },
+    "prompt_34": {
+        "prompt": "A trail leads to a wood park bench in a tree filled park.",
+        "step_compression": 1.0,
+        "latency": 12.473504066467285
+    },
+    "prompt_35": {
+        "prompt": "A plate with a banana and slices of cheese.",
+        "step_compression": 1.0,
+        "latency": 12.512434482574463
+    },
+    "prompt_36": {
+        "prompt": "A bathroom sink sitting under a bathroom mirror.",
+        "step_compression": 1.0,
+        "latency": 12.52252197265625
+    },
+    "prompt_37": {
+        "prompt": "A baseball player swinging a bat at a ball.",
+        "step_compression": 1.0,
+        "latency": 12.62625765800476
+    },
+    "prompt_38": {
+        "prompt": "A traffic signal sitting next to a street at night.",
+        "step_compression": 1.0,
+        "latency": 15.731603145599365
+    },
+    "prompt_39": {
+        "prompt": "A wooden table topped with a pastry and a cup of coffee.",
+        "step_compression": 1.0,
+        "latency": 13.271188497543335
+    },
+    "prompt_40": {
+        "prompt": "A large brown horse walking across a grass covered field.",
+        "step_compression": 1.0,
+        "latency": 13.164405584335327
+    },
+    "prompt_41": {
+        "prompt": "A city street with a traffic light and street signs in front of a stone building.",
+        "step_compression": 1.0,
+        "latency": 13.127613544464111
+    },
+    "prompt_42": {
+        "prompt": "Three kids sitting with presents and cake, with a lot of books behind them.",
+        "step_compression": 1.0,
+        "latency": 13.231887340545654
+    },
+    "prompt_43": {
+        "prompt": "a photo of a light pole near a city street",
+        "step_compression": 1.0,
+        "latency": 13.166396141052246
+    },
+    "prompt_44": {
+        "prompt": "A restaurant table with a plate of vegetable pizza and garnishment",
+        "step_compression": 1.0,
+        "latency": 13.095668077468872
+    },
+    "prompt_45": {
+        "prompt": "A baby brown bear standing on it's hind legs.",
+        "step_compression": 1.0,
+        "latency": 13.252351522445679
+    },
+    "prompt_46": {
+        "prompt": "A broken cell phone laying on carpeted ground.",
+        "step_compression": 1.0,
+        "latency": 13.117871761322021
+    },
+    "prompt_47": {
+        "prompt": "An organized baseball team near a batting cage.",
+        "step_compression": 1.0,
+        "latency": 13.167027711868286
+    },
+    "prompt_48": {
+        "prompt": "A doll with blue hair poses with it's case.",
+        "step_compression": 1.0,
+        "latency": 13.196166515350342
+    },
+    "prompt_49": {
+        "prompt": "A man at a table with several dishes of food.",
+        "step_compression": 1.0,
+        "latency": 13.214857816696167
+    },
+    "prompt_50": {
+        "prompt": "A cow eating a mix of vegetables on a piece of paper next to a bird.",
+        "step_compression": 1.0,
+        "latency": 13.203822612762451
+    },
+    "prompt_51": {
+        "prompt": "Sign with the words Radar across the bottom.",
+        "step_compression": 1.0,
+        "latency": 13.224319458007812
+    },
+    "prompt_52": {
+        "prompt": "Odd red fire hydrant with an Asian lady standing next to it.",
+        "step_compression": 1.0,
+        "latency": 13.111427068710327
+    },
+    "prompt_53": {
+        "prompt": "A dog resting his head on the edge of the pool next to an apple.",
+        "step_compression": 1.0,
+        "latency": 12.648780822753906
+    },
+    "prompt_54": {
+        "prompt": "There are people who are getting their food.",
+        "step_compression": 1.0,
+        "latency": 12.650033473968506
+    },
+    "prompt_55": {
+        "prompt": "Two girls sitting on a bed eating bananas together.",
+        "step_compression": 1.0,
+        "latency": 12.508154392242432
+    },
+    "prompt_56": {
+        "prompt": "some oranges are stacked up in a bowl",
+        "step_compression": 1.0,
+        "latency": 13.136724472045898
+    },
+    "prompt_57": {
+        "prompt": "a bear that is standing in a pond",
+        "step_compression": 1.0,
+        "latency": 13.090458869934082
+    },
+    "prompt_58": {
+        "prompt": "A floodway sign sitting on the side of a road in a field.",
+        "step_compression": 1.0,
+        "latency": 13.070919275283813
+    },
+    "prompt_59": {
+        "prompt": "A bathroom sink below a well lit mirror.",
+        "step_compression": 1.0,
+        "latency": 13.199968338012695
+    },
+    "prompt_60": {
+        "prompt": "A man in a gray jacket standing in a kitchen next to a black dog.",
+        "step_compression": 1.0,
+        "latency": 13.09950590133667
+    },
+    "prompt_61": {
+        "prompt": "Some cute little boys at a little table eating together.",
+        "step_compression": 1.0,
+        "latency": 13.38818359375
+    },
+    "prompt_62": {
+        "prompt": "A group of people with suitcases in a room.",
+        "step_compression": 1.0,
+        "latency": 13.219302415847778
+    },
+    "prompt_63": {
+        "prompt": "A small white boat sits on some calm water under a snow capped mountain.",
+        "step_compression": 1.0,
+        "latency": 13.306082487106323
+    },
+    "prompt_64": {
+        "prompt": "A beautiful young woman talking on a phone.",
+        "step_compression": 1.0,
+        "latency": 13.417190074920654
+    },
+    "prompt_65": {
+        "prompt": "A man presenting something to another man in a tent.",
+        "step_compression": 1.0,
+        "latency": 13.303085327148438
+    },
+    "prompt_66": {
+        "prompt": "A hefty rugby player in red shirt and black shorts in the air.",
+        "step_compression": 1.0,
+        "latency": 13.335052490234375
+    },
+    "prompt_67": {
+        "prompt": "a close up of many plates of food on a table",
+        "step_compression": 1.0,
+        "latency": 13.402894973754883
+    },
+    "prompt_68": {
+        "prompt": "A no parking sign sitting on a sidewalk in front of a building.",
+        "step_compression": 1.0,
+        "latency": 12.858970880508423
+    },
+    "prompt_69": {
+        "prompt": "A group of people riding on a cart traveling down a street.",
+        "step_compression": 1.0,
+        "latency": 12.861079454421997
+    },
+    "prompt_70": {
+        "prompt": "A small dog on TV behind the words \" What Did I Do Wrong?'.",
+        "step_compression": 1.0,
+        "latency": 12.816415309906006
+    },
+    "prompt_71": {
+        "prompt": "This a case full of doughnuts and cinnamon buns.",
+        "step_compression": 1.0,
+        "latency": 13.162355184555054
+    },
+    "prompt_72": {
+        "prompt": "A person standing next to skis in the snow.",
+        "step_compression": 1.0,
+        "latency": 13.193276643753052
+    },
+    "prompt_73": {
+        "prompt": "Commercial jet airplane flying in clear blue skies.",
+        "step_compression": 1.0,
+        "latency": 13.102378368377686
+    },
+    "prompt_74": {
+        "prompt": "a beach with people and sand with a view of the water",
+        "step_compression": 1.0,
+        "latency": 13.062558650970459
+    },
+    "prompt_75": {
+        "prompt": "A tiled bathroom with white towels hanging up.",
+        "step_compression": 1.0,
+        "latency": 13.178341150283813
+    },
+    "prompt_76": {
+        "prompt": "A white toilet sitting next to a window in a bathroom.",
+        "step_compression": 1.0,
+        "latency": 13.06505012512207
+    },
+    "prompt_77": {
+        "prompt": "a suit case sits on a top next to some drink",
+        "step_compression": 1.0,
+        "latency": 13.173670530319214
+    },
+    "prompt_78": {
+        "prompt": "A penny behind three tiny flower vases on a wooden table.",
+        "step_compression": 1.0,
+        "latency": 13.198194026947021
+    },
+    "prompt_79": {
+        "prompt": "A boat is sitting in the water at a dock",
+        "step_compression": 1.0,
+        "latency": 13.138205289840698
+    },
+    "prompt_80": {
+        "prompt": "The cat rests on the bed while watching television.",
+        "step_compression": 1.0,
+        "latency": 13.26146149635315
+    },
+    "prompt_81": {
+        "prompt": "A man and a woman sitting on a couch with laptops.",
+        "step_compression": 1.0,
+        "latency": 13.255796670913696
+    },
+    "prompt_82": {
+        "prompt": "a pepperoni pizza with some green toppings and a fork",
+        "step_compression": 1.0,
+        "latency": 13.414865493774414
+    },
+    "prompt_83": {
+        "prompt": "A boy on a skateboard is jumping over a red obstacle.",
+        "step_compression": 1.0,
+        "latency": 13.3222496509552
+    },
+    "prompt_84": {
+        "prompt": "A living room featuring a comfortable seating arrangement of chairs and tables.",
+        "step_compression": 1.0,
+        "latency": 13.279728651046753
+    },
+    "prompt_85": {
+        "prompt": "Characters from Cat in the Hat in front of a man and child.",
+        "step_compression": 1.0,
+        "latency": 13.307658433914185
+    },
+    "prompt_86": {
+        "prompt": "A white paint holding food that includes broccoli and meat.",
+        "step_compression": 1.0,
+        "latency": 13.158175945281982
+    },
+    "prompt_87": {
+        "prompt": "A fire hydrant is painted red, white and blue and sits on a sidewalk in front of a brick wall that shows graffiti.",
+        "step_compression": 1.0,
+        "latency": 13.267213344573975
+    },
+    "prompt_88": {
+        "prompt": "A bathroom with his and her sinks and mirrors.",
+        "step_compression": 1.0,
+        "latency": 13.280046939849854
+    },
+    "prompt_89": {
+        "prompt": "A boy playing tennis in a tennis court.",
+        "step_compression": 1.0,
+        "latency": 13.380524396896362
+    },
+    "prompt_90": {
+        "prompt": "a person riding a bike on a grass field with rocks",
+        "step_compression": 1.0,
+        "latency": 13.285303115844727
+    },
+    "prompt_91": {
+        "prompt": "A train traveling very close to houses next to a street.",
+        "step_compression": 1.0,
+        "latency": 13.339946746826172
+    },
+    "prompt_92": {
+        "prompt": "A man in a black shirt eating a sandwich",
+        "step_compression": 1.0,
+        "latency": 12.88804316520691
+    },
+    "prompt_93": {
+        "prompt": "A group of young children sitting next to each other.",
+        "step_compression": 1.0,
+        "latency": 13.202265739440918
+    },
+    "prompt_94": {
+        "prompt": "Person on motorbike  with speed detector showing 26.",
+        "step_compression": 1.0,
+        "latency": 12.668449640274048
+    },
+    "prompt_95": {
+        "prompt": "An image of a bedroom with a bed in the middle if the room",
+        "step_compression": 1.0,
+        "latency": 12.656857967376709
+    },
+    "prompt_96": {
+        "prompt": "Two giraffes are standing together outside near a wall.",
+        "step_compression": 1.0,
+        "latency": 12.564127445220947
+    },
+    "prompt_97": {
+        "prompt": "two boats sitting on the shore close to the water",
+        "step_compression": 1.0,
+        "latency": 12.611241817474365
+    },
+    "prompt_98": {
+        "prompt": "A group of people sitting at tables eating food.",
+        "step_compression": 1.0,
+        "latency": 12.551342248916626
+    },
+    "prompt_99": {
+        "prompt": "A red fire hydrant sitting on a sidewalk next to a street.",
+        "step_compression": 1.0,
+        "latency": 12.651538133621216
+    },
+    "prompt_100": {
+        "prompt": "A glass of red wine sits beside the bottle for a refill as a piece of cake goes untouched in the back.",
+        "step_compression": 1.0,
+        "latency": 12.597038507461548
+    },
+    "prompt_101": {
+        "prompt": "A man on motorcycle driving past cows on the street",
+        "step_compression": 1.0,
+        "latency": 12.56722640991211
+    },
+    "prompt_102": {
+        "prompt": "A woman sits at a table for a meal.",
+        "step_compression": 1.0,
+        "latency": 13.162959098815918
+    },
+    "prompt_103": {
+        "prompt": "A man riding a wave on to of a surfboard.",
+        "step_compression": 1.0,
+        "latency": 13.23617672920227
+    },
+    "prompt_104": {
+        "prompt": "A girl sitting on a bench in front of a stone wall.",
+        "step_compression": 1.0,
+        "latency": 12.883299350738525
+    },
+    "prompt_105": {
+        "prompt": "a black and white cat a chair and some bicycles",
+        "step_compression": 1.0,
+        "latency": 12.926646947860718
+    },
+    "prompt_106": {
+        "prompt": "Many elephants being paraded through an area of spectators.",
+        "step_compression": 1.0,
+        "latency": 12.85933780670166
+    },
+    "prompt_107": {
+        "prompt": "A German language street directional sign that reads Bauminghausstrasse.",
+        "step_compression": 1.0,
+        "latency": 13.15837049484253
+    },
+    "prompt_108": {
+        "prompt": "A toddler boy is on a white pad playing a video game.",
+        "step_compression": 1.0,
+        "latency": 13.109652519226074
+    },
+    "prompt_109": {
+        "prompt": "A woman in a wedding dress standing in a field near a corn farm and holding the bridle of a cream colored horse.",
+        "step_compression": 1.0,
+        "latency": 13.143651723861694
+    },
+    "prompt_110": {
+        "prompt": "A Star wars storm trooper holding a pink umbrella.",
+        "step_compression": 1.0,
+        "latency": 13.173545598983765
+    },
+    "prompt_111": {
+        "prompt": "A middle aged tennis player is posed for action.",
+        "step_compression": 1.0,
+        "latency": 13.163690328598022
+    },
+    "prompt_112": {
+        "prompt": "A man scowling while looking in a refrigerator",
+        "step_compression": 1.0,
+        "latency": 12.944616317749023
+    },
+    "prompt_113": {
+        "prompt": "A sandwich filled with meat with a knife sticking out of it.",
+        "step_compression": 1.0,
+        "latency": 13.241760969161987
+    },
+    "prompt_114": {
+        "prompt": "A surfer is riding back side on a wave.",
+        "step_compression": 1.0,
+        "latency": 13.159106254577637
+    },
+    "prompt_115": {
+        "prompt": "A white plate filled with pasta. and a fork.",
+        "step_compression": 1.0,
+        "latency": 13.31780481338501
+    },
+    "prompt_116": {
+        "prompt": "Two plane flying over a sea and island",
+        "step_compression": 1.0,
+        "latency": 13.180279731750488
+    },
+    "prompt_117": {
+        "prompt": "A man laying in bed holding a baby.",
+        "step_compression": 1.0,
+        "latency": 13.246386051177979
+    },
+    "prompt_118": {
+        "prompt": "A man and woman that is sitting down in a raft.",
+        "step_compression": 1.0,
+        "latency": 13.085110664367676
+    },
+    "prompt_119": {
+        "prompt": "A red frosted donut sitting on top of a table.",
+        "step_compression": 1.0,
+        "latency": 13.152019500732422
+    },
+    "prompt_120": {
+        "prompt": "A city street lit up in a night scene with cars in the background.",
+        "step_compression": 1.0,
+        "latency": 13.122233629226685
+    },
+    "prompt_121": {
+        "prompt": "a person riding a surf board on a wave",
+        "step_compression": 1.0,
+        "latency": 13.233062505722046
+    },
+    "prompt_122": {
+        "prompt": "A white toilet sitting next to a bathroom sink.",
+        "step_compression": 1.0,
+        "latency": 13.216612815856934
+    },
+    "prompt_123": {
+        "prompt": "A table with a piece of construction paper, scissors and sewing thread.",
+        "step_compression": 1.0,
+        "latency": 13.096320390701294
+    },
+    "prompt_124": {
+        "prompt": "A white microwave oven sitting inside of a wall.",
+        "step_compression": 1.0,
+        "latency": 13.162522554397583
+    },
+    "prompt_125": {
+        "prompt": "A stone clock tower juts out from the fog below.",
+        "step_compression": 1.0,
+        "latency": 13.225000858306885
+    },
+    "prompt_126": {
+        "prompt": "A city street with a storm drain, fire hydrant, and manhole cover.",
+        "step_compression": 1.0,
+        "latency": 13.073152780532837
+    },
+    "prompt_127": {
+        "prompt": "An Asian man ad woman on their cell phones.",
+        "step_compression": 1.0,
+        "latency": 13.226409435272217
+    },
+    "prompt_128": {
+        "prompt": "a woman holding a colorful striped umbrella",
+        "step_compression": 1.0,
+        "latency": 13.18976354598999
+    },
+    "prompt_129": {
+        "prompt": "a tennis player swings his tennis racket",
+        "step_compression": 1.0,
+        "latency": 13.091469049453735
+    },
+    "prompt_130": {
+        "prompt": "A bird standing in the wooded area with leaves all around.",
+        "step_compression": 1.0,
+        "latency": 13.09627366065979
+    },
+    "prompt_131": {
+        "prompt": "A plate with a bowl and food on it.",
+        "step_compression": 1.0,
+        "latency": 13.102110862731934
+    },
+    "prompt_132": {
+        "prompt": "A bear and a cub sniffing the end of a log.",
+        "step_compression": 1.0,
+        "latency": 13.198097229003906
+    },
+    "prompt_133": {
+        "prompt": "A commercial airplane at the gate being serviced",
+        "step_compression": 1.0,
+        "latency": 12.645715236663818
+    },
+    "prompt_134": {
+        "prompt": "a large group of people are gathered around the table",
+        "step_compression": 1.0,
+        "latency": 12.634506702423096
+    },
+    "prompt_135": {
+        "prompt": "some skateboarders doing tricks and people watching them",
+        "step_compression": 1.0,
+        "latency": 12.486603736877441
+    },
+    "prompt_136": {
+        "prompt": "A tagged cow and a calf lying in a field.",
+        "step_compression": 1.0,
+        "latency": 12.487968921661377
+    },
+    "prompt_137": {
+        "prompt": "A person standing in front of a train holding a pair of skis.",
+        "step_compression": 1.0,
+        "latency": 12.606785774230957
+    },
+    "prompt_138": {
+        "prompt": "The blue trailers are being hauled by a train.",
+        "step_compression": 1.0,
+        "latency": 12.788635730743408
+    },
+    "prompt_139": {
+        "prompt": "A bed topped with three white pillows covered in a canopy.",
+        "step_compression": 1.0,
+        "latency": 12.602790355682373
+    },
+    "prompt_140": {
+        "prompt": "A picture advertising Arizona tourism in an airport",
+        "step_compression": 1.0,
+        "latency": 12.642467260360718
+    },
+    "prompt_141": {
+        "prompt": "A bunch of different bikes on a wooden floor.",
+        "step_compression": 1.0,
+        "latency": 12.683229207992554
+    },
+    "prompt_142": {
+        "prompt": "four lambs grazing in a fenced in pasture",
+        "step_compression": 1.0,
+        "latency": 12.657580614089966
+    },
+    "prompt_143": {
+        "prompt": "A pork roast in a glass dish surrounded by potatoes and carrots.",
+        "step_compression": 1.0,
+        "latency": 12.63874626159668
+    },
+    "prompt_144": {
+        "prompt": "A man sitting on a train next to a woman.",
+        "step_compression": 1.0,
+        "latency": 13.05764365196228
+    },
+    "prompt_145": {
+        "prompt": "A red tray topped with three chili cheese and bacon covered hot dogs.",
+        "step_compression": 1.0,
+        "latency": 13.134618997573853
+    },
+    "prompt_146": {
+        "prompt": "A man in black jacket cross country skiing in woods.",
+        "step_compression": 1.0,
+        "latency": 13.25709581375122
+    },
+    "prompt_147": {
+        "prompt": "a close up of a dog sitting wearing a hat",
+        "step_compression": 1.0,
+        "latency": 13.348942756652832
+    },
+    "prompt_148": {
+        "prompt": "A dog in a mirror with a person in a room.",
+        "step_compression": 1.0,
+        "latency": 12.971513748168945
+    },
+    "prompt_149": {
+        "prompt": "A group of books on top of a book shelf.",
+        "step_compression": 1.0,
+        "latency": 13.265852212905884
+    },
+    "prompt_150": {
+        "prompt": "A man standing in a bathroom in front of a mirror.",
+        "step_compression": 1.0,
+        "latency": 13.096698760986328
+    },
+    "prompt_151": {
+        "prompt": "black and white photo of two birds flying on a cloudy sky",
+        "step_compression": 1.0,
+        "latency": 12.916438817977905
+    },
+    "prompt_152": {
+        "prompt": "A boat that is sitting in the water.",
+        "step_compression": 1.0,
+        "latency": 12.991315126419067
+    },
+    "prompt_153": {
+        "prompt": "A \"Virgin Records\" train next to a blue, yellow and red train at a subway station.",
+        "step_compression": 1.0,
+        "latency": 12.988866090774536
+    },
+    "prompt_154": {
+        "prompt": "Several stacks of white cups in a restaurant.",
+        "step_compression": 1.0,
+        "latency": 12.954177618026733
+    },
+    "prompt_155": {
+        "prompt": "A class room filled with students sitting in front of computer.",
+        "step_compression": 1.0,
+        "latency": 12.727847337722778
+    },
+    "prompt_156": {
+        "prompt": "A pizza sitting on top of a white plate covered in cheese and veggies.",
+        "step_compression": 1.0,
+        "latency": 12.475512504577637
+    },
+    "prompt_157": {
+        "prompt": "A RED BIRD PERCHED ON A BRANCH IN A TREE.",
+        "step_compression": 1.0,
+        "latency": 12.368622541427612
+    },
+    "prompt_158": {
+        "prompt": "A bench sits all alone on a beach looking at the magnificent ocean view.",
+        "step_compression": 1.0,
+        "latency": 12.528531074523926
+    },
+    "prompt_159": {
+        "prompt": "a dog walking on his hind legs carrying a Frisbee",
+        "step_compression": 1.0,
+        "latency": 12.481854438781738
+    },
+    "prompt_160": {
+        "prompt": "Ripe bananas sitting next to a laptop computer and plastic wrap.",
+        "step_compression": 1.0,
+        "latency": 12.388942241668701
+    },
+    "prompt_161": {
+        "prompt": "A living room with large open windows and blue carpet.",
+        "step_compression": 1.0,
+        "latency": 12.386152982711792
+    },
+    "prompt_162": {
+        "prompt": "A beautiful woman looking over a mans shoulder in front of a computer.",
+        "step_compression": 1.0,
+        "latency": 12.51924753189087
+    },
+    "prompt_163": {
+        "prompt": "A little girl sitting on top of a bed next to a lamp.",
+        "step_compression": 1.0,
+        "latency": 12.513868808746338
+    },
+    "prompt_164": {
+        "prompt": "A person cutting some material on a table",
+        "step_compression": 1.0,
+        "latency": 12.457838535308838
+    },
+    "prompt_165": {
+        "prompt": "a couple of plates that have some food on them",
+        "step_compression": 1.0,
+        "latency": 12.506690263748169
+    },
+    "prompt_166": {
+        "prompt": "A bakery counter has many different kinds of pastries and pies.",
+        "step_compression": 1.0,
+        "latency": 12.515950679779053
+    },
+    "prompt_167": {
+        "prompt": "An American Airlines airplane is sitting on the runway",
+        "step_compression": 1.0,
+        "latency": 13.32074785232544
+    },
+    "prompt_168": {
+        "prompt": "This kitchen contains a stove with an exhaust hood, many cabinets, and a microwave.",
+        "step_compression": 1.0,
+        "latency": 13.171015977859497
+    },
+    "prompt_169": {
+        "prompt": "A horse rolling around on it's back in a green park.",
+        "step_compression": 1.0,
+        "latency": 13.125587940216064
+    },
+    "prompt_170": {
+        "prompt": "A parking lot filled with large passenger buses.",
+        "step_compression": 1.0,
+        "latency": 13.302374839782715
+    },
+    "prompt_171": {
+        "prompt": "An elephant and a rhinoceros stand not far from each other.",
+        "step_compression": 1.0,
+        "latency": 12.745913028717041
+    },
+    "prompt_172": {
+        "prompt": "A young girl sitting at a table that has two pizzas and a pepsi beverage glass on it.",
+        "step_compression": 1.0,
+        "latency": 13.376513481140137
+    },
+    "prompt_173": {
+        "prompt": "A person rides a surf board in wavy rapids.",
+        "step_compression": 1.0,
+        "latency": 13.493206977844238
+    },
+    "prompt_174": {
+        "prompt": "A white and orange cat sitting on top of a sidewalk.",
+        "step_compression": 1.0,
+        "latency": 13.346933364868164
+    },
+    "prompt_175": {
+        "prompt": "A couple of men holding white surfboards on top of a beach.",
+        "step_compression": 1.0,
+        "latency": 13.416780471801758
+    },
+    "prompt_176": {
+        "prompt": "a male in a gray suit checked tie and silver watch",
+        "step_compression": 1.0,
+        "latency": 13.294592380523682
+    },
+    "prompt_177": {
+        "prompt": "A plate topped with a slice of pizza, a chicken breast and vegetables.",
+        "step_compression": 1.0,
+        "latency": 13.247192859649658
+    },
+    "prompt_178": {
+        "prompt": "a male in a black shirt is typing on a green and white notebook computer",
+        "step_compression": 1.0,
+        "latency": 13.317192792892456
+    },
+    "prompt_179": {
+        "prompt": "A man walks with his head and racket down as he crosses a tennis court.",
+        "step_compression": 1.0,
+        "latency": 13.267103672027588
+    },
+    "prompt_180": {
+        "prompt": "A man performing on a skateboard ramp jump.",
+        "step_compression": 1.0,
+        "latency": 13.255851030349731
+    },
+    "prompt_181": {
+        "prompt": "a red, blue and tour bus with people standing outside of them",
+        "step_compression": 1.0,
+        "latency": 13.027212142944336
+    },
+    "prompt_182": {
+        "prompt": "The man is playing video games in the living room",
+        "step_compression": 1.0,
+        "latency": 12.612475156784058
+    },
+    "prompt_183": {
+        "prompt": "a man is flying a kite in a field",
+        "step_compression": 1.0,
+        "latency": 13.283571243286133
+    },
+    "prompt_184": {
+        "prompt": "Two zebras are heading into the bushes as another is heading in the opposite direction.",
+        "step_compression": 1.0,
+        "latency": 13.086068153381348
+    },
+    "prompt_185": {
+        "prompt": "Two unattended motorcycles parked somewhere near a red car.",
+        "step_compression": 1.0,
+        "latency": 13.2267165184021
+    },
+    "prompt_186": {
+        "prompt": "Two roosters standing next to a wooden fence.",
+        "step_compression": 1.0,
+        "latency": 12.639791488647461
+    },
+    "prompt_187": {
+        "prompt": "a person wearing a green hat playing nintendo wii",
+        "step_compression": 1.0,
+        "latency": 12.429988622665405
+    },
+    "prompt_188": {
+        "prompt": "a group of boats parked next to a dock in the water",
+        "step_compression": 1.0,
+        "latency": 12.391210556030273
+    },
+    "prompt_189": {
+        "prompt": "A black cat is inside a white toilet.",
+        "step_compression": 1.0,
+        "latency": 13.041279315948486
+    },
+    "prompt_190": {
+        "prompt": "A traffic light with car passing underneath on the road.",
+        "step_compression": 1.0,
+        "latency": 13.058201551437378
+    },
+    "prompt_191": {
+        "prompt": "A brown horse sticking its head out of a red and white barn door.",
+        "step_compression": 1.0,
+        "latency": 13.080580711364746
+    },
+    "prompt_192": {
+        "prompt": "A blue and white train is moving on the rails.",
+        "step_compression": 1.0,
+        "latency": 12.999600172042847
+    },
+    "prompt_193": {
+        "prompt": "A couple of young girls sitting next to each other playing a game on the Nintendo Wii.",
+        "step_compression": 1.0,
+        "latency": 13.021207094192505
+    },
+    "prompt_194": {
+        "prompt": "Two people on skies in the snow",
+        "step_compression": 1.0,
+        "latency": 12.93303108215332
+    },
+    "prompt_195": {
+        "prompt": "Electronic computer items displayed on wooden desk in office.",
+        "step_compression": 1.0,
+        "latency": 12.944156885147095
+    },
+    "prompt_196": {
+        "prompt": "A young girl inhales with the intent of blowing out a candle.",
+        "step_compression": 1.0,
+        "latency": 12.859748363494873
+    },
+    "prompt_197": {
+        "prompt": "A guy with a scissors cutting the cast off the arm of another guy.",
+        "step_compression": 1.0,
+        "latency": 12.822864294052124
+    },
+    "prompt_198": {
+        "prompt": "Car mirror with dog's head reflected on sunny day.",
+        "step_compression": 1.0,
+        "latency": 12.497575998306274
+    },
+    "prompt_199": {
+        "prompt": "A row of urinals stand on a wall in a bathroom area.",
+        "step_compression": 1.0,
+        "latency": 13.314095735549927
+    },
+    "prompt_200": {
+        "prompt": "A snowboarder is sliding quickly along a snowy hill.",
+        "step_compression": 1.0,
+        "latency": 12.72323989868164
+    },
+    "prompt_201": {
+        "prompt": "A man standing in front of a flat screen TV holding a Wii game controller.",
+        "step_compression": 1.0,
+        "latency": 12.762745380401611
+    },
+    "prompt_202": {
+        "prompt": "Pastry and bottle of liquid on table with various bottles",
+        "step_compression": 1.0,
+        "latency": 12.997857093811035
+    },
+    "prompt_203": {
+        "prompt": "A brown bear trying to open a picnic cooler.",
+        "step_compression": 1.0,
+        "latency": 13.175402641296387
+    },
+    "prompt_204": {
+        "prompt": "Two giraffes standing beside each other next to a fence.",
+        "step_compression": 1.0,
+        "latency": 13.063088178634644
+    },
+    "prompt_205": {
+        "prompt": "A very bright light shining down on some signs at night.",
+        "step_compression": 1.0,
+        "latency": 13.272256851196289
+    },
+    "prompt_206": {
+        "prompt": "A female surfer lying on her surf board in the water as a wave pushes her",
+        "step_compression": 1.0,
+        "latency": 13.230669736862183
+    },
+    "prompt_207": {
+        "prompt": "A man and a young boy working on laptop computers.",
+        "step_compression": 1.0,
+        "latency": 13.301024675369263
+    },
+    "prompt_208": {
+        "prompt": "An individual with a red tie sitting next to a dog.",
+        "step_compression": 1.0,
+        "latency": 13.094202280044556
+    },
+    "prompt_209": {
+        "prompt": "A sign hanging on a pole by the sidewalk",
+        "step_compression": 1.0,
+        "latency": 13.264960289001465
+    },
+    "prompt_210": {
+        "prompt": "A man holding a red frisbee while standing on lush green field.",
+        "step_compression": 1.0,
+        "latency": 12.698694705963135
+    },
+    "prompt_211": {
+        "prompt": "A man is wearing baseball gear and standing on the field.",
+        "step_compression": 1.0,
+        "latency": 12.520448923110962
+    },
+    "prompt_212": {
+        "prompt": "A young girl protects herself with an umbrella",
+        "step_compression": 1.0,
+        "latency": 12.73997187614441
+    },
+    "prompt_213": {
+        "prompt": "a man in a wheel chair smiles as he open a oven",
+        "step_compression": 1.0,
+        "latency": 12.599003791809082
+    },
+    "prompt_214": {
+        "prompt": "A clock mounted on a wall over the doorway of a kitchen.",
+        "step_compression": 1.0,
+        "latency": 13.087031602859497
+    },
+    "prompt_215": {
+        "prompt": "The person is walking in the alley alone",
+        "step_compression": 1.0,
+        "latency": 13.09442400932312
+    },
+    "prompt_216": {
+        "prompt": "Two people standing next to each other on a ski slope.",
+        "step_compression": 1.0,
+        "latency": 13.08095908164978
+    },
+    "prompt_217": {
+        "prompt": "A person riding a wave on a skateboard.",
+        "step_compression": 1.0,
+        "latency": 12.579029083251953
+    },
+    "prompt_218": {
+        "prompt": "A little girl holding a red frisbee while wearing a pink visor.",
+        "step_compression": 1.0,
+        "latency": 12.977818489074707
+    },
+    "prompt_219": {
+        "prompt": "Three sheep in a field of grass near a steep hill.",
+        "step_compression": 1.0,
+        "latency": 12.625821352005005
+    },
+    "prompt_220": {
+        "prompt": "A squadron of four fighter jets flying through a blue sky.",
+        "step_compression": 1.0,
+        "latency": 13.228662967681885
+    },
+    "prompt_221": {
+        "prompt": "A road sign warns there is a curve in the road.",
+        "step_compression": 1.0,
+        "latency": 13.258800268173218
+    },
+    "prompt_222": {
+        "prompt": "A person wearing skis bent over looking through a backpack.",
+        "step_compression": 1.0,
+        "latency": 12.752294063568115
+    },
+    "prompt_223": {
+        "prompt": "A picture of a large building with people milling about.",
+        "step_compression": 1.0,
+        "latency": 13.192493915557861
+    },
+    "prompt_224": {
+        "prompt": "A group of baseball players cluster together while wearing blue and white uniforms.",
+        "step_compression": 1.0,
+        "latency": 13.417922496795654
+    },
+    "prompt_225": {
+        "prompt": "a blue and white three wheeler truck  and two men",
+        "step_compression": 1.0,
+        "latency": 13.08146595954895
+    },
+    "prompt_226": {
+        "prompt": "A herd of animals laying at the foot of a stone mountain.",
+        "step_compression": 1.0,
+        "latency": 12.505086183547974
+    },
+    "prompt_227": {
+        "prompt": "A man riding a motorcycle down a street with a person.",
+        "step_compression": 1.0,
+        "latency": 12.379431247711182
+    },
+    "prompt_228": {
+        "prompt": "some food is laying on a white and blue plate",
+        "step_compression": 1.0,
+        "latency": 12.523835182189941
+    },
+    "prompt_229": {
+        "prompt": "A man riding on the back of a blue motorcycle.",
+        "step_compression": 1.0,
+        "latency": 12.468684196472168
+    },
+    "prompt_230": {
+        "prompt": "A couple of people on top of a snow covered ski slope.",
+        "step_compression": 1.0,
+        "latency": 12.855617761611938
+    },
+    "prompt_231": {
+        "prompt": "A backpack and a line of supplies laying out.",
+        "step_compression": 1.0,
+        "latency": 12.84414792060852
+    },
+    "prompt_232": {
+        "prompt": "A young boy wearing a yellow shirt holding a bat.",
+        "step_compression": 1.0,
+        "latency": 13.36875057220459
+    },
+    "prompt_233": {
+        "prompt": "Four young men in a sitting area stand looking towards the opposite side of the room.",
+        "step_compression": 1.0,
+        "latency": 13.317605018615723
+    },
+    "prompt_234": {
+        "prompt": "A white plate with two fried eggs and greens.",
+        "step_compression": 1.0,
+        "latency": 13.35766077041626
+    },
+    "prompt_235": {
+        "prompt": "a close up of a giraffe drinking water",
+        "step_compression": 1.0,
+        "latency": 13.281593799591064
+    },
+    "prompt_236": {
+        "prompt": "The picture of a cat under a car.",
+        "step_compression": 1.0,
+        "latency": 13.38915491104126
+    },
+    "prompt_237": {
+        "prompt": "An adult and baby elephant standing in a grassy field.",
+        "step_compression": 1.0,
+        "latency": 13.40834379196167
+    },
+    "prompt_238": {
+        "prompt": "A picture of some people about to board a plane.",
+        "step_compression": 1.0,
+        "latency": 13.357947826385498
+    },
+    "prompt_239": {
+        "prompt": "some people seated at a table with plates of food",
+        "step_compression": 1.0,
+        "latency": 12.771809816360474
+    },
+    "prompt_240": {
+        "prompt": "Apples on a tree that need longer to ripen.",
+        "step_compression": 1.0,
+        "latency": 12.589747905731201
+    },
+    "prompt_241": {
+        "prompt": "A black and white photograph of luggage lined up on a sidewalk.",
+        "step_compression": 1.0,
+        "latency": 13.140138149261475
+    },
+    "prompt_242": {
+        "prompt": "A traffic light next to a set of stairs.",
+        "step_compression": 1.0,
+        "latency": 13.296064138412476
+    },
+    "prompt_243": {
+        "prompt": "A man in shorts riding a surfboard in  a pit",
+        "step_compression": 1.0,
+        "latency": 13.185314178466797
+    },
+    "prompt_244": {
+        "prompt": "Two green signs that are on top of a stop sign.",
+        "step_compression": 1.0,
+        "latency": 12.9510817527771
+    },
+    "prompt_245": {
+        "prompt": "Close up of a plate with broccoli and shrimp, with some broth.",
+        "step_compression": 1.0,
+        "latency": 13.006052732467651
+    },
+    "prompt_246": {
+        "prompt": "A man riding a skateboard through the air.",
+        "step_compression": 1.0,
+        "latency": 12.648626565933228
+    },
+    "prompt_247": {
+        "prompt": "A man riding a skateboard into the air.",
+        "step_compression": 1.0,
+        "latency": 12.54069709777832
+    },
+    "prompt_248": {
+        "prompt": "A fire hydrant sits in the middle of the park",
+        "step_compression": 1.0,
+        "latency": 12.388170003890991
+    },
+    "prompt_249": {
+        "prompt": "A horse standing on top of a lush green field.",
+        "step_compression": 1.0,
+        "latency": 12.52173376083374
+    },
+    "prompt_250": {
+        "prompt": "A white sheep standing next to a brick wall.",
+        "step_compression": 1.0,
+        "latency": 12.992523908615112
+    },
+    "prompt_251": {
+        "prompt": "A woman laying on a bed without sheets.",
+        "step_compression": 1.0,
+        "latency": 13.471862077713013
+    },
+    "prompt_252": {
+        "prompt": "A smiling woman reclines in a chair with a newspaper.",
+        "step_compression": 1.0,
+        "latency": 12.580034255981445
+    },
+    "prompt_253": {
+        "prompt": "A metallic toilet sitting in a small bathroom.",
+        "step_compression": 1.0,
+        "latency": 12.487325191497803
+    },
+    "prompt_254": {
+        "prompt": "Two hot dogs covered in chili and sour kraut.",
+        "step_compression": 1.0,
+        "latency": 12.470733165740967
+    },
+    "prompt_255": {
+        "prompt": "Two children hold large crocheted stockings on Christmas.",
+        "step_compression": 1.0,
+        "latency": 13.098249197006226
+    },
+    "prompt_256": {
+        "prompt": "A red double decker bus traveling down a street.",
+        "step_compression": 1.0,
+        "latency": 13.135297536849976
+    },
+    "prompt_257": {
+        "prompt": "A street light on a pole outside of a house.",
+        "step_compression": 1.0,
+        "latency": 13.26974368095398
+    },
+    "prompt_258": {
+        "prompt": "Boy doing skateboard trick in air at a skate park.",
+        "step_compression": 1.0,
+        "latency": 13.171185731887817
+    },
+    "prompt_259": {
+        "prompt": "A man holding a tennis racquet on top of a tennis court.",
+        "step_compression": 1.0,
+        "latency": 13.278289556503296
+    },
+    "prompt_260": {
+        "prompt": "a red motorcycle parked on some gravel next to grass",
+        "step_compression": 1.0,
+        "latency": 12.879571199417114
+    },
+    "prompt_261": {
+        "prompt": "A woman sitting next to a  man on top of a purple bench.",
+        "step_compression": 1.0,
+        "latency": 13.085161209106445
+    },
+    "prompt_262": {
+        "prompt": "Even old people with knee injuries can enjoy a nice game of tennis.",
+        "step_compression": 1.0,
+        "latency": 13.09244704246521
+    },
+    "prompt_263": {
+        "prompt": "A cat sitting on the back of a white chair in a living room.",
+        "step_compression": 1.0,
+        "latency": 13.146186351776123
+    },
+    "prompt_264": {
+        "prompt": "Two young boys sitting and eating very large carrots.",
+        "step_compression": 1.0,
+        "latency": 13.42208743095398
+    },
+    "prompt_265": {
+        "prompt": "A gray and white puppy on a leash atop a skateboard.",
+        "step_compression": 1.0,
+        "latency": 13.197909355163574
+    },
+    "prompt_266": {
+        "prompt": "A glass of milk sitting next to a bowl of fruit on top of a table.",
+        "step_compression": 1.0,
+        "latency": 13.011574029922485
+    },
+    "prompt_267": {
+        "prompt": "Two zebras stand in front of a large building.",
+        "step_compression": 1.0,
+        "latency": 12.914161443710327
+    },
+    "prompt_268": {
+        "prompt": "A man looking in the refrigerator with a cat also looking inside",
+        "step_compression": 1.0,
+        "latency": 12.859927892684937
+    },
+    "prompt_269": {
+        "prompt": "The table is holding, pizza, eating utensils and glasses of orange juice.",
+        "step_compression": 1.0,
+        "latency": 13.009241104125977
+    },
+    "prompt_270": {
+        "prompt": "A small herd of buffalo resting on the ither side of the stream.",
+        "step_compression": 1.0,
+        "latency": 13.166484355926514
+    },
+    "prompt_271": {
+        "prompt": "A couple of cars on a city street.",
+        "step_compression": 1.0,
+        "latency": 13.238940477371216
+    },
+    "prompt_272": {
+        "prompt": "Two adult dogs play with frisbees in the snow.",
+        "step_compression": 1.0,
+        "latency": 13.273475170135498
+    },
+    "prompt_273": {
+        "prompt": "A bathroom with sinks, a toilet and a mirror.",
+        "step_compression": 1.0,
+        "latency": 13.125569343566895
+    },
+    "prompt_274": {
+        "prompt": "A beautiful woman sitting in a blue chair writing a paper.",
+        "step_compression": 1.0,
+        "latency": 13.239220142364502
+    },
+    "prompt_275": {
+        "prompt": "little dude shredding the gnar on flat ground",
+        "step_compression": 1.0,
+        "latency": 13.246489524841309
+    },
+    "prompt_276": {
+        "prompt": "A plate with pizza slices, chips, and cole slaw.",
+        "step_compression": 1.0,
+        "latency": 13.189997434616089
+    },
+    "prompt_277": {
+        "prompt": "A store with a taxi and bus parked out front",
+        "step_compression": 1.0,
+        "latency": 13.044649600982666
+    },
+    "prompt_278": {
+        "prompt": "A close-up of a plate of food containing meat and beans.",
+        "step_compression": 1.0,
+        "latency": 13.044230937957764
+    },
+    "prompt_279": {
+        "prompt": "Two opponents are having a game of Frisbee.",
+        "step_compression": 1.0,
+        "latency": 13.158333778381348
+    },
+    "prompt_280": {
+        "prompt": "Two horses graze in a grassy pasture lined with pine trees.",
+        "step_compression": 1.0,
+        "latency": 13.133992433547974
+    },
+    "prompt_281": {
+        "prompt": "a brown and black counter a bath tub and a mirror and cups",
+        "step_compression": 1.0,
+        "latency": 13.117323160171509
+    },
+    "prompt_282": {
+        "prompt": "a close up of graffiti written on a train",
+        "step_compression": 1.0,
+        "latency": 13.106342315673828
+    },
+    "prompt_283": {
+        "prompt": "Traffic drives down a street on a green light passed tall buildings.",
+        "step_compression": 1.0,
+        "latency": 13.090242385864258
+    },
+    "prompt_284": {
+        "prompt": "A man riding skis across snow covered ground.",
+        "step_compression": 1.0,
+        "latency": 12.518960237503052
+    },
+    "prompt_285": {
+        "prompt": "Five pure brand toothbrushes in a closed package",
+        "step_compression": 1.0,
+        "latency": 13.337575197219849
+    },
+    "prompt_286": {
+        "prompt": "Black and white photograph of a living room's large television",
+        "step_compression": 1.0,
+        "latency": 12.515615224838257
+    },
+    "prompt_287": {
+        "prompt": "A table topped with dessert next to a window.",
+        "step_compression": 1.0,
+        "latency": 12.497548818588257
+    },
+    "prompt_288": {
+        "prompt": "a person is standing in the snow in skis",
+        "step_compression": 1.0,
+        "latency": 12.45356822013855
+    },
+    "prompt_289": {
+        "prompt": "a sleeping baby wearing gray red and black",
+        "step_compression": 1.0,
+        "latency": 12.680614709854126
+    },
+    "prompt_290": {
+        "prompt": "A stuffed animal sleeping in a miniature bed under a blanket.",
+        "step_compression": 1.0,
+        "latency": 13.128380060195923
+    },
+    "prompt_291": {
+        "prompt": "A dog that is sitting in the front seat of a vehicle.",
+        "step_compression": 1.0,
+        "latency": 13.056307315826416
+    },
+    "prompt_292": {
+        "prompt": "A flower in a vase next to a window.",
+        "step_compression": 1.0,
+        "latency": 13.029153108596802
+    },
+    "prompt_293": {
+        "prompt": "A young boy holding a baseball bat on a field.",
+        "step_compression": 1.0,
+        "latency": 13.071815490722656
+    },
+    "prompt_294": {
+        "prompt": "The airplane flies low to the ground during sunset.",
+        "step_compression": 1.0,
+        "latency": 13.163548231124878
+    },
+    "prompt_295": {
+        "prompt": "A green train traveling through a train yard.",
+        "step_compression": 1.0,
+        "latency": 13.08164381980896
+    },
+    "prompt_296": {
+        "prompt": "This is a picture of a kitchen in a poverty area of a town.",
+        "step_compression": 1.0,
+        "latency": 13.103954553604126
+    },
+    "prompt_297": {
+        "prompt": "A dark street with a bicycle near a tree on the side of a building.",
+        "step_compression": 1.0,
+        "latency": 13.110117435455322
+    },
+    "prompt_298": {
+        "prompt": "A baseball holding a baseball bat during a baseball game.",
+        "step_compression": 1.0,
+        "latency": 13.276341438293457
+    },
+    "prompt_299": {
+        "prompt": "A white computer monitor on top of a wooden desk.",
+        "step_compression": 1.0,
+        "latency": 13.362878561019897
+    },
+    "prompt_300": {
+        "prompt": "A group of people ski and snowboard together",
+        "step_compression": 1.0,
+        "latency": 12.963221073150635
+    },
+    "prompt_301": {
+        "prompt": "A large long train on a steel track.",
+        "step_compression": 1.0,
+        "latency": 13.47338342666626
+    },
+    "prompt_302": {
+        "prompt": "A woman is sitting in a chair with an umbrella.",
+        "step_compression": 1.0,
+        "latency": 13.418904304504395
+    },
+    "prompt_303": {
+        "prompt": "A large clock on top of the face of a building with statue adorned on top of it.",
+        "step_compression": 1.0,
+        "latency": 13.44741702079773
+    },
+    "prompt_304": {
+        "prompt": "A made up bed with a pile of newspapers on it.",
+        "step_compression": 1.0,
+        "latency": 13.278237104415894
+    },
+    "prompt_305": {
+        "prompt": "Close-up of green bananas still on the stalk",
+        "step_compression": 1.0,
+        "latency": 13.107296228408813
+    },
+    "prompt_306": {
+        "prompt": "giant colgate clock sits on shore next to water",
+        "step_compression": 1.0,
+        "latency": 13.132774591445923
+    },
+    "prompt_307": {
+        "prompt": "A young man with a laptop bag travels on a skateboard.",
+        "step_compression": 1.0,
+        "latency": 13.261932611465454
+    },
+    "prompt_308": {
+        "prompt": "A cat sitting in a blue and white bag.",
+        "step_compression": 1.0,
+        "latency": 13.072343587875366
+    },
+    "prompt_309": {
+        "prompt": "A young man doing a flip on a skateboard in the middle of a busy street.",
+        "step_compression": 1.0,
+        "latency": 13.307821273803711
+    },
+    "prompt_310": {
+        "prompt": "An elephant messing with a tree trunk.",
+        "step_compression": 1.0,
+        "latency": 12.618976831436157
+    },
+    "prompt_311": {
+        "prompt": "A surfer standing with his surf board next to the water",
+        "step_compression": 1.0,
+        "latency": 13.120100021362305
+    },
+    "prompt_312": {
+        "prompt": "a couple of people are standing around a table",
+        "step_compression": 1.0,
+        "latency": 13.18238377571106
+    },
+    "prompt_313": {
+        "prompt": "A picture of a fire hydrant that is cut in half.",
+        "step_compression": 1.0,
+        "latency": 13.220845699310303
+    },
+    "prompt_314": {
+        "prompt": "A tie that is sitting on top of a shirt.",
+        "step_compression": 1.0,
+        "latency": 12.538651943206787
+    },
+    "prompt_315": {
+        "prompt": "THERE IS A TOILET THAT IS DECORATED",
+        "step_compression": 1.0,
+        "latency": 13.2386634349823
+    },
+    "prompt_316": {
+        "prompt": "A stop sign is fashioned into a snack store sign.",
+        "step_compression": 1.0,
+        "latency": 13.079456090927124
+    },
+    "prompt_317": {
+        "prompt": "The skateboarder is putting on a show using the picnic table as his stage.",
+        "step_compression": 1.0,
+        "latency": 12.511311769485474
+    },
+    "prompt_318": {
+        "prompt": "A mountain area with rocks and grass, and a large ram standing in the grass.",
+        "step_compression": 1.0,
+        "latency": 12.870409965515137
+    },
+    "prompt_319": {
+        "prompt": "A couple of double deck tour buses parked at a street side.",
+        "step_compression": 1.0,
+        "latency": 12.835807800292969
+    },
+    "prompt_320": {
+        "prompt": "a couple of kids are holding stuffed animals",
+        "step_compression": 1.0,
+        "latency": 12.949970483779907
+    },
+    "prompt_321": {
+        "prompt": "The little boy sits on the ground next to the skateboard.",
+        "step_compression": 1.0,
+        "latency": 13.04148530960083
+    },
+    "prompt_322": {
+        "prompt": "A pizza topped with large tomatoes and cheese with ham.",
+        "step_compression": 1.0,
+        "latency": 12.495408535003662
+    },
+    "prompt_323": {
+        "prompt": "A sink, soap, toilet and a mirror",
+        "step_compression": 1.0,
+        "latency": 12.395269632339478
+    },
+    "prompt_324": {
+        "prompt": "A man sitting on a bench with a tall building behind him.",
+        "step_compression": 1.0,
+        "latency": 12.469545841217041
+    },
+    "prompt_325": {
+        "prompt": "A half eaten banana being held by a human hand.",
+        "step_compression": 1.0,
+        "latency": 12.515198230743408
+    },
+    "prompt_326": {
+        "prompt": "a plane flys through the grey sky",
+        "step_compression": 1.0,
+        "latency": 12.861913919448853
+    },
+    "prompt_327": {
+        "prompt": "Lady walking through a parking lot with an umbrella over her head.",
+        "step_compression": 1.0,
+        "latency": 13.01427435874939
+    },
+    "prompt_328": {
+        "prompt": "A pair of red scissors sitting on top of a piece of paper.",
+        "step_compression": 1.0,
+        "latency": 12.670277118682861
+    },
+    "prompt_329": {
+        "prompt": "A man holding a white frisbee standing on top of a field.",
+        "step_compression": 1.0,
+        "latency": 13.441825151443481
+    },
+    "prompt_330": {
+        "prompt": "Giraffe standing in the shade of a tall covering",
+        "step_compression": 1.0,
+        "latency": 13.434535264968872
+    },
+    "prompt_331": {
+        "prompt": "A bathroom that has over flooded with water.",
+        "step_compression": 1.0,
+        "latency": 12.908222675323486
+    },
+    "prompt_332": {
+        "prompt": "a boat with a rainbow umbrella sitting in water",
+        "step_compression": 1.0,
+        "latency": 12.514299631118774
+    },
+    "prompt_333": {
+        "prompt": "a couple of people that are standing up in a room",
+        "step_compression": 1.0,
+        "latency": 12.99522876739502
+    },
+    "prompt_334": {
+        "prompt": "A house being built with lots of wood.",
+        "step_compression": 1.0,
+        "latency": 12.39466118812561
+    },
+    "prompt_335": {
+        "prompt": "A group of two people waiting to cross the street under an umbrella.",
+        "step_compression": 1.0,
+        "latency": 12.483971118927002
+    },
+    "prompt_336": {
+        "prompt": "Several people are at a podium holding a frame while a man in a suit looks on.",
+        "step_compression": 1.0,
+        "latency": 12.469425678253174
+    },
+    "prompt_337": {
+        "prompt": "A close up of black and white zebra stripes.",
+        "step_compression": 1.0,
+        "latency": 12.477858304977417
+    },
+    "prompt_338": {
+        "prompt": "The person holding a colorful umbrella is in a black and white scenery.",
+        "step_compression": 1.0,
+        "latency": 12.50608491897583
+    },
+    "prompt_339": {
+        "prompt": "A fire truck parked next to a fire hydrant.",
+        "step_compression": 1.0,
+        "latency": 12.898760080337524
+    },
+    "prompt_340": {
+        "prompt": "A lone giraffe standing in the tall bushes.",
+        "step_compression": 1.0,
+        "latency": 13.35082745552063
+    },
+    "prompt_341": {
+        "prompt": "A zombee walking down a street covered in blood.",
+        "step_compression": 1.0,
+        "latency": 12.677992105484009
+    },
+    "prompt_342": {
+        "prompt": "a baseball player is throwing a ball",
+        "step_compression": 1.0,
+        "latency": 12.600440263748169
+    },
+    "prompt_343": {
+        "prompt": "A child taking a bite of a pizza slice on a plate.",
+        "step_compression": 1.0,
+        "latency": 12.597379207611084
+    },
+    "prompt_344": {
+        "prompt": "Two chairs at the foot of the bed have books and a purse on them.",
+        "step_compression": 1.0,
+        "latency": 13.28560495376587
+    },
+    "prompt_345": {
+        "prompt": "A red train with its doors closed near the platform.",
+        "step_compression": 1.0,
+        "latency": 13.421405792236328
+    },
+    "prompt_346": {
+        "prompt": "A blurry living room scene suggests a wide screen T,V. with a game playing, bookshelves, a low cluttered table, a couch, and closest and clearest, a sports t-shirt with the number thirty-five on it.",
+        "step_compression": 1.0,
+        "latency": 12.699724435806274
+    },
+    "prompt_347": {
+        "prompt": "A man riding a skateboard through the air at a skate park.",
+        "step_compression": 1.0,
+        "latency": 13.061631441116333
+    },
+    "prompt_348": {
+        "prompt": "A Styrofoam cup of coffee with a wooden stirrer in it is nearly half drank.",
+        "step_compression": 1.0,
+        "latency": 13.256776332855225
+    },
+    "prompt_349": {
+        "prompt": "A lady snowboarding on a hill with snow.",
+        "step_compression": 1.0,
+        "latency": 13.267060279846191
+    },
+    "prompt_350": {
+        "prompt": "Black and white photograph of a woman using a sewing machine.",
+        "step_compression": 1.0,
+        "latency": 13.278721570968628
+    },
+    "prompt_351": {
+        "prompt": "A woman is standing in the kitchen and holding a thermometer.",
+        "step_compression": 1.0,
+        "latency": 13.321567058563232
+    },
+    "prompt_352": {
+        "prompt": "A group of kids at table around a cake.",
+        "step_compression": 1.0,
+        "latency": 13.496808052062988
+    },
+    "prompt_353": {
+        "prompt": "A boy holding a red frisbee with bushes in the background.",
+        "step_compression": 1.0,
+        "latency": 13.205622434616089
+    },
+    "prompt_354": {
+        "prompt": "The zebra is confined within the wire fence.",
+        "step_compression": 1.0,
+        "latency": 13.288265705108643
+    },
+    "prompt_355": {
+        "prompt": "A herd of giraffe and long horned goats laying in a zoo.",
+        "step_compression": 1.0,
+        "latency": 12.514402627944946
+    },
+    "prompt_356": {
+        "prompt": "Sailboats parked at a dock on a calm lake on a clear day.",
+        "step_compression": 1.0,
+        "latency": 12.530640602111816
+    },
+    "prompt_357": {
+        "prompt": "A gray cat is laying on a pink duster.",
+        "step_compression": 1.0,
+        "latency": 13.062374830245972
+    },
+    "prompt_358": {
+        "prompt": "A couple of people at the beach during the day.",
+        "step_compression": 1.0,
+        "latency": 13.203689098358154
+    },
+    "prompt_359": {
+        "prompt": "A tray has a cup and a plate with fries and a hotdog on it.",
+        "step_compression": 1.0,
+        "latency": 13.154036283493042
+    },
+    "prompt_360": {
+        "prompt": "Miniature fruit and chocolate chip cookies are ready for the doll house occupants.",
+        "step_compression": 1.0,
+        "latency": 13.044935703277588
+    },
+    "prompt_361": {
+        "prompt": "A man that has a hat and a beard.",
+        "step_compression": 1.0,
+        "latency": 12.891164779663086
+    },
+    "prompt_362": {
+        "prompt": "a male tennis player playing tennis on a green and blue court",
+        "step_compression": 1.0,
+        "latency": 13.200176477432251
+    },
+    "prompt_363": {
+        "prompt": "Man laying on bed with shirt open looking into device for picture.",
+        "step_compression": 1.0,
+        "latency": 13.186677694320679
+    },
+    "prompt_364": {
+        "prompt": "A goat with very long horns standing in front of a tree.",
+        "step_compression": 1.0,
+        "latency": 12.636802196502686
+    },
+    "prompt_365": {
+        "prompt": "A zebra standing on a dry grass covered field.",
+        "step_compression": 1.0,
+        "latency": 12.645740747451782
+    },
+    "prompt_366": {
+        "prompt": "Closeup of an orange stuck between a tree an its branch.",
+        "step_compression": 1.0,
+        "latency": 12.926010131835938
+    },
+    "prompt_367": {
+        "prompt": "A brown bear in a rocky zoo display",
+        "step_compression": 1.0,
+        "latency": 13.110899925231934
+    },
+    "prompt_368": {
+        "prompt": "Female tennis player preparing to serve the ball",
+        "step_compression": 1.0,
+        "latency": 13.157562732696533
+    },
+    "prompt_369": {
+        "prompt": "A BBQ topped with lots of sausages sitting side by side.",
+        "step_compression": 1.0,
+        "latency": 13.233312368392944
+    },
+    "prompt_370": {
+        "prompt": "A hotdog is in a bread sandwich bun.",
+        "step_compression": 1.0,
+        "latency": 13.117652416229248
+    },
+    "prompt_371": {
+        "prompt": "Three zebras gathered together in a field looking at something.",
+        "step_compression": 1.0,
+        "latency": 13.110770225524902
+    },
+    "prompt_372": {
+        "prompt": "Pizza on a wooden table being cut into slices.",
+        "step_compression": 1.0,
+        "latency": 12.58449411392212
+    },
+    "prompt_373": {
+        "prompt": "a man jumping skis at a ski area",
+        "step_compression": 1.0,
+        "latency": 13.151397228240967
+    },
+    "prompt_374": {
+        "prompt": "A white toilet bowl with a plunger standing near it",
+        "step_compression": 1.0,
+        "latency": 12.62268853187561
+    },
+    "prompt_375": {
+        "prompt": "A photo collage of a girl hitting a tennis ball and looking over a hedge and a woman hitting a tennis ball.",
+        "step_compression": 1.0,
+        "latency": 13.1980881690979
+    },
+    "prompt_376": {
+        "prompt": "A man standing on a beach with a parachute in the background.",
+        "step_compression": 1.0,
+        "latency": 12.950435638427734
+    },
+    "prompt_377": {
+        "prompt": "A black animal stands behind a few trees with fall colored leaves.",
+        "step_compression": 1.0,
+        "latency": 12.857502460479736
+    },
+    "prompt_378": {
+        "prompt": "A white bathroom sink with a vase of flowers on it",
+        "step_compression": 1.0,
+        "latency": 13.355703115463257
+    },
+    "prompt_379": {
+        "prompt": "A man stands out in the rain underneath an umbrella.",
+        "step_compression": 1.0,
+        "latency": 13.372868776321411
+    },
+    "prompt_380": {
+        "prompt": "A cat sits between a window and a large birdcage.",
+        "step_compression": 1.0,
+        "latency": 13.366673946380615
+    },
+    "prompt_381": {
+        "prompt": "A baseball bat, ball and glove laying on a playing field",
+        "step_compression": 1.0,
+        "latency": 13.286454200744629
+    },
+    "prompt_382": {
+        "prompt": "Young couple wearing ties outdoors showing celebratory emotions.",
+        "step_compression": 1.0,
+        "latency": 13.41314959526062
+    },
+    "prompt_383": {
+        "prompt": "A snowboarder crouching on his board in mid air.",
+        "step_compression": 1.0,
+        "latency": 13.386684894561768
+    },
+    "prompt_384": {
+        "prompt": "one zebra laying down in the dirt outside",
+        "step_compression": 1.0,
+        "latency": 13.131677150726318
+    },
+    "prompt_385": {
+        "prompt": "A black and white cat on its hind legs looking at a television.",
+        "step_compression": 1.0,
+        "latency": 12.520380735397339
+    },
+    "prompt_386": {
+        "prompt": "A group of people who are standing together.",
+        "step_compression": 1.0,
+        "latency": 12.51412844657898
+    },
+    "prompt_387": {
+        "prompt": "A woman standing in a set suit on a beach holding a surfboard.",
+        "step_compression": 1.0,
+        "latency": 13.257742881774902
+    },
+    "prompt_388": {
+        "prompt": "A person serving putting red wine to a glass",
+        "step_compression": 1.0,
+        "latency": 13.42294430732727
+    },
+    "prompt_389": {
+        "prompt": "A platter filled with cooked food and broccoli.",
+        "step_compression": 1.0,
+        "latency": 13.578140020370483
+    },
+    "prompt_390": {
+        "prompt": "three bears outside in the woods in the bushes",
+        "step_compression": 1.0,
+        "latency": 13.566245317459106
+    },
+    "prompt_391": {
+        "prompt": "A group of bikers wait before riding down the street.",
+        "step_compression": 1.0,
+        "latency": 13.440026044845581
+    },
+    "prompt_392": {
+        "prompt": "A white and grey cat laying on a pair of shoes.",
+        "step_compression": 1.0,
+        "latency": 13.283711433410645
+    },
+    "prompt_393": {
+        "prompt": "A built in desk with two mid-century modern chairs.",
+        "step_compression": 1.0,
+        "latency": 13.088262557983398
+    },
+    "prompt_394": {
+        "prompt": "A small group of people sitting at a table participating in a meeting.",
+        "step_compression": 1.0,
+        "latency": 13.044036865234375
+    },
+    "prompt_395": {
+        "prompt": "A woman flying kites in a cloudy sky.",
+        "step_compression": 1.0,
+        "latency": 13.164640188217163
+    },
+    "prompt_396": {
+        "prompt": "There are keyboard keys on a wooden table.",
+        "step_compression": 1.0,
+        "latency": 13.075358390808105
+    },
+    "prompt_397": {
+        "prompt": "People passed out on the floor of a bathroom with urinals and a toilet.",
+        "step_compression": 1.0,
+        "latency": 13.372053146362305
+    },
+    "prompt_398": {
+        "prompt": "A man in costume standing next to a building.",
+        "step_compression": 1.0,
+        "latency": 13.315860271453857
+    },
+    "prompt_399": {
+        "prompt": "Two women walking on top of a tennis court holding tennis racquets.",
+        "step_compression": 1.0,
+        "latency": 12.886463642120361
+    },
+    "prompt_400": {
+        "prompt": "Several trams are parked with electric lines above them.",
+        "step_compression": 1.0,
+        "latency": 13.168067932128906
+    },
+    "prompt_401": {
+        "prompt": "a man sitting on a dirtbike in a circus ring",
+        "step_compression": 1.0,
+        "latency": 12.36822247505188
+    },
+    "prompt_402": {
+        "prompt": "There is more than one roll of toilet paper for this toilet.",
+        "step_compression": 1.0,
+        "latency": 12.491708517074585
+    },
+    "prompt_403": {
+        "prompt": "a living room with a pair of coaches and a big table",
+        "step_compression": 1.0,
+        "latency": 12.542289972305298
+    },
+    "prompt_404": {
+        "prompt": "A bench sitting in a park next to a tree.",
+        "step_compression": 1.0,
+        "latency": 12.376215934753418
+    },
+    "prompt_405": {
+        "prompt": "A group of young children sitting next to each other on a couch.",
+        "step_compression": 1.0,
+        "latency": 12.502031803131104
+    },
+    "prompt_406": {
+        "prompt": "A person standing near two cars is watching a jet take off from a field.",
+        "step_compression": 1.0,
+        "latency": 12.475384712219238
+    },
+    "prompt_407": {
+        "prompt": "Two young men are looking at a computer screen.",
+        "step_compression": 1.0,
+        "latency": 12.526548147201538
+    },
+    "prompt_408": {
+        "prompt": "there are three oranges next to  a paper towel on the counter",
+        "step_compression": 1.0,
+        "latency": 12.574413061141968
+    },
+    "prompt_409": {
+        "prompt": "A dog with a hat on top of his head.",
+        "step_compression": 1.0,
+        "latency": 12.520035982131958
+    },
+    "prompt_410": {
+        "prompt": "Dairy cows line up against a barber wire fence to graze the sweeter grass.",
+        "step_compression": 1.0,
+        "latency": 12.516586542129517
+    },
+    "prompt_411": {
+        "prompt": "a small cat is sitting on a step by a door",
+        "step_compression": 1.0,
+        "latency": 12.452903747558594
+    },
+    "prompt_412": {
+        "prompt": "A woman, and baby use toothbrushes in front of a sink.",
+        "step_compression": 1.0,
+        "latency": 12.446343183517456
+    },
+    "prompt_413": {
+        "prompt": "A herd of elephant with a calf and adult elephants.",
+        "step_compression": 1.0,
+        "latency": 12.510525226593018
+    },
+    "prompt_414": {
+        "prompt": "A man swinging a tennis racquet at a tennis court.",
+        "step_compression": 1.0,
+        "latency": 12.651796817779541
+    },
+    "prompt_415": {
+        "prompt": "A red fire hydrant along the curb at night.",
+        "step_compression": 1.0,
+        "latency": 12.98063588142395
+    },
+    "prompt_416": {
+        "prompt": "A plate of cottage cheese pizza and another with two pepperoni slices sitting on the table",
+        "step_compression": 1.0,
+        "latency": 12.950312614440918
+    },
+    "prompt_417": {
+        "prompt": "some one about to take a picture with a camera",
+        "step_compression": 1.0,
+        "latency": 13.536156177520752
+    },
+    "prompt_418": {
+        "prompt": "A group of four bowls sitting on top of a wooden table.",
+        "step_compression": 1.0,
+        "latency": 13.459028482437134
+    },
+    "prompt_419": {
+        "prompt": "A bird is perched on a large rock near the shore.",
+        "step_compression": 1.0,
+        "latency": 13.319654941558838
+    },
+    "prompt_420": {
+        "prompt": "A man and woman in western clothing standing in front of a trailer.",
+        "step_compression": 1.0,
+        "latency": 13.33887791633606
+    },
+    "prompt_421": {
+        "prompt": "A market display case filled with different colored vegetables.",
+        "step_compression": 1.0,
+        "latency": 13.488937854766846
+    },
+    "prompt_422": {
+        "prompt": "Sliced pizza in delivery box with bottle beverage on table.",
+        "step_compression": 1.0,
+        "latency": 13.290124893188477
+    },
+    "prompt_423": {
+        "prompt": "A man walking down the street carrying a suitcase.",
+        "step_compression": 1.0,
+        "latency": 13.255274295806885
+    },
+    "prompt_424": {
+        "prompt": "Man playing tennis ball in mid air hit.",
+        "step_compression": 1.0,
+        "latency": 13.468826293945312
+    },
+    "prompt_425": {
+        "prompt": "Black and white photo of a boy with a dog.",
+        "step_compression": 1.0,
+        "latency": 13.31255578994751
+    },
+    "prompt_426": {
+        "prompt": "A baby sitting on a females lap staring into the camera.",
+        "step_compression": 1.0,
+        "latency": 13.250211000442505
+    },
+    "prompt_427": {
+        "prompt": "A man riding a wave on a surfboard in the ocean.",
+        "step_compression": 1.0,
+        "latency": 13.370423316955566
+    },
+    "prompt_428": {
+        "prompt": "A group of people on a field playing baseball.",
+        "step_compression": 1.0,
+        "latency": 13.39102578163147
+    },
+    "prompt_429": {
+        "prompt": "a laptop computer sitting on a cushion  open and running",
+        "step_compression": 1.0,
+        "latency": 13.27798080444336
+    },
+    "prompt_430": {
+        "prompt": "A red brick building sits on a corner and has a tower and a clock.",
+        "step_compression": 1.0,
+        "latency": 13.438123226165771
+    },
+    "prompt_431": {
+        "prompt": "A person trying to get on a train, but the door shut.",
+        "step_compression": 1.0,
+        "latency": 13.404138088226318
+    },
+    "prompt_432": {
+        "prompt": "The happy couple are cutting the cake together",
+        "step_compression": 1.0,
+        "latency": 13.38010835647583
+    },
+    "prompt_433": {
+        "prompt": "A couple of elephants washing a baby elephant in a river.",
+        "step_compression": 1.0,
+        "latency": 13.288800239562988
+    },
+    "prompt_434": {
+        "prompt": "A cat standing on top of a piece of luggage in a room.",
+        "step_compression": 1.0,
+        "latency": 13.420430660247803
+    },
+    "prompt_435": {
+        "prompt": "The dog is achieving high jumps in the yard.",
+        "step_compression": 1.0,
+        "latency": 13.497210264205933
+    },
+    "prompt_436": {
+        "prompt": "A sidewalk with sandwich board, table and umbrella.",
+        "step_compression": 1.0,
+        "latency": 13.367921829223633
+    },
+    "prompt_437": {
+        "prompt": "There is a bus and a car on the road.",
+        "step_compression": 1.0,
+        "latency": 13.14767074584961
+    },
+    "prompt_438": {
+        "prompt": "A parking meter next to a parked car.",
+        "step_compression": 1.0,
+        "latency": 12.495596885681152
+    },
+    "prompt_439": {
+        "prompt": "Two men are playing tennis one of them is serving the ball.",
+        "step_compression": 1.0,
+        "latency": 12.506330728530884
+    },
+    "prompt_440": {
+        "prompt": "Two cats are sitting on a laptop computer.",
+        "step_compression": 1.0,
+        "latency": 12.607873678207397
+    },
+    "prompt_441": {
+        "prompt": "An American Airlines passenger jet takes off from an airport.",
+        "step_compression": 1.0,
+        "latency": 13.01786732673645
+    },
+    "prompt_442": {
+        "prompt": "A woman sits under the shade of an umbrella at the beach.",
+        "step_compression": 1.0,
+        "latency": 12.716539859771729
+    },
+    "prompt_443": {
+        "prompt": "a truck and other cars under a bridge",
+        "step_compression": 1.0,
+        "latency": 13.102113962173462
+    },
+    "prompt_444": {
+        "prompt": "A large cheese pizza sitting on a pizza pan.",
+        "step_compression": 1.0,
+        "latency": 13.066544532775879
+    },
+    "prompt_445": {
+        "prompt": "a view inside a bedroom seeing a bed , table stand and an open window",
+        "step_compression": 1.0,
+        "latency": 12.666935682296753
+    },
+    "prompt_446": {
+        "prompt": "A man with thick sunglasses and multiple piercings sits with his mouth open.",
+        "step_compression": 1.0,
+        "latency": 13.257950782775879
+    },
+    "prompt_447": {
+        "prompt": "A group of giraffes that are standing in the grass.",
+        "step_compression": 1.0,
+        "latency": 13.10328459739685
+    },
+    "prompt_448": {
+        "prompt": "a glass vase with some flowers coming out of it",
+        "step_compression": 1.0,
+        "latency": 13.057104110717773
+    },
+    "prompt_449": {
+        "prompt": "A woman and a man riding on the back of an elephant.",
+        "step_compression": 1.0,
+        "latency": 13.131425857543945
+    },
+    "prompt_450": {
+        "prompt": "A man kicks a soccer ball on a soccer field.",
+        "step_compression": 1.0,
+        "latency": 13.101863622665405
+    },
+    "prompt_451": {
+        "prompt": "Why would anyone use a portable light to shine on a banana?",
+        "step_compression": 1.0,
+        "latency": 13.191288948059082
+    },
+    "prompt_452": {
+        "prompt": "A small boat sits on the water next to a city.",
+        "step_compression": 1.0,
+        "latency": 13.1502046585083
+    },
+    "prompt_453": {
+        "prompt": "a blurry photo of a yellow fire hydrant",
+        "step_compression": 1.0,
+        "latency": 13.150780200958252
+    },
+    "prompt_454": {
+        "prompt": "a man and woman and some people looking at them",
+        "step_compression": 1.0,
+        "latency": 13.192282438278198
+    },
+    "prompt_455": {
+        "prompt": "A Miami Air airplane flies against a blue sky.",
+        "step_compression": 1.0,
+        "latency": 13.17134976387024
+    },
+    "prompt_456": {
+        "prompt": "There are four sheep in the grassy field.",
+        "step_compression": 1.0,
+        "latency": 13.324218273162842
+    },
+    "prompt_457": {
+        "prompt": "Two people who are walking under the same umbrella.",
+        "step_compression": 1.0,
+        "latency": 13.157159805297852
+    },
+    "prompt_458": {
+        "prompt": "A group of commuters standing around a train station.",
+        "step_compression": 1.0,
+        "latency": 13.120508432388306
+    },
+    "prompt_459": {
+        "prompt": "A plate of cooked food in seen in this image.",
+        "step_compression": 1.0,
+        "latency": 13.261883735656738
+    },
+    "prompt_460": {
+        "prompt": "Luggage moves along a conveyor belt at an airport.",
+        "step_compression": 1.0,
+        "latency": 12.453834772109985
+    },
+    "prompt_461": {
+        "prompt": "Beach goers enjoying a sunny day in the sand and surf.",
+        "step_compression": 1.0,
+        "latency": 12.449400424957275
+    },
+    "prompt_462": {
+        "prompt": "A close up of a zebra's back with its neighbor's mane in the background.",
+        "step_compression": 1.0,
+        "latency": 12.98593544960022
+    },
+    "prompt_463": {
+        "prompt": "A woman underneath a umbrella on a street.",
+        "step_compression": 1.0,
+        "latency": 12.964085817337036
+    },
+    "prompt_464": {
+        "prompt": "A heard of cattle grazing in a field of grass.",
+        "step_compression": 1.0,
+        "latency": 12.933642625808716
+    },
+    "prompt_465": {
+        "prompt": "a large field full of sheep out in the outdoors",
+        "step_compression": 1.0,
+        "latency": 13.160831928253174
+    },
+    "prompt_466": {
+        "prompt": "Cat laying in luggage on bed with white walls",
+        "step_compression": 1.0,
+        "latency": 13.430704593658447
+    },
+    "prompt_467": {
+        "prompt": "A white sink sitting under a bathroom window.",
+        "step_compression": 1.0,
+        "latency": 13.245217561721802
+    },
+    "prompt_468": {
+        "prompt": "A person holding a sausage on a bun with peppers.",
+        "step_compression": 1.0,
+        "latency": 13.150506019592285
+    },
+    "prompt_469": {
+        "prompt": "A smaller car is stopped at the red light, as traffic drives on.",
+        "step_compression": 1.0,
+        "latency": 13.267340660095215
+    },
+    "prompt_470": {
+        "prompt": "A yellow plate topped with bread and slices of fruit.",
+        "step_compression": 1.0,
+        "latency": 12.632731437683105
+    },
+    "prompt_471": {
+        "prompt": "A girl sits on a pillow thinking and writing into a notebook.",
+        "step_compression": 1.0,
+        "latency": 12.578550815582275
+    },
+    "prompt_472": {
+        "prompt": "a person riding a snow board on a snowy surface",
+        "step_compression": 1.0,
+        "latency": 13.091729879379272
+    },
+    "prompt_473": {
+        "prompt": "a couple of people that are jumping on a skateboard",
+        "step_compression": 1.0,
+        "latency": 13.219135522842407
+    },
+    "prompt_474": {
+        "prompt": "The soccer player jumps to hit the ball with his head.",
+        "step_compression": 1.0,
+        "latency": 13.10435152053833
+    },
+    "prompt_475": {
+        "prompt": "The wooden bench is near a busy stream.",
+        "step_compression": 1.0,
+        "latency": 13.240440130233765
+    },
+    "prompt_476": {
+        "prompt": "Two large pizzas covered in sauce and cheese.",
+        "step_compression": 1.0,
+        "latency": 13.30286431312561
+    },
+    "prompt_477": {
+        "prompt": "A pink stuffed bear and some wraped presents",
+        "step_compression": 1.0,
+        "latency": 13.220696687698364
+    },
+    "prompt_478": {
+        "prompt": "A bathroom sink with a large mirror above it next to a doorway.",
+        "step_compression": 1.0,
+        "latency": 13.046712636947632
+    },
+    "prompt_479": {
+        "prompt": "A little girl standing in a room with no shoes on.",
+        "step_compression": 1.0,
+        "latency": 12.51722526550293
+    },
+    "prompt_480": {
+        "prompt": "a woman posing on a wooden bench in the woods",
+        "step_compression": 1.0,
+        "latency": 12.652897834777832
+    },
+    "prompt_481": {
+        "prompt": "a bed a lamp a cabinet and some curtains",
+        "step_compression": 1.0,
+        "latency": 12.595017433166504
+    },
+    "prompt_482": {
+        "prompt": "A dog wearing a yellow jacket kissing a dog laying on the ground.",
+        "step_compression": 1.0,
+        "latency": 12.61242938041687
+    },
+    "prompt_483": {
+        "prompt": "The airplane in the sky is doing tricks while spitting out smoke.",
+        "step_compression": 1.0,
+        "latency": 12.600701570510864
+    },
+    "prompt_484": {
+        "prompt": "A man is plowing the field in preparation.",
+        "step_compression": 1.0,
+        "latency": 12.634999990463257
+    },
+    "prompt_485": {
+        "prompt": "A person holding an umbrella above their head.",
+        "step_compression": 1.0,
+        "latency": 13.006990432739258
+    },
+    "prompt_486": {
+        "prompt": "a bathroom with a sink a mirror and a toilet",
+        "step_compression": 1.0,
+        "latency": 12.583921909332275
+    },
+    "prompt_487": {
+        "prompt": "Three workers stand next to each other with their baked goods behind them.",
+        "step_compression": 1.0,
+        "latency": 12.50544786453247
+    },
+    "prompt_488": {
+        "prompt": "A child is shown eating a scoop of yogurt.",
+        "step_compression": 1.0,
+        "latency": 13.319321632385254
+    },
+    "prompt_489": {
+        "prompt": "A tennis player prepares to serve the ball.",
+        "step_compression": 1.0,
+        "latency": 13.147631883621216
+    },
+    "prompt_490": {
+        "prompt": "a dining room table with a plate of food next to a wine bottle and some glasses",
+        "step_compression": 1.0,
+        "latency": 12.589433908462524
+    },
+    "prompt_491": {
+        "prompt": "A guy on his surfboard surfing through the ocean.",
+        "step_compression": 1.0,
+        "latency": 12.843931913375854
+    },
+    "prompt_492": {
+        "prompt": "A VERY NICE BATHROOM IN THE MIDDLE OF A REMODEL",
+        "step_compression": 1.0,
+        "latency": 13.110544204711914
+    },
+    "prompt_493": {
+        "prompt": "Four young adults standing and playing a video game.",
+        "step_compression": 1.0,
+        "latency": 13.277141332626343
+    },
+    "prompt_494": {
+        "prompt": "A man sitting on a bench looking out to sea.",
+        "step_compression": 1.0,
+        "latency": 13.344836950302124
+    },
+    "prompt_495": {
+        "prompt": "Are the dogs being friendly with each other or chasing each other?",
+        "step_compression": 1.0,
+        "latency": 13.236796140670776
+    },
+    "prompt_496": {
+        "prompt": "A woman's feet leave the ground as she swings her tennis racket.",
+        "step_compression": 1.0,
+        "latency": 13.121136665344238
+    },
+    "prompt_497": {
+        "prompt": "A chubby black pony in a pasture looking ahead.",
+        "step_compression": 1.0,
+        "latency": 13.1703462600708
+    },
+    "prompt_498": {
+        "prompt": "A bathroom with a glass door and a sink.",
+        "step_compression": 1.0,
+        "latency": 13.369197845458984
+    },
+    "prompt_499": {
+        "prompt": "A dog is in mid air with a frisbee in its mouth.",
+        "step_compression": 1.0,
+        "latency": 13.352060794830322
+    },
+    "prompt_500": {
+        "prompt": "A woman carrying a red piece of luggage next to a chair.",
+        "step_compression": 1.0,
+        "latency": 12.930810928344727
+    },
+    "prompt_501": {
+        "prompt": "Two long buses parked on the side of a road.",
+        "step_compression": 1.0,
+        "latency": 12.958998203277588
+    },
+    "prompt_502": {
+        "prompt": "A group of yellow bananas hanging by a door",
+        "step_compression": 1.0,
+        "latency": 12.38381290435791
+    },
+    "prompt_503": {
+        "prompt": "A bird that is sitting on top of a tree.",
+        "step_compression": 1.0,
+        "latency": 12.391599893569946
+    },
+    "prompt_504": {
+        "prompt": "A baseball player swinging a bat at a baseball.",
+        "step_compression": 1.0,
+        "latency": 12.518128871917725
+    },
+    "prompt_505": {
+        "prompt": "Two jack o lanterns are outside on a rail.",
+        "step_compression": 1.0,
+        "latency": 12.379904508590698
+    },
+    "prompt_506": {
+        "prompt": "A woman petting a horse in a enclosure.",
+        "step_compression": 1.0,
+        "latency": 12.398059606552124
+    },
+    "prompt_507": {
+        "prompt": "A person who is taking a picture of something with his phone.",
+        "step_compression": 1.0,
+        "latency": 13.326743841171265
+    },
+    "prompt_508": {
+        "prompt": "A man is baking bread in a room full of bread.",
+        "step_compression": 1.0,
+        "latency": 13.215410709381104
+    },
+    "prompt_509": {
+        "prompt": "A skier posing on a steep snowy hill.",
+        "step_compression": 1.0,
+        "latency": 13.154821872711182
+    },
+    "prompt_510": {
+        "prompt": "A small brown hamster sleeping inside of it's cage.",
+        "step_compression": 1.0,
+        "latency": 13.038333654403687
+    },
+    "prompt_511": {
+        "prompt": "The oranges are picked to make fresh jams.",
+        "step_compression": 1.0,
+        "latency": 13.149243354797363
+    },
+    "prompt_512": {
+        "prompt": "A sign says fashion district near some buildings.",
+        "step_compression": 1.0,
+        "latency": 13.231714487075806
+    },
+    "prompt_513": {
+        "prompt": "The white train is at a platform at evening time.",
+        "step_compression": 1.0,
+        "latency": 12.486535787582397
+    },
+    "prompt_514": {
+        "prompt": "A home made pizza and some wine on a table",
+        "step_compression": 1.0,
+        "latency": 12.901668548583984
+    },
+    "prompt_515": {
+        "prompt": "An orange and white cat laying on top of black shoes.",
+        "step_compression": 1.0,
+        "latency": 13.131160020828247
+    },
+    "prompt_516": {
+        "prompt": "A couple of bags of luggage sitting on top of a ship.",
+        "step_compression": 1.0,
+        "latency": 13.41479778289795
+    },
+    "prompt_517": {
+        "prompt": "Two men standing in a living room next to a couch holding Wii controllers.",
+        "step_compression": 1.0,
+        "latency": 13.405346155166626
+    },
+    "prompt_518": {
+        "prompt": "A group of people getting off an air plane.",
+        "step_compression": 1.0,
+        "latency": 12.470859050750732
+    },
+    "prompt_519": {
+        "prompt": "A baby in high chair with bib and cake.",
+        "step_compression": 1.0,
+        "latency": 12.352806091308594
+    },
+    "prompt_520": {
+        "prompt": "A lady holding an umbrella is walking with a lady in the wheel chair.",
+        "step_compression": 1.0,
+        "latency": 12.381685972213745
+    },
+    "prompt_521": {
+        "prompt": "A couple of young men standing on top of a baseball field.",
+        "step_compression": 1.0,
+        "latency": 12.93892240524292
+    },
+    "prompt_522": {
+        "prompt": "Two baseball players work out on the field.",
+        "step_compression": 1.0,
+        "latency": 13.09305715560913
+    },
+    "prompt_523": {
+        "prompt": "A filthy sink and toilet are seen from above.",
+        "step_compression": 1.0,
+        "latency": 13.469815015792847
+    },
+    "prompt_524": {
+        "prompt": "A boat sitting next to a beach in the ocean covered with birds.",
+        "step_compression": 1.0,
+        "latency": 13.268584251403809
+    },
+    "prompt_525": {
+        "prompt": "A vase filled with yellow flowers on top of a table.",
+        "step_compression": 1.0,
+        "latency": 13.106701850891113
+    },
+    "prompt_526": {
+        "prompt": "an equestrian riding a horse jumping an obstacle",
+        "step_compression": 1.0,
+        "latency": 13.26108455657959
+    },
+    "prompt_527": {
+        "prompt": "A cat sitting on a window sill behind mini blinds.",
+        "step_compression": 1.0,
+        "latency": 13.240360498428345
+    },
+    "prompt_528": {
+        "prompt": "A well balanced meal set on a tray",
+        "step_compression": 1.0,
+        "latency": 13.368563890457153
+    },
+    "prompt_529": {
+        "prompt": "A man is about to take a swing at the Tennis ball.",
+        "step_compression": 1.0,
+        "latency": 12.669820547103882
+    },
+    "prompt_530": {
+        "prompt": "A desk with multiple computers and cell phones.",
+        "step_compression": 1.0,
+        "latency": 12.637078523635864
+    },
+    "prompt_531": {
+        "prompt": "Two hot dogs on buns sitting on top of a paper plate.",
+        "step_compression": 1.0,
+        "latency": 12.584624290466309
+    },
+    "prompt_532": {
+        "prompt": "a man is playing tennis on a court",
+        "step_compression": 1.0,
+        "latency": 13.319266319274902
+    },
+    "prompt_533": {
+        "prompt": "A building displaying a clock showing the time to be 6 oclock.",
+        "step_compression": 1.0,
+        "latency": 13.070323705673218
+    },
+    "prompt_534": {
+        "prompt": "A bench on a wooden plank in the water",
+        "step_compression": 1.0,
+        "latency": 12.51812219619751
+    },
+    "prompt_535": {
+        "prompt": "A park filled with lots of lit up sculptures.",
+        "step_compression": 1.0,
+        "latency": 13.105894088745117
+    },
+    "prompt_536": {
+        "prompt": "A girl sitting on a sofa in front of a laptop.",
+        "step_compression": 1.0,
+        "latency": 13.139813899993896
+    },
+    "prompt_537": {
+        "prompt": "Small horse standing behind a large group of horses eating.",
+        "step_compression": 1.0,
+        "latency": 13.224952220916748
+    },
+    "prompt_538": {
+        "prompt": "A restroom with three stalls with three toilets.",
+        "step_compression": 1.0,
+        "latency": 13.219387531280518
+    },
+    "prompt_539": {
+        "prompt": "A blue bike parked next to a tree in a planter.",
+        "step_compression": 1.0,
+        "latency": 13.081660509109497
+    },
+    "prompt_540": {
+        "prompt": "A red bus on side of street next to a building.",
+        "step_compression": 1.0,
+        "latency": 13.062296390533447
+    },
+    "prompt_541": {
+        "prompt": "A man holding a tennis racquet on a tennis court.",
+        "step_compression": 1.0,
+        "latency": 12.988508224487305
+    },
+    "prompt_542": {
+        "prompt": "A young boy eating mushrooms near a pizza.",
+        "step_compression": 1.0,
+        "latency": 12.967324495315552
+    },
+    "prompt_543": {
+        "prompt": "A color kite flying over a large body of water.",
+        "step_compression": 1.0,
+        "latency": 13.126144886016846
+    },
+    "prompt_544": {
+        "prompt": "a baby girl with a tooth brush in her mouth",
+        "step_compression": 1.0,
+        "latency": 12.996454954147339
+    },
+    "prompt_545": {
+        "prompt": "A man kiteboarding over waves in the ocean.",
+        "step_compression": 1.0,
+        "latency": 13.251396179199219
+    },
+    "prompt_546": {
+        "prompt": "Multiple people playing with a soccer ball on the beach.",
+        "step_compression": 1.0,
+        "latency": 13.130553007125854
+    },
+    "prompt_547": {
+        "prompt": "A wooden bench sitting in front of a park.",
+        "step_compression": 1.0,
+        "latency": 13.25780439376831
+    },
+    "prompt_548": {
+        "prompt": "there is a large sign that says a street name on it",
+        "step_compression": 1.0,
+        "latency": 13.128074169158936
+    },
+    "prompt_549": {
+        "prompt": "A female tennis player smiles as she hits the ball.",
+        "step_compression": 1.0,
+        "latency": 13.1125328540802
+    },
+    "prompt_550": {
+        "prompt": "a directory next to some snow covered benches",
+        "step_compression": 1.0,
+        "latency": 12.85056185722351
+    },
+    "prompt_551": {
+        "prompt": "Brown horse grazing alone in an open grassy field.",
+        "step_compression": 1.0,
+        "latency": 12.925214767456055
+    },
+    "prompt_552": {
+        "prompt": "A creepy Spinx statue suspended to the front end of a dump truck.",
+        "step_compression": 1.0,
+        "latency": 12.941115379333496
+    },
+    "prompt_553": {
+        "prompt": "An old self portrait of a man dressed nice.",
+        "step_compression": 1.0,
+        "latency": 12.39447546005249
+    },
+    "prompt_554": {
+        "prompt": "Closeup of a black hair dryer on a chair.",
+        "step_compression": 1.0,
+        "latency": 12.402211427688599
+    },
+    "prompt_555": {
+        "prompt": "an airplane is getting ready to be loaded with passengers",
+        "step_compression": 1.0,
+        "latency": 13.488775491714478
+    },
+    "prompt_556": {
+        "prompt": "a cell phone and an SD card sitting on a table",
+        "step_compression": 1.0,
+        "latency": 12.926881313323975
+    },
+    "prompt_557": {
+        "prompt": "A man that is on a surfboard in the water.",
+        "step_compression": 1.0,
+        "latency": 13.079500198364258
+    },
+    "prompt_558": {
+        "prompt": "A stop light that is green that also has various other street markers on it.",
+        "step_compression": 1.0,
+        "latency": 13.108283996582031
+    },
+    "prompt_559": {
+        "prompt": "A dog sitting on a sandy beach next to the ocean.",
+        "step_compression": 1.0,
+        "latency": 12.9977707862854
+    },
+    "prompt_560": {
+        "prompt": "An office with a computer desk and a musical keyboard.",
+        "step_compression": 1.0,
+        "latency": 12.893160104751587
+    },
+    "prompt_561": {
+        "prompt": "Girlfriend surfers paddling out on their surfboards",
+        "step_compression": 1.0,
+        "latency": 13.260836362838745
+    },
+    "prompt_562": {
+        "prompt": "A woman in white and black dress with suitcase on train.",
+        "step_compression": 1.0,
+        "latency": 13.244762420654297
+    },
+    "prompt_563": {
+        "prompt": "A man and a women posing next to one another in front of a table.",
+        "step_compression": 1.0,
+        "latency": 12.353330612182617
+    },
+    "prompt_564": {
+        "prompt": "A brown and white cow in grassy area next to fence.",
+        "step_compression": 1.0,
+        "latency": 12.47073483467102
+    },
+    "prompt_565": {
+        "prompt": "The tray on the bed has a pastry and two mugs on it.",
+        "step_compression": 1.0,
+        "latency": 12.368082284927368
+    },
+    "prompt_566": {
+        "prompt": "A blue and white street sign next to a white building.",
+        "step_compression": 1.0,
+        "latency": 12.524447202682495
+    },
+    "prompt_567": {
+        "prompt": "A back that has a skull and two swords on it.",
+        "step_compression": 1.0,
+        "latency": 12.364501476287842
+    },
+    "prompt_568": {
+        "prompt": "The white van is driving past the red fire hydrant.",
+        "step_compression": 1.0,
+        "latency": 12.559054374694824
+    },
+    "prompt_569": {
+        "prompt": "A young boy getting ready to catch a baseball in a grass field.",
+        "step_compression": 1.0,
+        "latency": 14.285863637924194
+    },
+    "prompt_570": {
+        "prompt": "An attractive lady riding a cow while leaping over a set of poles.",
+        "step_compression": 1.0,
+        "latency": 12.380713939666748
+    },
+    "prompt_571": {
+        "prompt": "A group of men riding on the back of a small elephant.",
+        "step_compression": 1.0,
+        "latency": 12.386620283126831
+    },
+    "prompt_572": {
+        "prompt": "Baby sits inside an empty suitcase on top of a bed.",
+        "step_compression": 1.0,
+        "latency": 12.947746515274048
+    },
+    "prompt_573": {
+        "prompt": "a toddler sitting on the bed holding onto a book",
+        "step_compression": 1.0,
+        "latency": 12.597098588943481
+    },
+    "prompt_574": {
+        "prompt": "THERE ARE SOME THINGS THAT ARE IN A TRAY",
+        "step_compression": 1.0,
+        "latency": 12.608405351638794
+    },
+    "prompt_575": {
+        "prompt": "Woman and her dog tends to the herd of sheep",
+        "step_compression": 1.0,
+        "latency": 13.296327829360962
+    },
+    "prompt_576": {
+        "prompt": "A very rusty old car near some pretty flowers.",
+        "step_compression": 1.0,
+        "latency": 13.195980787277222
+    },
+    "prompt_577": {
+        "prompt": "A white plate topped with a worm on slices of pizza.",
+        "step_compression": 1.0,
+        "latency": 13.075023651123047
+    },
+    "prompt_578": {
+        "prompt": "A nearly all black snapshot shows a man standing sideways and looking forward, who is wearing a dark coat and hat and a bright pink tie.",
+        "step_compression": 1.0,
+        "latency": 13.125367403030396
+    },
+    "prompt_579": {
+        "prompt": "A man standing on a blue tennis court holding a racquet.",
+        "step_compression": 1.0,
+        "latency": 13.117322206497192
+    },
+    "prompt_580": {
+        "prompt": "A black plate topped with a pile of different foods.",
+        "step_compression": 1.0,
+        "latency": 12.538434028625488
+    },
+    "prompt_581": {
+        "prompt": "A female tennis player waits for the ball on a clay court.",
+        "step_compression": 1.0,
+        "latency": 12.537653684616089
+    },
+    "prompt_582": {
+        "prompt": "A car traveling down a road next to other parked cars.",
+        "step_compression": 1.0,
+        "latency": 12.538910865783691
+    },
+    "prompt_583": {
+        "prompt": "A man holding holding a giant remote control.",
+        "step_compression": 1.0,
+        "latency": 12.602813005447388
+    },
+    "prompt_584": {
+        "prompt": "A pond with two ducks swimming on top of it.",
+        "step_compression": 1.0,
+        "latency": 13.202105045318604
+    },
+    "prompt_585": {
+        "prompt": "A man in a baseball uniform kneeling down while holding a baseball bat.",
+        "step_compression": 1.0,
+        "latency": 13.082094669342041
+    },
+    "prompt_586": {
+        "prompt": "A baby next to a stuffed bear of some sort.",
+        "step_compression": 1.0,
+        "latency": 13.250788927078247
+    },
+    "prompt_587": {
+        "prompt": "An adult elephant and two baby elephants are in a lake.",
+        "step_compression": 1.0,
+        "latency": 12.599073886871338
+    },
+    "prompt_588": {
+        "prompt": "two giraffes standing next to each other with a fence between them",
+        "step_compression": 1.0,
+        "latency": 13.204541206359863
+    },
+    "prompt_589": {
+        "prompt": "Two men dressed as confederate soldiers during a reenactment.",
+        "step_compression": 1.0,
+        "latency": 13.115424394607544
+    },
+    "prompt_590": {
+        "prompt": "One zebra is front of the other zebra.",
+        "step_compression": 1.0,
+        "latency": 13.255565881729126
+    },
+    "prompt_591": {
+        "prompt": "A group of people sitting around a circular table with food.",
+        "step_compression": 1.0,
+        "latency": 13.415833234786987
+    },
+    "prompt_592": {
+        "prompt": "A brown teddy bear hanging from a green sign.",
+        "step_compression": 1.0,
+        "latency": 13.488928318023682
+    },
+    "prompt_593": {
+        "prompt": "A sparse room with a bed sitting in the corner.",
+        "step_compression": 1.0,
+        "latency": 12.713583707809448
+    },
+    "prompt_594": {
+        "prompt": "A red stop sign sitting next to a wooden fence.",
+        "step_compression": 1.0,
+        "latency": 12.726218223571777
+    },
+    "prompt_595": {
+        "prompt": "I am unable to see an image above.",
+        "step_compression": 1.0,
+        "latency": 13.120636940002441
+    },
+    "prompt_596": {
+        "prompt": "A man readies to swing his tennis racket.",
+        "step_compression": 1.0,
+        "latency": 13.273136854171753
+    },
+    "prompt_597": {
+        "prompt": "People out on a city street in the rain, many with umbrellas.",
+        "step_compression": 1.0,
+        "latency": 13.25203824043274
+    },
+    "prompt_598": {
+        "prompt": "A woman in red pajamas is hugging a cute dog.",
+        "step_compression": 1.0,
+        "latency": 13.086862802505493
+    },
+    "prompt_599": {
+        "prompt": "A child's train sitting on top of snow near a building.",
+        "step_compression": 1.0,
+        "latency": 12.530939102172852
+    },
+    "prompt_600": {
+        "prompt": "some kids in a bedroom with a lot of beds in it",
+        "step_compression": 1.0,
+        "latency": 13.227850437164307
+    },
+    "prompt_601": {
+        "prompt": "A Sanyo microwave oven sitting on the counter.",
+        "step_compression": 1.0,
+        "latency": 13.260335683822632
+    },
+    "prompt_602": {
+        "prompt": "A young man, formally dressed, is posing.",
+        "step_compression": 1.0,
+        "latency": 13.290613651275635
+    },
+    "prompt_603": {
+        "prompt": "a kitchen with an electonic device above the sink",
+        "step_compression": 1.0,
+        "latency": 13.13934326171875
+    },
+    "prompt_604": {
+        "prompt": "A man and woman are sitting at the table",
+        "step_compression": 1.0,
+        "latency": 13.271599531173706
+    },
+    "prompt_605": {
+        "prompt": "a reflection of a man taking a photo",
+        "step_compression": 1.0,
+        "latency": 13.183512210845947
+    },
+    "prompt_606": {
+        "prompt": "A black and white scene with two couples under umbrellas and rain jackets sitting at a stadium.",
+        "step_compression": 1.0,
+        "latency": 13.470863819122314
+    },
+    "prompt_607": {
+        "prompt": "a woman holding a tennis racquet on top of a tennis court.",
+        "step_compression": 1.0,
+        "latency": 13.395344734191895
+    },
+    "prompt_608": {
+        "prompt": "a pigeon perched on the arm of a bench",
+        "step_compression": 1.0,
+        "latency": 13.497309923171997
+    },
+    "prompt_609": {
+        "prompt": "Two giraffes are eating a leafy branch together.",
+        "step_compression": 1.0,
+        "latency": 13.456907510757446
+    },
+    "prompt_610": {
+        "prompt": "A couple of teddy bears sitting on top of a red heart cake.",
+        "step_compression": 1.0,
+        "latency": 13.42799973487854
+    },
+    "prompt_611": {
+        "prompt": "A sexy woman walking down a street with a  phone.",
+        "step_compression": 1.0,
+        "latency": 12.47640609741211
+    },
+    "prompt_612": {
+        "prompt": "A blender glass with several green vegetables in it.",
+        "step_compression": 1.0,
+        "latency": 12.382881879806519
+    },
+    "prompt_613": {
+        "prompt": "Two refrigerators sitting next to each other in a kitchen with items stored on top of them.",
+        "step_compression": 1.0,
+        "latency": 12.371307134628296
+    },
+    "prompt_614": {
+        "prompt": "A basket filled with ripe bananas sitting on a counter.",
+        "step_compression": 1.0,
+        "latency": 12.375859498977661
+    },
+    "prompt_615": {
+        "prompt": "A large and small giraffe standing in a grassy field.",
+        "step_compression": 1.0,
+        "latency": 12.466597318649292
+    },
+    "prompt_616": {
+        "prompt": "A woman holding a big spoon while cooking spaghetti.",
+        "step_compression": 1.0,
+        "latency": 12.483076333999634
+    },
+    "prompt_617": {
+        "prompt": "A white sink sitting underneath a round mirror.",
+        "step_compression": 1.0,
+        "latency": 12.472248554229736
+    },
+    "prompt_618": {
+        "prompt": "A bunch of skiers on snow are standing around.",
+        "step_compression": 1.0,
+        "latency": 12.47146224975586
+    },
+    "prompt_619": {
+        "prompt": "a person walking across the street with a traffic light above",
+        "step_compression": 1.0,
+        "latency": 12.388862609863281
+    },
+    "prompt_620": {
+        "prompt": "a kitchen next to a wood floored living area",
+        "step_compression": 1.0,
+        "latency": 12.390594005584717
+    },
+    "prompt_621": {
+        "prompt": "Road construction and street signs in Cape Town, SA",
+        "step_compression": 1.0,
+        "latency": 12.933080434799194
+    },
+    "prompt_622": {
+        "prompt": "An eating area with a table and a few chairs.",
+        "step_compression": 1.0,
+        "latency": 12.944371223449707
+    },
+    "prompt_623": {
+        "prompt": "A stop sign is at an intersection on Morgan Rd.",
+        "step_compression": 1.0,
+        "latency": 12.932562351226807
+    },
+    "prompt_624": {
+        "prompt": "A fire hydrant sitting on the side of a road near a building.",
+        "step_compression": 1.0,
+        "latency": 13.11307692527771
+    },
+    "prompt_625": {
+        "prompt": "Several plates of food are set on a table.",
+        "step_compression": 1.0,
+        "latency": 12.92220139503479
+    },
+    "prompt_626": {
+        "prompt": "A large sign sitting in a field with a broken down fence.",
+        "step_compression": 1.0,
+        "latency": 12.910603523254395
+    },
+    "prompt_627": {
+        "prompt": "A man standing in the ocean next to a young child.",
+        "step_compression": 1.0,
+        "latency": 13.027968645095825
+    },
+    "prompt_628": {
+        "prompt": "there is a male skier going down a hill",
+        "step_compression": 1.0,
+        "latency": 12.91897439956665
+    },
+    "prompt_629": {
+        "prompt": "Vibrant photo of a train sitting at a train station",
+        "step_compression": 1.0,
+        "latency": 13.103922605514526
+    },
+    "prompt_630": {
+        "prompt": "A woman and two men sitting on a bench in front of a store.",
+        "step_compression": 1.0,
+        "latency": 12.895995855331421
+    },
+    "prompt_631": {
+        "prompt": "Two girls in stand on grass and one holds a bat as the other holds a pink cup.",
+        "step_compression": 1.0,
+        "latency": 12.936126947402954
+    },
+    "prompt_632": {
+        "prompt": "A man wearing a stripped shirt with a stripped tie.",
+        "step_compression": 1.0,
+        "latency": 12.897178411483765
+    },
+    "prompt_633": {
+        "prompt": "a yellow bus that is next to a curb",
+        "step_compression": 1.0,
+        "latency": 12.619646310806274
+    },
+    "prompt_634": {
+        "prompt": "A blue room connected to a room with a table in it.",
+        "step_compression": 1.0,
+        "latency": 12.519521474838257
+    },
+    "prompt_635": {
+        "prompt": "A boy standing in tall grass flying a kite.",
+        "step_compression": 1.0,
+        "latency": 12.477175951004028
+    },
+    "prompt_636": {
+        "prompt": "A man with long hair wearing a red suit surfing.",
+        "step_compression": 1.0,
+        "latency": 12.982097625732422
+    },
+    "prompt_637": {
+        "prompt": "A young man sitting on top of a white bench.",
+        "step_compression": 1.0,
+        "latency": 13.246806144714355
+    },
+    "prompt_638": {
+        "prompt": "A herd of elephants standing on top of a dirt road.",
+        "step_compression": 1.0,
+        "latency": 13.218345880508423
+    },
+    "prompt_639": {
+        "prompt": "A bedroom with a bed next to a closet.",
+        "step_compression": 1.0,
+        "latency": 13.138329982757568
+    },
+    "prompt_640": {
+        "prompt": "Text written on a photo of a cat shutting in front of a television",
+        "step_compression": 1.0,
+        "latency": 13.23349928855896
+    },
+    "prompt_641": {
+        "prompt": "A refrigerator and a stove in a small kitchen.",
+        "step_compression": 1.0,
+        "latency": 13.015164375305176
+    },
+    "prompt_642": {
+        "prompt": "A bedroom with an old bedspread and a very cluttered wooden night stand.",
+        "step_compression": 1.0,
+        "latency": 13.474044561386108
+    },
+    "prompt_643": {
+        "prompt": "A man riding on the back of a brown horse.",
+        "step_compression": 1.0,
+        "latency": 13.349302530288696
+    },
+    "prompt_644": {
+        "prompt": "A yellow fire hydrant sits by the side of the road.",
+        "step_compression": 1.0,
+        "latency": 12.997159004211426
+    },
+    "prompt_645": {
+        "prompt": "A living room with a large stone fire place and furniture.",
+        "step_compression": 1.0,
+        "latency": 13.01550555229187
+    },
+    "prompt_646": {
+        "prompt": "The people are riding motor cycles down the street.",
+        "step_compression": 1.0,
+        "latency": 12.881856203079224
+    },
+    "prompt_647": {
+        "prompt": "some two zebras feeding on the dry grass",
+        "step_compression": 1.0,
+        "latency": 12.977593660354614
+    },
+    "prompt_648": {
+        "prompt": "A woman laying on top of a couch using a laptop computer.",
+        "step_compression": 1.0,
+        "latency": 13.314520120620728
+    },
+    "prompt_649": {
+        "prompt": "A young girl in a red dress is smiling.",
+        "step_compression": 1.0,
+        "latency": 13.123859882354736
+    },
+    "prompt_650": {
+        "prompt": "The woman using a cell phone touches her long hair.",
+        "step_compression": 1.0,
+        "latency": 13.132696151733398
+    },
+    "prompt_651": {
+        "prompt": "A man in a red shirt rides a yellow surfboard on light blue water.",
+        "step_compression": 1.0,
+        "latency": 13.18272089958191
+    },
+    "prompt_652": {
+        "prompt": "A person sitting on a chair in front of yellow vegetables.",
+        "step_compression": 1.0,
+        "latency": 13.357755422592163
+    },
+    "prompt_653": {
+        "prompt": "Two plates of chips and a sandwich are served on a tray.",
+        "step_compression": 1.0,
+        "latency": 13.297788143157959
+    },
+    "prompt_654": {
+        "prompt": "The water the boat is in is reflecting the sun.",
+        "step_compression": 1.0,
+        "latency": 13.337074995040894
+    },
+    "prompt_655": {
+        "prompt": "A man riding down the street in a horse and carriage",
+        "step_compression": 1.0,
+        "latency": 12.890323638916016
+    },
+    "prompt_656": {
+        "prompt": "A man kite surfing while riding a wave in the ocean.",
+        "step_compression": 1.0,
+        "latency": 13.04163146018982
+    },
+    "prompt_657": {
+        "prompt": "Two teddy bears that are hanging on a line.",
+        "step_compression": 1.0,
+        "latency": 13.130877256393433
+    },
+    "prompt_658": {
+        "prompt": "A man in a shirt and tie motioning with his hand.",
+        "step_compression": 1.0,
+        "latency": 12.941978693008423
+    },
+    "prompt_659": {
+        "prompt": "Tall flower arrangement in a pitcher by a window.",
+        "step_compression": 1.0,
+        "latency": 12.955267190933228
+    },
+    "prompt_660": {
+        "prompt": "A person that is swinging a baseball bat.",
+        "step_compression": 1.0,
+        "latency": 12.869590282440186
+    },
+    "prompt_661": {
+        "prompt": "There is a woman looking at two vases that are on display in a glass case.",
+        "step_compression": 1.0,
+        "latency": 12.387983083724976
+    },
+    "prompt_662": {
+        "prompt": "A dog holding a pink Frisbee in it's mouth.",
+        "step_compression": 1.0,
+        "latency": 13.050003290176392
+    },
+    "prompt_663": {
+        "prompt": "A green and white street sign that reads \"pee wee reese rd.\"",
+        "step_compression": 1.0,
+        "latency": 13.015800952911377
+    },
+    "prompt_664": {
+        "prompt": "A group of people are reading a menu at the table",
+        "step_compression": 1.0,
+        "latency": 13.088184595108032
+    },
+    "prompt_665": {
+        "prompt": "A hotdog with toppings served in a red basket",
+        "step_compression": 1.0,
+        "latency": 13.375180721282959
+    },
+    "prompt_666": {
+        "prompt": "A bathroom sink with toiletries on the counter.",
+        "step_compression": 1.0,
+        "latency": 13.26785945892334
+    },
+    "prompt_667": {
+        "prompt": "A hand holding a piece of cinnamon roll",
+        "step_compression": 1.0,
+        "latency": 13.322864294052124
+    },
+    "prompt_668": {
+        "prompt": "A little girl sleeping with her teddy bear and quilt.",
+        "step_compression": 1.0,
+        "latency": 13.356186151504517
+    },
+    "prompt_669": {
+        "prompt": "a brown couch a coffee table a lamp window and television set",
+        "step_compression": 1.0,
+        "latency": 12.52576732635498
+    },
+    "prompt_670": {
+        "prompt": "Office space with office equipment on desk top.",
+        "step_compression": 1.0,
+        "latency": 12.5469069480896
+    },
+    "prompt_671": {
+        "prompt": "A group of people walking on a street and sidewalk.",
+        "step_compression": 1.0,
+        "latency": 12.497941493988037
+    },
+    "prompt_672": {
+        "prompt": "View of a public men's' room with a  cot on the side.",
+        "step_compression": 1.0,
+        "latency": 13.159303903579712
+    },
+    "prompt_673": {
+        "prompt": "A wooden bench in front of some trees.",
+        "step_compression": 1.0,
+        "latency": 13.048384189605713
+    },
+    "prompt_674": {
+        "prompt": "An old mattress near parked trucks in the grass",
+        "step_compression": 1.0,
+        "latency": 12.905762434005737
+    },
+    "prompt_675": {
+        "prompt": "A truck with beer advertisement parked by a curb",
+        "step_compression": 1.0,
+        "latency": 13.414367198944092
+    },
+    "prompt_676": {
+        "prompt": "A dog is lying down in a living room",
+        "step_compression": 1.0,
+        "latency": 13.365634679794312
+    },
+    "prompt_677": {
+        "prompt": "a bookshelf that has a bunch of books on it",
+        "step_compression": 1.0,
+        "latency": 13.40949296951294
+    },
+    "prompt_678": {
+        "prompt": "A bathroom with a white toilet and a white toilet seat.",
+        "step_compression": 1.0,
+        "latency": 13.395556926727295
+    },
+    "prompt_679": {
+        "prompt": "A narrow white room with a white mattress on the floor.",
+        "step_compression": 1.0,
+        "latency": 13.275720357894897
+    },
+    "prompt_680": {
+        "prompt": "a small chicken is standing by a bench",
+        "step_compression": 1.0,
+        "latency": 13.242956161499023
+    },
+    "prompt_681": {
+        "prompt": "two black and white clocks on a black clock tower and clouds",
+        "step_compression": 1.0,
+        "latency": 12.733347654342651
+    },
+    "prompt_682": {
+        "prompt": "A plate of food with rice and a banana on it.",
+        "step_compression": 1.0,
+        "latency": 12.498819589614868
+    },
+    "prompt_683": {
+        "prompt": "A man wearing a hat while standing next to a body of water.",
+        "step_compression": 1.0,
+        "latency": 12.502837657928467
+    },
+    "prompt_684": {
+        "prompt": "a stop sign altered so it says 'stop hammer time'",
+        "step_compression": 1.0,
+        "latency": 12.568758249282837
+    },
+    "prompt_685": {
+        "prompt": "A person is walking through the snow on skis.",
+        "step_compression": 1.0,
+        "latency": 12.639565706253052
+    },
+    "prompt_686": {
+        "prompt": "A baby and adult elephant are standing by large rocks.",
+        "step_compression": 1.0,
+        "latency": 12.931824922561646
+    },
+    "prompt_687": {
+        "prompt": "A small child wears a helmet while riding a skateboard",
+        "step_compression": 1.0,
+        "latency": 13.279130697250366
+    },
+    "prompt_688": {
+        "prompt": "A living room filled with furniture and a fire place.",
+        "step_compression": 1.0,
+        "latency": 12.431334972381592
+    },
+    "prompt_689": {
+        "prompt": "There are two riders on motorcycles and mountains in the distance.",
+        "step_compression": 1.0,
+        "latency": 12.416454553604126
+    },
+    "prompt_690": {
+        "prompt": "A room that has stained glass windows separating another room.",
+        "step_compression": 1.0,
+        "latency": 12.406695365905762
+    },
+    "prompt_691": {
+        "prompt": "A baseball player takes his turn at bat.",
+        "step_compression": 1.0,
+        "latency": 12.994641780853271
+    },
+    "prompt_692": {
+        "prompt": "Lit up night traffic is zooming by a clock tower.",
+        "step_compression": 1.0,
+        "latency": 13.524996995925903
+    },
+    "prompt_693": {
+        "prompt": "A large plane is parked outside an airplane hangar.",
+        "step_compression": 1.0,
+        "latency": 12.697905778884888
+    },
+    "prompt_694": {
+        "prompt": "a couple is sitting on a statue of a horse and some plants",
+        "step_compression": 1.0,
+        "latency": 12.53990626335144
+    },
+    "prompt_695": {
+        "prompt": "A person in boat on water with island in distance.",
+        "step_compression": 1.0,
+        "latency": 13.163391590118408
+    },
+    "prompt_696": {
+        "prompt": "Small kitchen with white cabinets and white appliances with a city view.",
+        "step_compression": 1.0,
+        "latency": 13.089450359344482
+    },
+    "prompt_697": {
+        "prompt": "The tennis player is extending his reach to hit the racket.",
+        "step_compression": 1.0,
+        "latency": 13.081994771957397
+    },
+    "prompt_698": {
+        "prompt": "A brown vase filled with yellow, purple and pink flowers on a table.",
+        "step_compression": 1.0,
+        "latency": 13.174636840820312
+    },
+    "prompt_699": {
+        "prompt": "A person is taking a picture of a hotel bathroom.",
+        "step_compression": 1.0,
+        "latency": 12.645697593688965
+    },
+    "prompt_700": {
+        "prompt": "A row of different colored vases sitting on a walkway.",
+        "step_compression": 1.0,
+        "latency": 12.560975551605225
+    },
+    "prompt_701": {
+        "prompt": "A cute little girl riding a skateboard in a store.",
+        "step_compression": 1.0,
+        "latency": 12.990998268127441
+    },
+    "prompt_702": {
+        "prompt": "a bowl full of mixed vegetables and pieces",
+        "step_compression": 1.0,
+        "latency": 13.262081146240234
+    },
+    "prompt_703": {
+        "prompt": "Three traffic lights are shown and they all read red.",
+        "step_compression": 1.0,
+        "latency": 13.32691764831543
+    },
+    "prompt_704": {
+        "prompt": "A bathroom with blue walls, a white commode and a contemporary white sink without faucets.",
+        "step_compression": 1.0,
+        "latency": 13.40848994255066
+    },
+    "prompt_705": {
+        "prompt": "An airplane flying through the air on a clear day.",
+        "step_compression": 1.0,
+        "latency": 13.374018669128418
+    },
+    "prompt_706": {
+        "prompt": "A small airplane flying over a field over crops.",
+        "step_compression": 1.0,
+        "latency": 13.344198226928711
+    },
+    "prompt_707": {
+        "prompt": "A person is holding a video game controller",
+        "step_compression": 1.0,
+        "latency": 13.412165403366089
+    },
+    "prompt_708": {
+        "prompt": "A brown hamster standing on a hair brush.",
+        "step_compression": 1.0,
+        "latency": 13.509768724441528
+    },
+    "prompt_709": {
+        "prompt": "A group of giraffe standing next to each other.",
+        "step_compression": 1.0,
+        "latency": 13.45928430557251
+    },
+    "prompt_710": {
+        "prompt": "Wedding couple cuts cake in front of wedding party",
+        "step_compression": 1.0,
+        "latency": 12.68422555923462
+    },
+    "prompt_711": {
+        "prompt": "A surfer curls to balance on his board atop the foamy white crest of a wave",
+        "step_compression": 1.0,
+        "latency": 12.599046230316162
+    },
+    "prompt_712": {
+        "prompt": "A hand holding a bunch of ripe nearly rotten bananas.",
+        "step_compression": 1.0,
+        "latency": 13.17881464958191
+    },
+    "prompt_713": {
+        "prompt": "A boat traveling down a lake next to a shoreline.",
+        "step_compression": 1.0,
+        "latency": 13.302011728286743
+    },
+    "prompt_714": {
+        "prompt": "Trio of roses ascending from a white table top canvass",
+        "step_compression": 1.0,
+        "latency": 13.258863687515259
+    },
+    "prompt_715": {
+        "prompt": "a green double Decker bus stopped on the street",
+        "step_compression": 1.0,
+        "latency": 13.47195839881897
+    },
+    "prompt_716": {
+        "prompt": "The fruit are arranges on the surface in a brown wicker basket.",
+        "step_compression": 1.0,
+        "latency": 13.119548320770264
+    },
+    "prompt_717": {
+        "prompt": "A wooden desk with a cat and lamp on it.",
+        "step_compression": 1.0,
+        "latency": 13.22044587135315
+    },
+    "prompt_718": {
+        "prompt": "A person in sneakers on a skateboard hitting a cone.",
+        "step_compression": 1.0,
+        "latency": 13.162884712219238
+    },
+    "prompt_719": {
+        "prompt": "Two people are sitting beside one another working on their laptops.",
+        "step_compression": 1.0,
+        "latency": 13.075062274932861
+    },
+    "prompt_720": {
+        "prompt": "a woman holding an umbrella walking down a wet sidewalk",
+        "step_compression": 1.0,
+        "latency": 13.160892486572266
+    },
+    "prompt_721": {
+        "prompt": "A delicious gourmet berry desert dish with a scoop of ice cream,",
+        "step_compression": 1.0,
+        "latency": 13.118452548980713
+    },
+    "prompt_722": {
+        "prompt": "A yellow train traveling down tracks next to a train station.",
+        "step_compression": 1.0,
+        "latency": 13.122063398361206
+    },
+    "prompt_723": {
+        "prompt": "A man playing Wii bowling in a living room.",
+        "step_compression": 1.0,
+        "latency": 13.298747301101685
+    },
+    "prompt_724": {
+        "prompt": "A skier with his skis and back pack taking a rest.",
+        "step_compression": 1.0,
+        "latency": 13.40298080444336
+    },
+    "prompt_725": {
+        "prompt": "An unfinished bathroom with a boarded window and exposed pipes.",
+        "step_compression": 1.0,
+        "latency": 12.984957933425903
+    },
+    "prompt_726": {
+        "prompt": "a woman with flowers in her hair staring at the horse next to her",
+        "step_compression": 1.0,
+        "latency": 13.167719602584839
+    },
+    "prompt_727": {
+        "prompt": "some people on a green hill are flying kites",
+        "step_compression": 1.0,
+        "latency": 12.663973093032837
+    },
+    "prompt_728": {
+        "prompt": "Several toy animals and trees on fake grass.",
+        "step_compression": 1.0,
+        "latency": 12.611141681671143
+    },
+    "prompt_729": {
+        "prompt": "A man flying through the air while riding a bike.",
+        "step_compression": 1.0,
+        "latency": 12.579864501953125
+    },
+    "prompt_730": {
+        "prompt": "a close up of a plate of broccoli and sauce",
+        "step_compression": 1.0,
+        "latency": 12.990094184875488
+    },
+    "prompt_731": {
+        "prompt": "a square wooden table in a home livingroom",
+        "step_compression": 1.0,
+        "latency": 12.456597566604614
+    },
+    "prompt_732": {
+        "prompt": "Dark clouds moving in over a harbor full of moored sailboats.",
+        "step_compression": 1.0,
+        "latency": 12.399205446243286
+    },
+    "prompt_733": {
+        "prompt": "A photo with many buildings off of a street with trucks parked in front.",
+        "step_compression": 1.0,
+        "latency": 12.394459247589111
+    },
+    "prompt_734": {
+        "prompt": "A black refrigerator freezer sitting next to a dishwasher.",
+        "step_compression": 1.0,
+        "latency": 13.313357830047607
+    },
+    "prompt_735": {
+        "prompt": "Small monkey eating fruit sitting on a rock.",
+        "step_compression": 1.0,
+        "latency": 12.493533372879028
+    },
+    "prompt_736": {
+        "prompt": "A person and young girl with a frog umbrella standing next to water.",
+        "step_compression": 1.0,
+        "latency": 13.178917646408081
+    },
+    "prompt_737": {
+        "prompt": "A close up of a street pole with several signs.",
+        "step_compression": 1.0,
+        "latency": 12.879999876022339
+    },
+    "prompt_738": {
+        "prompt": "a couple of giraffes that are knick knacks",
+        "step_compression": 1.0,
+        "latency": 13.056976079940796
+    },
+    "prompt_739": {
+        "prompt": "A young man skating near a residential area",
+        "step_compression": 1.0,
+        "latency": 12.592489242553711
+    },
+    "prompt_740": {
+        "prompt": "A woman leans against a kitchen counter as two boys clean pumpkins on a newspaper covered table.",
+        "step_compression": 1.0,
+        "latency": 13.20927095413208
+    },
+    "prompt_741": {
+        "prompt": "A black cat wearing a black beanie while laying on a red couch..",
+        "step_compression": 1.0,
+        "latency": 13.14374828338623
+    },
+    "prompt_742": {
+        "prompt": "A woman with glasses drying her hair with a blowdryer.",
+        "step_compression": 1.0,
+        "latency": 13.551997900009155
+    },
+    "prompt_743": {
+        "prompt": "A man riding a kiteboard over the ocean under a cloudy sky.",
+        "step_compression": 1.0,
+        "latency": 13.537222623825073
+    },
+    "prompt_744": {
+        "prompt": "A man wearing a black water suit surfs through the water",
+        "step_compression": 1.0,
+        "latency": 13.567814350128174
+    },
+    "prompt_745": {
+        "prompt": "An airplane flies high above in the sky with telephone lines in the picture as well.",
+        "step_compression": 1.0,
+        "latency": 12.946095943450928
+    },
+    "prompt_746": {
+        "prompt": "A table in the sun with a white cloth, beef sandwich, glass of beer, and bottle of wine.",
+        "step_compression": 1.0,
+        "latency": 13.04629921913147
+    },
+    "prompt_747": {
+        "prompt": "A sickly cow and her calf grazing in a yard.",
+        "step_compression": 1.0,
+        "latency": 13.075795888900757
+    },
+    "prompt_748": {
+        "prompt": "A group of kids that are sitting together.",
+        "step_compression": 1.0,
+        "latency": 12.543951034545898
+    },
+    "prompt_749": {
+        "prompt": "Oriental woman preparing to put a toothbrush into her mouth.",
+        "step_compression": 1.0,
+        "latency": 12.372689485549927
+    },
+    "prompt_750": {
+        "prompt": "A very attractive woman holding a tennis racquet.",
+        "step_compression": 1.0,
+        "latency": 12.388086795806885
+    },
+    "prompt_751": {
+        "prompt": "Some type of colorful vegetable is wet and sitting on the counter",
+        "step_compression": 1.0,
+        "latency": 13.085902452468872
+    },
+    "prompt_752": {
+        "prompt": "A person on a motor bike travels around a sharp corner.",
+        "step_compression": 1.0,
+        "latency": 13.100889444351196
+    },
+    "prompt_753": {
+        "prompt": "A green apple on a wooden cutting board next to peeler.",
+        "step_compression": 1.0,
+        "latency": 12.996244668960571
+    },
+    "prompt_754": {
+        "prompt": "A giraffe caged in while grass falling from his mouth.",
+        "step_compression": 1.0,
+        "latency": 13.160667657852173
+    },
+    "prompt_755": {
+        "prompt": "a man rides a motor cycle across a field",
+        "step_compression": 1.0,
+        "latency": 12.617753267288208
+    },
+    "prompt_756": {
+        "prompt": "Two well equipped men with dogs at a pier.",
+        "step_compression": 1.0,
+        "latency": 12.591550588607788
+    },
+    "prompt_757": {
+        "prompt": "A picture of a motorcycle on the street.",
+        "step_compression": 1.0,
+        "latency": 13.299828290939331
+    },
+    "prompt_758": {
+        "prompt": "A girl with some food and drink at a table.",
+        "step_compression": 1.0,
+        "latency": 13.16876220703125
+    },
+    "prompt_759": {
+        "prompt": "A field with various wildlife and trees in the background.",
+        "step_compression": 1.0,
+        "latency": 13.093817234039307
+    },
+    "prompt_760": {
+        "prompt": "a walk in shower with a seat next to a white sink.",
+        "step_compression": 1.0,
+        "latency": 12.998806476593018
+    },
+    "prompt_761": {
+        "prompt": "A pretty young lady standing in front of a couch behind a wooden table.",
+        "step_compression": 1.0,
+        "latency": 13.168103218078613
+    },
+    "prompt_762": {
+        "prompt": "An older woman walking behind a bus on a city street.",
+        "step_compression": 1.0,
+        "latency": 13.593665361404419
+    },
+    "prompt_763": {
+        "prompt": "A very happy older couple cutting a cake together.",
+        "step_compression": 1.0,
+        "latency": 13.539153337478638
+    },
+    "prompt_764": {
+        "prompt": "A baby walks down a brick sidewalk as she carries a blue umbrella.",
+        "step_compression": 1.0,
+        "latency": 13.447252035140991
+    },
+    "prompt_765": {
+        "prompt": "A person on a court with a tennis racket.",
+        "step_compression": 1.0,
+        "latency": 13.373348951339722
+    },
+    "prompt_766": {
+        "prompt": "Several buses stopped on a night time street.",
+        "step_compression": 1.0,
+        "latency": 13.482221603393555
+    },
+    "prompt_767": {
+        "prompt": "there is a elephant that has a red cape or cloth on its back",
+        "step_compression": 1.0,
+        "latency": 13.432308197021484
+    },
+    "prompt_768": {
+        "prompt": "Two persons with glasses skiing on snow covered mountain",
+        "step_compression": 1.0,
+        "latency": 13.29055380821228
+    },
+    "prompt_769": {
+        "prompt": "Two very pretty zebras playing near a fence.",
+        "step_compression": 1.0,
+        "latency": 13.415146589279175
+    },
+    "prompt_770": {
+        "prompt": "a person walking across an odd looking pavement carrying an umbrella",
+        "step_compression": 1.0,
+        "latency": 12.428675174713135
+    },
+    "prompt_771": {
+        "prompt": "a baseball player swings at a fast-moving baseball in a crowded stadium.",
+        "step_compression": 1.0,
+        "latency": 12.630196332931519
+    },
+    "prompt_772": {
+        "prompt": "a toilet sits in front of a bath tub",
+        "step_compression": 1.0,
+        "latency": 13.1445631980896
+    },
+    "prompt_773": {
+        "prompt": "An enclose in a building with a giraffe in the background.",
+        "step_compression": 1.0,
+        "latency": 13.196850061416626
+    },
+    "prompt_774": {
+        "prompt": "A street covered in pink confetti next to a red fire hydrant.",
+        "step_compression": 1.0,
+        "latency": 13.092772006988525
+    },
+    "prompt_775": {
+        "prompt": "a man in red and plack sleeping on a park bench",
+        "step_compression": 1.0,
+        "latency": 13.107779741287231
+    },
+    "prompt_776": {
+        "prompt": "A lot of police officers on horses patrolling a city street.",
+        "step_compression": 1.0,
+        "latency": 12.560888528823853
+    },
+    "prompt_777": {
+        "prompt": "A giraffe is standing outside in the woods.",
+        "step_compression": 1.0,
+        "latency": 12.46397590637207
+    },
+    "prompt_778": {
+        "prompt": "A toilet with a red seat sitting next to a paper towel dispenser.",
+        "step_compression": 1.0,
+        "latency": 12.531481504440308
+    },
+    "prompt_779": {
+        "prompt": "A man and his reflection from a side mirror.",
+        "step_compression": 1.0,
+        "latency": 13.10757040977478
+    },
+    "prompt_780": {
+        "prompt": "two guys and two girls watching a computer",
+        "step_compression": 1.0,
+        "latency": 13.230675220489502
+    },
+    "prompt_781": {
+        "prompt": "A litte girl in a blue jacket holding a carrot.",
+        "step_compression": 1.0,
+        "latency": 13.171601057052612
+    },
+    "prompt_782": {
+        "prompt": "A woman holding a giant pair of scissors",
+        "step_compression": 1.0,
+        "latency": 12.394838571548462
+    },
+    "prompt_783": {
+        "prompt": "A display case filled with bakes goods in front of a store.",
+        "step_compression": 1.0,
+        "latency": 12.490326404571533
+    },
+    "prompt_784": {
+        "prompt": "A brown horse with white fetlocks grazing in a fenced in yard.",
+        "step_compression": 1.0,
+        "latency": 12.386224746704102
+    },
+    "prompt_785": {
+        "prompt": "A table full of green vegetables that are for sale",
+        "step_compression": 1.0,
+        "latency": 12.424329996109009
+    },
+    "prompt_786": {
+        "prompt": "A male skate boarder rides his skate board on a ramp",
+        "step_compression": 1.0,
+        "latency": 12.550710201263428
+    },
+    "prompt_787": {
+        "prompt": "Elderly man sitting on a bench facing the beach.",
+        "step_compression": 1.0,
+        "latency": 12.373277425765991
+    },
+    "prompt_788": {
+        "prompt": "A skier climbing up a snowy mountain half in shade.",
+        "step_compression": 1.0,
+        "latency": 12.494554281234741
+    },
+    "prompt_789": {
+        "prompt": "Three dogs are sitting looking outside of a window",
+        "step_compression": 1.0,
+        "latency": 12.397449731826782
+    },
+    "prompt_790": {
+        "prompt": "A wine bottle and glass sit on a table in front of a couch.",
+        "step_compression": 1.0,
+        "latency": 12.537127017974854
+    },
+    "prompt_791": {
+        "prompt": "A person taking a picture with a cell phone of someone laying on the ground",
+        "step_compression": 1.0,
+        "latency": 12.538025140762329
+    },
+    "prompt_792": {
+        "prompt": "A teddy bear is placed on a metallic sculpture.",
+        "step_compression": 1.0,
+        "latency": 13.049026489257812
+    },
+    "prompt_793": {
+        "prompt": "A desk topped with a desktop computer monitor behind a keyboard.",
+        "step_compression": 1.0,
+        "latency": 13.159953594207764
+    },
+    "prompt_794": {
+        "prompt": "A passenger bus that is parked in a parking lot.",
+        "step_compression": 1.0,
+        "latency": 13.252089977264404
+    },
+    "prompt_795": {
+        "prompt": "A red fire hydrant sitting in a parking lot next to a metal post.",
+        "step_compression": 1.0,
+        "latency": 13.265360832214355
+    },
+    "prompt_796": {
+        "prompt": "A group of sheep sitting next to a tree.",
+        "step_compression": 1.0,
+        "latency": 13.133215188980103
+    },
+    "prompt_797": {
+        "prompt": "An apple computer is on a table with supplies.",
+        "step_compression": 1.0,
+        "latency": 13.275903701782227
+    },
+    "prompt_798": {
+        "prompt": "A table with a plate that has food on it and a mug.",
+        "step_compression": 1.0,
+        "latency": 13.117769479751587
+    },
+    "prompt_799": {
+        "prompt": "A dog and a horse standing near each other.",
+        "step_compression": 1.0,
+        "latency": 13.126073122024536
+    },
+    "prompt_800": {
+        "prompt": "A toasted sandwich sits on a wooden cutting board.",
+        "step_compression": 1.0,
+        "latency": 13.215200901031494
+    },
+    "prompt_801": {
+        "prompt": "A black and white cat standing in a white bathroom sink.",
+        "step_compression": 1.0,
+        "latency": 13.259065866470337
+    },
+    "prompt_802": {
+        "prompt": "A counter, sink, and cabinets in a kitchen",
+        "step_compression": 1.0,
+        "latency": 12.92502236366272
+    },
+    "prompt_803": {
+        "prompt": "A man on a motorcycle going down the street.",
+        "step_compression": 1.0,
+        "latency": 12.919845581054688
+    },
+    "prompt_804": {
+        "prompt": "small birds on tree branches with a sky background",
+        "step_compression": 1.0,
+        "latency": 13.036306142807007
+    },
+    "prompt_805": {
+        "prompt": "The giraffes are standing in the fenced area.",
+        "step_compression": 1.0,
+        "latency": 12.42426609992981
+    },
+    "prompt_806": {
+        "prompt": "A herd of antelope next to some zebra's grazing in a field.",
+        "step_compression": 1.0,
+        "latency": 12.37543272972107
+    },
+    "prompt_807": {
+        "prompt": "A woman chopping vegetables in the kitchen looking at a recipe",
+        "step_compression": 1.0,
+        "latency": 12.368663549423218
+    },
+    "prompt_808": {
+        "prompt": "A sexy young woman standing on a tennis court holding a tennis racquet.",
+        "step_compression": 1.0,
+        "latency": 13.026676654815674
+    },
+    "prompt_809": {
+        "prompt": "A large clock tower over a church next to trees.",
+        "step_compression": 1.0,
+        "latency": 13.031707286834717
+    },
+    "prompt_810": {
+        "prompt": "A full view of a bathroom with the shower and sink.",
+        "step_compression": 1.0,
+        "latency": 14.8256254196167
+    },
+    "prompt_811": {
+        "prompt": "A Virgin Airlines plane and an American Airlines plane.",
+        "step_compression": 1.0,
+        "latency": 13.125990390777588
+    },
+    "prompt_812": {
+        "prompt": "A man holding a tv remote and wii controller.",
+        "step_compression": 1.0,
+        "latency": 13.124976873397827
+    },
+    "prompt_813": {
+        "prompt": "COLORFUL BRIGHT EYED CAT SURROUNDED BY ALL BLACK AND WHITE BOTTLES AND CANS",
+        "step_compression": 1.0,
+        "latency": 12.81259298324585
+    },
+    "prompt_814": {
+        "prompt": "A group of people walking towards a beach while carrying surfboards.",
+        "step_compression": 1.0,
+        "latency": 12.540894031524658
+    },
+    "prompt_815": {
+        "prompt": "a green plant  is in a glass vase",
+        "step_compression": 1.0,
+        "latency": 12.743146896362305
+    },
+    "prompt_816": {
+        "prompt": "a man holding a bag watches a baseball game unfold",
+        "step_compression": 1.0,
+        "latency": 12.636381149291992
+    },
+    "prompt_817": {
+        "prompt": "A herd of sheep grazing on a green grass covered piece of land next to a forest.",
+        "step_compression": 1.0,
+        "latency": 13.176730394363403
+    },
+    "prompt_818": {
+        "prompt": "A bench sitting in front of a group of vending machines.",
+        "step_compression": 1.0,
+        "latency": 13.109314441680908
+    },
+    "prompt_819": {
+        "prompt": "A man spraying the side of a van with spray paint.",
+        "step_compression": 1.0,
+        "latency": 13.118281364440918
+    },
+    "prompt_820": {
+        "prompt": "A bird that is flying above the flowers.",
+        "step_compression": 1.0,
+        "latency": 13.083128690719604
+    },
+    "prompt_821": {
+        "prompt": "A see through drink cooler in a store by the kitchen",
+        "step_compression": 1.0,
+        "latency": 13.203137159347534
+    },
+    "prompt_822": {
+        "prompt": "A row of wooden poles with seagulls resting on them.",
+        "step_compression": 1.0,
+        "latency": 13.250401496887207
+    },
+    "prompt_823": {
+        "prompt": "A blue table cloth covered table topped with cakes and desserts.",
+        "step_compression": 1.0,
+        "latency": 13.31665325164795
+    },
+    "prompt_824": {
+        "prompt": "A man holding a tennis racquet up to the side of his face.",
+        "step_compression": 1.0,
+        "latency": 13.16655707359314
+    },
+    "prompt_825": {
+        "prompt": "The orange peal is on the wooden bench",
+        "step_compression": 1.0,
+        "latency": 13.05132508277893
+    },
+    "prompt_826": {
+        "prompt": "A man in a purple shirt riding a skateboard up a wooden ramp.",
+        "step_compression": 1.0,
+        "latency": 12.407718896865845
+    },
+    "prompt_827": {
+        "prompt": "a black plane is sitting on a runway",
+        "step_compression": 1.0,
+        "latency": 13.089428424835205
+    },
+    "prompt_828": {
+        "prompt": "A woman standing in a kitchen preparing food.",
+        "step_compression": 1.0,
+        "latency": 13.142353296279907
+    },
+    "prompt_829": {
+        "prompt": "THERE IS AN IMAGE OF A BUILDING ON THE GRASS",
+        "step_compression": 1.0,
+        "latency": 13.281944036483765
+    },
+    "prompt_830": {
+        "prompt": "An office area with two computer monitor and two hard casesset on a rolling chair.",
+        "step_compression": 1.0,
+        "latency": 13.000425577163696
+    },
+    "prompt_831": {
+        "prompt": "White cow standing alone on a busy city street.",
+        "step_compression": 1.0,
+        "latency": 13.036139965057373
+    },
+    "prompt_832": {
+        "prompt": "A lady jumping after the ball at a tennis match.",
+        "step_compression": 1.0,
+        "latency": 13.468923568725586
+    },
+    "prompt_833": {
+        "prompt": "A baseball game in progress with a young player swinging the bat.",
+        "step_compression": 1.0,
+        "latency": 13.487559795379639
+    },
+    "prompt_834": {
+        "prompt": "Woman outside playing a game of frisbee with a dog",
+        "step_compression": 1.0,
+        "latency": 13.403932809829712
+    },
+    "prompt_835": {
+        "prompt": "A group of people on a field playing baseball.",
+        "step_compression": 1.0,
+        "latency": 13.420220851898193
+    },
+    "prompt_836": {
+        "prompt": "A large boat filled with mean on wheels.",
+        "step_compression": 1.0,
+        "latency": 13.292822360992432
+    },
+    "prompt_837": {
+        "prompt": "Two chefs are preparing sandwiches on a cluttered table.",
+        "step_compression": 1.0,
+        "latency": 13.326029539108276
+    },
+    "prompt_838": {
+        "prompt": "A room with lots of seats next to an entrance.",
+        "step_compression": 1.0,
+        "latency": 13.32518219947815
+    },
+    "prompt_839": {
+        "prompt": "A little boy flying a kite in a sunny field",
+        "step_compression": 1.0,
+        "latency": 13.286247730255127
+    },
+    "prompt_840": {
+        "prompt": "A guy rides a bike in a race and has fun",
+        "step_compression": 1.0,
+        "latency": 13.283636093139648
+    },
+    "prompt_841": {
+        "prompt": "A stuffed bear sitting on the pillow of a bed.",
+        "step_compression": 1.0,
+        "latency": 13.481209516525269
+    },
+    "prompt_842": {
+        "prompt": "A table with wine glasses and bottles of wine",
+        "step_compression": 1.0,
+        "latency": 13.496660232543945
+    },
+    "prompt_843": {
+        "prompt": "A red plate topped with a chocolate pastry.",
+        "step_compression": 1.0,
+        "latency": 13.416414976119995
+    },
+    "prompt_844": {
+        "prompt": "A person with an umbrella walking across the street.",
+        "step_compression": 1.0,
+        "latency": 13.576028108596802
+    },
+    "prompt_845": {
+        "prompt": "A black fence guarding a building next to a trash can.",
+        "step_compression": 1.0,
+        "latency": 13.44327998161316
+    },
+    "prompt_846": {
+        "prompt": "A woman holding two halves of a banana sandwich.",
+        "step_compression": 1.0,
+        "latency": 12.539459943771362
+    },
+    "prompt_847": {
+        "prompt": "A large building with two white towers with a crowd of people next to it..",
+        "step_compression": 1.0,
+        "latency": 13.218520641326904
+    },
+    "prompt_848": {
+        "prompt": "A couple of baseball players in uniform standing in a field.",
+        "step_compression": 1.0,
+        "latency": 13.135890007019043
+    },
+    "prompt_849": {
+        "prompt": "Some is holding a bottle of wine next to a huge hot dog covered in chili.",
+        "step_compression": 1.0,
+        "latency": 13.318613529205322
+    },
+    "prompt_850": {
+        "prompt": "View of dining room of restaurant with cone lights overhead",
+        "step_compression": 1.0,
+        "latency": 13.251211404800415
+    },
+    "prompt_851": {
+        "prompt": "A dog going to the bathroom in the park.",
+        "step_compression": 1.0,
+        "latency": 13.2693612575531
+    },
+    "prompt_852": {
+        "prompt": "A man standing on his hands with a doughnut in his mouth.",
+        "step_compression": 1.0,
+        "latency": 13.262140989303589
+    },
+    "prompt_853": {
+        "prompt": "A woman holding a phone up to her ear.",
+        "step_compression": 1.0,
+        "latency": 13.189509868621826
+    },
+    "prompt_854": {
+        "prompt": "A catcher crouches as the batter swings to hit the ball in a baseball game.",
+        "step_compression": 1.0,
+        "latency": 13.169824838638306
+    },
+    "prompt_855": {
+        "prompt": "Three people standing next to each other holding ski equipment.",
+        "step_compression": 1.0,
+        "latency": 13.17734146118164
+    },
+    "prompt_856": {
+        "prompt": "Children's room with a bed and a small crib with stuffed toys on the ground.",
+        "step_compression": 1.0,
+        "latency": 13.356781721115112
+    },
+    "prompt_857": {
+        "prompt": "A person is riding a skateboard in a tennis court.",
+        "step_compression": 1.0,
+        "latency": 13.192270755767822
+    },
+    "prompt_858": {
+        "prompt": "Well stocked refrigerator with food and beverage items.",
+        "step_compression": 1.0,
+        "latency": 12.950299501419067
+    },
+    "prompt_859": {
+        "prompt": "A man holding a cutting board while making the peace sign.",
+        "step_compression": 1.0,
+        "latency": 12.997944116592407
+    },
+    "prompt_860": {
+        "prompt": "Tennis player on opposite end of court waiting for the ball.",
+        "step_compression": 1.0,
+        "latency": 13.49839973449707
+    },
+    "prompt_861": {
+        "prompt": "A BEAR CUB IS PLAYING WITH A LOG IN THE WATER",
+        "step_compression": 1.0,
+        "latency": 13.532625198364258
+    },
+    "prompt_862": {
+        "prompt": "A muffin tin filled with lots of  muffins.",
+        "step_compression": 1.0,
+        "latency": 13.451148271560669
+    },
+    "prompt_863": {
+        "prompt": "a person is standing in skies in the snow",
+        "step_compression": 1.0,
+        "latency": 13.427846908569336
+    },
+    "prompt_864": {
+        "prompt": "Two headless mannequins display fashionable clothing in front of a pink background.",
+        "step_compression": 1.0,
+        "latency": 12.959301471710205
+    },
+    "prompt_865": {
+        "prompt": "A blue van passes by a cement wall with graffiti.",
+        "step_compression": 1.0,
+        "latency": 12.95477819442749
+    },
+    "prompt_866": {
+        "prompt": "A man riding a skateboard up the side of a ramp.",
+        "step_compression": 1.0,
+        "latency": 13.235776662826538
+    },
+    "prompt_867": {
+        "prompt": "A young man is playing frisbee in the woods.",
+        "step_compression": 1.0,
+        "latency": 13.352266311645508
+    },
+    "prompt_868": {
+        "prompt": "A couple of people on a court with tennis rackets.",
+        "step_compression": 1.0,
+        "latency": 13.30139946937561
+    },
+    "prompt_869": {
+        "prompt": "a person jumping a pair of skis in the air",
+        "step_compression": 1.0,
+        "latency": 13.413444519042969
+    },
+    "prompt_870": {
+        "prompt": "Woman at wooden desk with a glass of finished wine in front",
+        "step_compression": 1.0,
+        "latency": 13.004902601242065
+    },
+    "prompt_871": {
+        "prompt": "A living room consisting of windows, rugs, chairs, and a coffee table.",
+        "step_compression": 1.0,
+        "latency": 13.009294033050537
+    },
+    "prompt_872": {
+        "prompt": "two people in a kitchen area preparing food on a stove",
+        "step_compression": 1.0,
+        "latency": 13.372938394546509
+    },
+    "prompt_873": {
+        "prompt": "A man and two women sitting on a tan ledge.",
+        "step_compression": 1.0,
+        "latency": 13.287913799285889
+    },
+    "prompt_874": {
+        "prompt": "A man tossing a frisbee over the ocean on the beach.",
+        "step_compression": 1.0,
+        "latency": 13.548582792282104
+    },
+    "prompt_875": {
+        "prompt": "A meat covered sandwich on top of a spatula being held by a chefs hand.",
+        "step_compression": 1.0,
+        "latency": 13.378270387649536
+    },
+    "prompt_876": {
+        "prompt": "A BASEBALL PLAYER IS HOLDING A BAT ON THE FIELD",
+        "step_compression": 1.0,
+        "latency": 13.525042057037354
+    },
+    "prompt_877": {
+        "prompt": "A lamp that is on sitting on a table.",
+        "step_compression": 1.0,
+        "latency": 13.404448747634888
+    },
+    "prompt_878": {
+        "prompt": "A surfer in a wetsuit stands with his surfboard and bicycle at the beach.",
+        "step_compression": 1.0,
+        "latency": 13.400500774383545
+    },
+    "prompt_879": {
+        "prompt": "A man riding a wave on top of a surfboard.",
+        "step_compression": 1.0,
+        "latency": 13.444140672683716
+    },
+    "prompt_880": {
+        "prompt": "A train is making its way down the tracks.",
+        "step_compression": 1.0,
+        "latency": 13.423927068710327
+    },
+    "prompt_881": {
+        "prompt": "A man thinks as he stands in front of a sign.",
+        "step_compression": 1.0,
+        "latency": 13.385231733322144
+    },
+    "prompt_882": {
+        "prompt": "A dog lying on a couch in a house.",
+        "step_compression": 1.0,
+        "latency": 13.293653011322021
+    },
+    "prompt_883": {
+        "prompt": "A pink motor scooter parked in a parking space.",
+        "step_compression": 1.0,
+        "latency": 12.509552240371704
+    },
+    "prompt_884": {
+        "prompt": "A city street filled with lots of traffic.",
+        "step_compression": 1.0,
+        "latency": 13.328234434127808
+    },
+    "prompt_885": {
+        "prompt": "A clock hanging off the side of a  all building.",
+        "step_compression": 1.0,
+        "latency": 13.157574653625488
+    },
+    "prompt_886": {
+        "prompt": "It is a small kitchen with standard appliances.",
+        "step_compression": 1.0,
+        "latency": 13.135589122772217
+    },
+    "prompt_887": {
+        "prompt": "A large brown and black dog laying on top of a bed.",
+        "step_compression": 1.0,
+        "latency": 13.276527166366577
+    },
+    "prompt_888": {
+        "prompt": "A group of bicycles on a subway train.",
+        "step_compression": 1.0,
+        "latency": 13.272472858428955
+    },
+    "prompt_889": {
+        "prompt": "a container seperated by two compartments having fruits and veggies",
+        "step_compression": 1.0,
+        "latency": 13.139853477478027
+    },
+    "prompt_890": {
+        "prompt": "Two dogs are playing together on the grass",
+        "step_compression": 1.0,
+        "latency": 13.250983238220215
+    },
+    "prompt_891": {
+        "prompt": "a large bus with two levels is parked outside",
+        "step_compression": 1.0,
+        "latency": 13.291790246963501
+    },
+    "prompt_892": {
+        "prompt": "a person riding a surf board on a wave",
+        "step_compression": 1.0,
+        "latency": 13.1439688205719
+    },
+    "prompt_893": {
+        "prompt": "A blocked view of the Eiffel Tower in France.",
+        "step_compression": 1.0,
+        "latency": 12.73242712020874
+    },
+    "prompt_894": {
+        "prompt": "Several beer signs above various businesses on a narrow street.",
+        "step_compression": 1.0,
+        "latency": 13.223822355270386
+    },
+    "prompt_895": {
+        "prompt": "A toy boat sits on the ground.",
+        "step_compression": 1.0,
+        "latency": 13.252609968185425
+    },
+    "prompt_896": {
+        "prompt": "A cowboy leads a cow through a paddock.",
+        "step_compression": 1.0,
+        "latency": 13.209023714065552
+    },
+    "prompt_897": {
+        "prompt": "A man standing on a tennis court serving a ball to a group of kids.",
+        "step_compression": 1.0,
+        "latency": 13.277527093887329
+    },
+    "prompt_898": {
+        "prompt": "A picture of a boat being built inside.",
+        "step_compression": 1.0,
+        "latency": 13.04943585395813
+    },
+    "prompt_899": {
+        "prompt": "A downtown area with cars parked at parking meters.",
+        "step_compression": 1.0,
+        "latency": 12.76360273361206
+    },
+    "prompt_900": {
+        "prompt": "A table topped with oranges and a bowl of salad.",
+        "step_compression": 1.0,
+        "latency": 13.240789890289307
+    },
+    "prompt_901": {
+        "prompt": "A living room decorated for Halloween with a large window with closed blinds.",
+        "step_compression": 1.0,
+        "latency": 13.10525918006897
+    },
+    "prompt_902": {
+        "prompt": "a fogy picture with a red light in the back ground",
+        "step_compression": 1.0,
+        "latency": 13.126994132995605
+    },
+    "prompt_903": {
+        "prompt": "BASEBALL DIAMOND WITH PITCHER ON MOUND READY TO THROW THE BALL",
+        "step_compression": 1.0,
+        "latency": 13.259685277938843
+    },
+    "prompt_904": {
+        "prompt": "Two people walking down the sidewalk with each other near a Street",
+        "step_compression": 1.0,
+        "latency": 13.10275673866272
+    },
+    "prompt_905": {
+        "prompt": "Pulling out a white partition on a small device.",
+        "step_compression": 1.0,
+        "latency": 13.300573825836182
+    },
+    "prompt_906": {
+        "prompt": "there is a cow and people in the street",
+        "step_compression": 1.0,
+        "latency": 12.934486150741577
+    },
+    "prompt_907": {
+        "prompt": "Two empty beach chairs laying on the sand.",
+        "step_compression": 1.0,
+        "latency": 13.245558977127075
+    },
+    "prompt_908": {
+        "prompt": "Young guy in mid motion of catching a frisbee.",
+        "step_compression": 1.0,
+        "latency": 13.275513410568237
+    },
+    "prompt_909": {
+        "prompt": "A woman and some kids sitting on a couch.",
+        "step_compression": 1.0,
+        "latency": 12.803451538085938
+    },
+    "prompt_910": {
+        "prompt": "A blue bench sitting under a clock mounted to a wall.",
+        "step_compression": 1.0,
+        "latency": 12.387622117996216
+    },
+    "prompt_911": {
+        "prompt": "Grilled toast piled with lettuce, a cup of black coffee and a glass of water are on a counter.",
+        "step_compression": 1.0,
+        "latency": 12.765394926071167
+    },
+    "prompt_912": {
+        "prompt": "A man smiles as he raises a goblet to his lips.",
+        "step_compression": 1.0,
+        "latency": 12.595451354980469
+    },
+    "prompt_913": {
+        "prompt": "Two zebras grazing in a grassy field with a forest behind them.",
+        "step_compression": 1.0,
+        "latency": 12.523876905441284
+    },
+    "prompt_914": {
+        "prompt": "A women who is on a surfboard riding a wave.",
+        "step_compression": 1.0,
+        "latency": 12.68388032913208
+    },
+    "prompt_915": {
+        "prompt": "A counter top with candles and an array of deserts.",
+        "step_compression": 1.0,
+        "latency": 13.221308946609497
+    },
+    "prompt_916": {
+        "prompt": "A street in front of a tall building filled with traffic.",
+        "step_compression": 1.0,
+        "latency": 13.152564525604248
+    },
+    "prompt_917": {
+        "prompt": "A man sits on the couch with two cats on his lap.",
+        "step_compression": 1.0,
+        "latency": 12.438603401184082
+    },
+    "prompt_918": {
+        "prompt": "A small dog sitting inside of a piece of luggage.",
+        "step_compression": 1.0,
+        "latency": 12.556078433990479
+    },
+    "prompt_919": {
+        "prompt": "Crowd of people watching people guide elephant by standing on them.",
+        "step_compression": 1.0,
+        "latency": 12.551580667495728
+    },
+    "prompt_920": {
+        "prompt": "A person holding skis standing in front of a cabin",
+        "step_compression": 1.0,
+        "latency": 12.531529426574707
+    },
+    "prompt_921": {
+        "prompt": "Clear vase with water and flower stems in window.",
+        "step_compression": 1.0,
+        "latency": 12.374432802200317
+    },
+    "prompt_922": {
+        "prompt": "A bedroom with a bed and small table near by.",
+        "step_compression": 1.0,
+        "latency": 12.476283550262451
+    },
+    "prompt_923": {
+        "prompt": "A boy sitting on a black couch with teddy bears.",
+        "step_compression": 1.0,
+        "latency": 12.471252202987671
+    },
+    "prompt_924": {
+        "prompt": "Some orange flowers in a tall silver vase",
+        "step_compression": 1.0,
+        "latency": 12.388787984848022
+    },
+    "prompt_925": {
+        "prompt": "a box of doughnuts on a table",
+        "step_compression": 1.0,
+        "latency": 13.476392030715942
+    },
+    "prompt_926": {
+        "prompt": "A clock tower is in the middle of the city with clocks",
+        "step_compression": 1.0,
+        "latency": 13.441976070404053
+    },
+    "prompt_927": {
+        "prompt": "Two giraffes that are standing in the grass.",
+        "step_compression": 1.0,
+        "latency": 13.354291915893555
+    },
+    "prompt_928": {
+        "prompt": "The young man are playing a game of soccer in the field.",
+        "step_compression": 1.0,
+        "latency": 13.131092309951782
+    },
+    "prompt_929": {
+        "prompt": "A bed topped with lots of pillows next to a table.",
+        "step_compression": 1.0,
+        "latency": 13.264052152633667
+    },
+    "prompt_930": {
+        "prompt": "A curly haired man standing on the side of the street.",
+        "step_compression": 1.0,
+        "latency": 13.314206838607788
+    },
+    "prompt_931": {
+        "prompt": "a woman hitting a tennis ball with her racket",
+        "step_compression": 1.0,
+        "latency": 12.498493671417236
+    },
+    "prompt_932": {
+        "prompt": "This photo shows a man in a chair with a toddler next to him.",
+        "step_compression": 1.0,
+        "latency": 12.411277055740356
+    },
+    "prompt_933": {
+        "prompt": "Parachutes fly through the sky above the ocean.",
+        "step_compression": 1.0,
+        "latency": 12.38747525215149
+    },
+    "prompt_934": {
+        "prompt": "Two motorcycles parked on the side of the road.",
+        "step_compression": 1.0,
+        "latency": 13.156888961791992
+    },
+    "prompt_935": {
+        "prompt": "An old green pickup truck on a flatbed truck behind a fence.",
+        "step_compression": 1.0,
+        "latency": 13.004427194595337
+    },
+    "prompt_936": {
+        "prompt": "A man riding a wave on a surfboard.",
+        "step_compression": 1.0,
+        "latency": 13.001611709594727
+    },
+    "prompt_937": {
+        "prompt": "a glass walled shower in a small bathroom",
+        "step_compression": 1.0,
+        "latency": 12.964437484741211
+    },
+    "prompt_938": {
+        "prompt": "A motorcycle is parked on a dirt road in a forest.",
+        "step_compression": 1.0,
+        "latency": 12.485184907913208
+    },
+    "prompt_939": {
+        "prompt": "A beach with waves coming in, and two people in wet suits and carrying surfboards, from the back, walking to the water.",
+        "step_compression": 1.0,
+        "latency": 12.568818092346191
+    },
+    "prompt_940": {
+        "prompt": "A very tall building sitting on the side of a road.",
+        "step_compression": 1.0,
+        "latency": 12.996983528137207
+    },
+    "prompt_941": {
+        "prompt": "A man flies a kite by the water side.",
+        "step_compression": 1.0,
+        "latency": 13.191760778427124
+    },
+    "prompt_942": {
+        "prompt": "A stop sign at the end of the road.",
+        "step_compression": 1.0,
+        "latency": 13.168749809265137
+    },
+    "prompt_943": {
+        "prompt": "A man wearing only a tie standing next to a lamp.",
+        "step_compression": 1.0,
+        "latency": 13.174480438232422
+    },
+    "prompt_944": {
+        "prompt": "A green cake that is shaped to be a train",
+        "step_compression": 1.0,
+        "latency": 12.980363130569458
+    },
+    "prompt_945": {
+        "prompt": "Many people are dining at a public restaurant.",
+        "step_compression": 1.0,
+        "latency": 13.160456895828247
+    },
+    "prompt_946": {
+        "prompt": "Picture of living room with modern furniture and decor",
+        "step_compression": 1.0,
+        "latency": 13.309035778045654
+    },
+    "prompt_947": {
+        "prompt": "A just married couple in the back of a car.",
+        "step_compression": 1.0,
+        "latency": 13.240156173706055
+    },
+    "prompt_948": {
+        "prompt": "A man with a suit and tie with a headset on.",
+        "step_compression": 1.0,
+        "latency": 13.440317869186401
+    },
+    "prompt_949": {
+        "prompt": "A display case with a single doughnut on each tray",
+        "step_compression": 1.0,
+        "latency": 13.493319511413574
+    },
+    "prompt_950": {
+        "prompt": "A person riding a skate board in the street holding a flag.",
+        "step_compression": 1.0,
+        "latency": 13.357039451599121
+    },
+    "prompt_951": {
+        "prompt": "A kid sitting at a computer wearing headphones.",
+        "step_compression": 1.0,
+        "latency": 13.506719827651978
+    },
+    "prompt_952": {
+        "prompt": "a stop sign sits on a street corner",
+        "step_compression": 1.0,
+        "latency": 13.48946762084961
+    },
+    "prompt_953": {
+        "prompt": "A bike attached to the front of a blue bus.",
+        "step_compression": 1.0,
+        "latency": 13.405574560165405
+    },
+    "prompt_954": {
+        "prompt": "A person sitting at a table with bagels and a donut.",
+        "step_compression": 1.0,
+        "latency": 12.980802536010742
+    },
+    "prompt_955": {
+        "prompt": "A giraffe standing next to a covered structure.",
+        "step_compression": 1.0,
+        "latency": 12.986474514007568
+    },
+    "prompt_956": {
+        "prompt": "many people walking into an opened air plane",
+        "step_compression": 1.0,
+        "latency": 13.125378370285034
+    },
+    "prompt_957": {
+        "prompt": "A MAN IN A SHIRT AND TIE SMILING FOR THE CAMERA",
+        "step_compression": 1.0,
+        "latency": 13.014561653137207
+    },
+    "prompt_958": {
+        "prompt": "A man flying on top of a surfboard on top of a wave.",
+        "step_compression": 1.0,
+        "latency": 13.0244779586792
+    },
+    "prompt_959": {
+        "prompt": "A man ridding on top of an elephant in a city.",
+        "step_compression": 1.0,
+        "latency": 12.963515758514404
+    },
+    "prompt_960": {
+        "prompt": "A tablet sitting on top of a computer desk.",
+        "step_compression": 1.0,
+        "latency": 13.464469909667969
+    },
+    "prompt_961": {
+        "prompt": "A large green field with a bench in the foreground.",
+        "step_compression": 1.0,
+        "latency": 13.328095436096191
+    },
+    "prompt_962": {
+        "prompt": "A girl holds a plate of food while eating a piece of it",
+        "step_compression": 1.0,
+        "latency": 12.92422342300415
+    },
+    "prompt_963": {
+        "prompt": "Two white plates topped with meat and veggies next to bottles.",
+        "step_compression": 1.0,
+        "latency": 13.327886819839478
+    },
+    "prompt_964": {
+        "prompt": "A tennis playing reaching to hit a tennis ball.",
+        "step_compression": 1.0,
+        "latency": 13.516145944595337
+    },
+    "prompt_965": {
+        "prompt": "Large clock tower sitting in front of a park.",
+        "step_compression": 1.0,
+        "latency": 13.34656023979187
+    },
+    "prompt_966": {
+        "prompt": "A pack of \"Hiragishi Donuts\" in a plastic container wrapped in a rubber band.",
+        "step_compression": 1.0,
+        "latency": 13.51927924156189
+    },
+    "prompt_967": {
+        "prompt": "A sandwich, carrots and strawberries in a lunch box.",
+        "step_compression": 1.0,
+        "latency": 13.459138631820679
+    },
+    "prompt_968": {
+        "prompt": "A computer keyboard sitting next to a mouse on a wooden table.",
+        "step_compression": 1.0,
+        "latency": 13.358638763427734
+    },
+    "prompt_969": {
+        "prompt": "A giraffe standing on a grass covered field.",
+        "step_compression": 1.0,
+        "latency": 13.368573427200317
+    },
+    "prompt_970": {
+        "prompt": "A little girl sitting on her dads back.",
+        "step_compression": 1.0,
+        "latency": 13.5199453830719
+    },
+    "prompt_971": {
+        "prompt": "A man on a surfboard on a wave in the water.",
+        "step_compression": 1.0,
+        "latency": 13.323285579681396
+    },
+    "prompt_972": {
+        "prompt": "Person in restaurant with flooring and blinds with tables",
+        "step_compression": 1.0,
+        "latency": 12.984585762023926
+    },
+    "prompt_973": {
+        "prompt": "A young child eating a pizza at a picnic table.",
+        "step_compression": 1.0,
+        "latency": 13.00082015991211
+    },
+    "prompt_974": {
+        "prompt": "A pizza sitting on top of a pan in the oven.",
+        "step_compression": 1.0,
+        "latency": 13.091960430145264
+    },
+    "prompt_975": {
+        "prompt": "A clean sink is in the middle of the counter.",
+        "step_compression": 1.0,
+        "latency": 13.084980487823486
+    },
+    "prompt_976": {
+        "prompt": "A small closed toilet in a cramped space.",
+        "step_compression": 1.0,
+        "latency": 13.334439992904663
+    },
+    "prompt_977": {
+        "prompt": "a dog with shoes and a backpack standing next to car",
+        "step_compression": 1.0,
+        "latency": 13.290663957595825
+    },
+    "prompt_978": {
+        "prompt": "A Zebra standing in between a group of large rocks",
+        "step_compression": 1.0,
+        "latency": 13.296726942062378
+    },
+    "prompt_979": {
+        "prompt": "Two metal warning street signs under tree branches.",
+        "step_compression": 1.0,
+        "latency": 13.007330894470215
+    },
+    "prompt_980": {
+        "prompt": "A shirtless man playing tennis on a blue court.",
+        "step_compression": 1.0,
+        "latency": 12.992347002029419
+    },
+    "prompt_981": {
+        "prompt": "A man holding a pine cone while wearing a name tag.",
+        "step_compression": 1.0,
+        "latency": 13.061925411224365
+    },
+    "prompt_982": {
+        "prompt": "A herd of giraffe standing next to each other near a forested hillside.",
+        "step_compression": 1.0,
+        "latency": 13.120493412017822
+    },
+    "prompt_983": {
+        "prompt": "a close up of a young person holding a skate board",
+        "step_compression": 1.0,
+        "latency": 12.946152925491333
+    },
+    "prompt_984": {
+        "prompt": "A white toilet sitting next to a white sink in a bathroom.",
+        "step_compression": 1.0,
+        "latency": 13.119423389434814
+    },
+    "prompt_985": {
+        "prompt": "The double decker bus is heading south through the mountainous region of California.",
+        "step_compression": 1.0,
+        "latency": 12.938281297683716
+    },
+    "prompt_986": {
+        "prompt": "Assorted food items displayed on light blue plates.",
+        "step_compression": 1.0,
+        "latency": 12.946064710617065
+    },
+    "prompt_987": {
+        "prompt": "A cow standing between two cars on a dirt lot.",
+        "step_compression": 1.0,
+        "latency": 13.118953466415405
+    },
+    "prompt_988": {
+        "prompt": "A red car sitting on to of a black boat.",
+        "step_compression": 1.0,
+        "latency": 13.062421798706055
+    },
+    "prompt_989": {
+        "prompt": "A cake is lit with tall yellow candles.",
+        "step_compression": 1.0,
+        "latency": 13.423274993896484
+    },
+    "prompt_990": {
+        "prompt": "a close up of a dog wearing a yellow clone hat",
+        "step_compression": 1.0,
+        "latency": 12.409712314605713
+    },
+    "prompt_991": {
+        "prompt": "A young boy is eating a meal in his pajamas.",
+        "step_compression": 1.0,
+        "latency": 12.536290884017944
+    },
+    "prompt_992": {
+        "prompt": "A statue and other pieces of art are along a wall.",
+        "step_compression": 1.0,
+        "latency": 13.064184665679932
+    },
+    "prompt_993": {
+        "prompt": "The computer technician is repairing several different laptops.",
+        "step_compression": 1.0,
+        "latency": 13.319555521011353
+    },
+    "prompt_994": {
+        "prompt": "A multicolored train passing another set of tracks.",
+        "step_compression": 1.0,
+        "latency": 13.13970398902893
+    },
+    "prompt_995": {
+        "prompt": "A bird standing alone in the water looking",
+        "step_compression": 1.0,
+        "latency": 13.097559690475464
+    },
+    "prompt_996": {
+        "prompt": "Two people riding different colored horses down a dirty road.",
+        "step_compression": 1.0,
+        "latency": 12.372419834136963
+    },
+    "prompt_997": {
+        "prompt": "A person riding on a pretty horse by a big white fence.",
+        "step_compression": 1.0,
+        "latency": 12.488553762435913
+    },
+    "prompt_998": {
+        "prompt": "a couple of chairs and beds in a room",
+        "step_compression": 1.0,
+        "latency": 12.968101501464844
+    },
+    "prompt_999": {
+        "prompt": "The image is a closeup of a computer keyboard.",
+        "step_compression": 1.0,
+        "latency": 13.064252853393555
+    }
+}

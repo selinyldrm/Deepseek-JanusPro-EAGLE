@@ -1,5 +1,12 @@
 import argparse
 import sys
+import os
+script_dir = os.path.dirname(__file__)
+parent_dir = os.path.dirname(script_dir)
+parent_parent_dir = os.path.dirname(parent_dir)
+sys.path.append(parent_dir)
+sys.path.append(parent_parent_dir)
+
 import entrypoints.train_drafter.main as train_drafter
 import entrypoints.generate_train_data as generate_train_data
 import entrypoints.generate_codebook as generate_codebook

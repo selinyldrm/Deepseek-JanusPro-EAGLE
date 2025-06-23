@@ -524,7 +524,7 @@ class Model(nn.Module):
                     emb_path = index_json["weight_map"]["model.embed_tokens.weight"]
                 with safe_open(os.path.join(path, emb_path),
                                framework="pt",
-                               device="cpu") as f:
+                               device="cuda") as f:
                     tensor_slice = f.get_slice("model.embed_tokens.weight")
                     vocab_size, hidden_dim = tensor_slice.get_shape()
                     tensor = tensor_slice[:, :hidden_dim].float()
@@ -533,7 +533,7 @@ class Model(nn.Module):
                     head_path = "model.safetensors"
                     with safe_open(os.path.join(path, head_path),
                                 framework="pt",
-                                device="cpu") as f:
+                                device="cuda") as f:
                         tensor_slice = f.get_slice("lm_head.weight")
                         vocab_size, hidden_dim = tensor_slice.get_shape()
                         tensor = tensor_slice[:, :hidden_dim].float()

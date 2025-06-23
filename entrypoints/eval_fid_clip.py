@@ -168,7 +168,7 @@ def compute_clip_score(
 
 
 @torch.no_grad()
-def compute_fid(fake_dir: Path, gt_dir: Path,
+def compute_fid(gt_dir: Path, fake_dir: Path, 
     resize_size=None, feature_extractor="clip"):
     from cleanfid import fid
     center_crop_trsf = CenterCropLongEdge()
@@ -192,26 +192,27 @@ def compute_fid(fake_dir: Path, gt_dir: Path,
                           fake_dir,
                           model_name=model_name,
                           custom_image_tranform=resize_and_center_crop)
+
     return fid
 
 
 def run_eval_fid_clip(opt):
     ### Generated images
-    dset2 = EvalDataset(data_dir=opt.fake_dir,
-                        crop_long_edge=True,
-                        resize_size=opt.eval_res,
-                        resizer="lanczos",
-                        normalize=True,
-                        caption_path=opt.caption_path)
+    # dset2 = EvalDataset(data_dir=opt.fake_dir,
+    #                     crop_long_edge=True,
+    #                     resize_size=opt.eval_res,
+    #                     resizer="lanczos",
+    #                     normalize=True,
+    #                     caption_path=opt.caption_path)
 
-    dset2_dataloader = DataLoader(dataset=dset2,
-                                  batch_size=opt.batch_size,
-                                  shuffle=False,
-                                  pin_memory=True,
-                                  drop_last=False)
+    # dset2_dataloader = DataLoader(dataset=dset2,
+    #                               batch_size=opt.batch_size,
+    #                               shuffle=False,
+    #                               pin_memory=True,
+    #                               drop_last=False)
 
-    clip_score = compute_clip_score(dset2_dataloader, clip_model=opt.clip_model4eval, how_many=opt.how_many)
-    print(f"CLIP score: {clip_score}")
+    # clip_score = compute_clip_score(dset2_dataloader, clip_model=opt.clip_model4eval, how_many=opt.how_many)
+    # print(f"CLIP score: {clip_score}")
 
     fid = compute_fid(
         os.path.join(opt.ref_dir),
@@ -220,10 +221,10 @@ def run_eval_fid_clip(opt):
         feature_extractor="inception")
     print(f"FID_{opt.eval_res}px: {fid}")
 
-    txt_path = opt.fake_dir + '/score.txt'
+    txt_path = opt.fake_dir + 'score.txt'
     print("writing to {}".format(txt_path))
     with open(txt_path, 'w') as f:
-        print(f"CLIP score: {clip_score}", file=f)
+        # print(f"CLIP score: {clip_score}", file=f)
         print(f"FID_{opt.eval_res}px: {fid}", file=f)
 
     return
