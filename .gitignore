@@ -1,6 +1,10 @@
 *.pt
 *.png
+*.yaml
+*.nfs*
 __pycache__/**
 *.npz
+*.pyc
+*.json
 *.npy
 

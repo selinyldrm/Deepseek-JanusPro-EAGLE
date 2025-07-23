@@ -32,6 +32,9 @@ from transformers.activations import ACT2FN
 
 from models.configs.configs import EConfig
 from .utils_c import *
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy
 from .choices import *
 
 
@@ -914,6 +917,12 @@ class Model(nn.Module):
     def init_tree_v1(self, tree_choices):
         self.tree = tree_choices
         self.tree_buffer=generate_tree_buffers(self.tree, self.embed_tokens.weight.device)
+        # print("self.tree_buffer['tree_indices'][0]: ", self.tree_buffer['tree_indices'][0])
+        # for x in self.tree_buffer['attn_mask']:
+            # print("(self.tree_buffer['attn_mask'])[]: ", x.shape, flush=True)
+        # print("(self.tree_buffer['attn_mask'])[1].shape: ", (self.tree_buffer['attn_mask'])[1].shape, flush=True)
+        # print("(self.tree_buffer['attn_mask'])[2].shape: ", (self.tree_buffer['attn_mask'])[2].shape, flush=True)
+        # print("(self.tree_buffer['attn_mask'])[3].shape: ", (self.tree_buffer['attn_mask'])[3].shape, flush=True)
 
     def repeat_hidden(self, hidden_states, num_repeat):
         new_hidden = []
@@ -921,9 +930,39 @@ class Model(nn.Module):
             new_hidden.append(hidden_states[:, id:id+1].repeat(1, i, 1))
         return torch.cat(new_hidden, dim=1)
     
-    def sample(self,logits, logits_processor,k=1):
+    def sample(self,logits, step, logits_processor,k=1):
         logits = logits_processor(None, logits)
+        masked_logits = logits.clone()
+        masked_logits[masked_logits == float('-inf')] = 0.0
+        masked_logits = masked_logits.to(torch.float32)
+        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
         probabilities = torch.nn.functional.softmax(logits, dim=1)
+        if normalized.shape[0] > 1 :
+            # cos_similarities = F.cosine_similarity(normalized[:-1], normalized[1:], dim=1)
+            # Compute cosine similarity matrix: [B, B]
+            cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
+            sns.heatmap(cosine_sim_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
+            # Compute L2 distance between each consecutive pair
+            # l2_distances = torch.norm(normalized[1:] - normalized[:-1], dim=1)  # shape: [B-1]
+            diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
+            l2_dist_matrix = torch.norm(diffs, dim=2).cpu().numpy()  # shape: [B, B]
+            l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
+           
+            # plt.plot(cos_similarities.to(torch.float32).cpu().numpy(), marker='o')
+            plt.title("Cosine Similarity Between Consecutive Tokens")
+            plt.xlabel("Token Index (i)")
+            plt.ylabel("cosine_similarity(logit[i], logit[i+1])")
+            plt.grid()
+            plt.savefig(f"./relaxed-lantern++-stg2-temp1-d3-k10-cfg3.0-k2000/analysis/c-{step}.png")
+            plt.close()
+            sns.heatmap(l2_dist_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, vmin=1.0,  vmax=0)
+            # plt.plot(l2_distances.to(torch.float32).cpu().numpy(), marker='o')
+            plt.title("L2 distance Between Consecutive Tokens")
+            plt.xlabel("Token Index (i)")
+            plt.ylabel("l2_distances(logit[i], logit[i+1])")
+            plt.grid()
+            plt.savefig(f"./relaxed-lantern++-stg2-temp1-d3-k10-cfg3.0-k2000/analysis/l-{step}.png")
+            plt.close()
         sampled_indices = torch.multinomial(probabilities, k, replacement=False)
         sampled_probs = torch.gather(probabilities, 1, sampled_indices)
 
@@ -941,14 +980,14 @@ class Model(nn.Module):
     
     
     @torch.no_grad()
-    def topK_genrate_v1(self, hidden_states, input_ids, head, logits_processor, cfg_scale):
+    def topK_genrate_v1(self, step, hidden_states, input_ids, head, logits_processor, cfg_scale):
         # test_=input_ids
         # input_ids = torch.tensor([state[1:]])
         input_ids = input_ids[:, 1:]
         input_ids = input_ids.to(hidden_states.device)
         ss_token,ss_prob,ss_op = [],[],[]
         len_posi=input_ids.shape[1]
-        self.reset()
+        self.reset() # self.tree_mask reset
 
         if hasattr(self, "stable_kv") and self.stable_kv is not None:
             kv_len=self.stable_kv[0][0].shape[2]
@@ -971,7 +1010,7 @@ class Model(nn.Module):
 
         for i in range(len(self.tree_buffer['tree_indices'])):
             if logits_processor is not None:
-                topk_index,topk_prob,op=self.sample(last_headout,logits_processor,k=self.top_k)
+                topk_index,topk_prob,op=self.sample(last_headout,step,logits_processor,k=self.top_k)
             else:
                 top=torch.topk(last_headout, self.top_k, dim=-1)
                 topk_index,topk_prob = top.indices,top.values
@@ -1011,7 +1050,7 @@ class Model(nn.Module):
             #print(select_index)
 
         if logits_processor is not None:
-            topk_index,topk_prob,op=self.sample(last_headout,logits_processor,k=self.top_k)
+            topk_index,topk_prob,op=self.sample(last_headout,step, logits_processor,k=self.top_k)
         else:
             top = torch.topk(last_headout, self.top_k, dim=-1)
             topk_index, topk_prob = top.indices, top.values

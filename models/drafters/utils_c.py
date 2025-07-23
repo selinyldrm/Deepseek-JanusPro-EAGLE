@@ -100,16 +100,20 @@ class Tree:
 def generate_tree_buffers(tree_choices, device="cuda"):
     tree=Tree(tree_choices)
     sorted_tree_choices = sorted(tree_choices, key=lambda x: (len(x), x))
-    tree_len = tree.num_node_wchild()
+    tree_len = tree.num_node_wchild() # num of node with child
 
 
     max_depth=tree.max_depth()
-    nodes_wc=tree.get_node_wchild()
+    # print("max_depth: ", max_depth)
+    # print("tree_len: ", tree_len)
+    nodes_wc=tree.get_node_wchild() # all nodes with child
 
     depth_counts=[0 for _ in range(max_depth-1)]
+    # print("depth_counts: ", depth_counts)
     for x in nodes_wc:
         depth_counts[x.depth-1]+=1
     depth_counts_sum = [sum(depth_counts[:i + 1]) for i in range(len(depth_counts))]
+    # print("depth_counts_sum: ", depth_counts_sum)
 
 
     tree_attn_mask = torch.eye(tree_len, tree_len)
@@ -203,4 +207,6 @@ def reset_past_key_values(passed_key_values: List[torch.Tensor]) -> List[torch.T
 if __name__=="__main__":
     from choices import mc_sim_7b_63
     a=generate_tree_buffers(mc_sim_7b_63)
-    print(a)
+    # from choices import naive_extend_57
+    # a=generate_tree_buffers(naive_extend_57)
+    # print("EAGLE generate_tree_buffers: ", a)

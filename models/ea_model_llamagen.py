@@ -10,6 +10,9 @@ from transformers import AutoTokenizer
 import os
 from transformers import PreTrainedModel, PretrainedConfig,AutoConfig
 import numpy as np
+from torchvision.utils import save_image
+import math
+import matplotlib.pyplot as plt
 
 
 from .kv_variants.modeling_llamagen_kv import LlamaForCausalLM as KVLlamaForCausalLM
@@ -280,8 +283,10 @@ class EaModel(nn.Module):
         # Append the padding values to the original path and return the new list.
         return path + [pad_value] * (length - len(path))
         
-    def generate_tree_buffers(self, tree_choices, device="cuda"):
+    def generate_tree_buffers(self, tree_choices, level_t, device="cuda"):
         sorted_tree_choices = sorted(tree_choices, key=lambda x: (len(x), x))
+        if level_t is not None:
+            sorted_tree_choices = [x for x in sorted_tree_choices if len(x) <= level_t]
         tree_len = len(sorted_tree_choices) + 1
 
         # Initialize depth_counts to keep track of how many choices have a particular depth
@@ -417,7 +422,7 @@ class EaModel(nn.Module):
         }
         tree_buffers["p_indices"] = p_indices_new
         tree_buffers["b_indices"] = b_indices_new
-        return tree_buffers
+        return tree_buffers, sorted_tree_choices
     
     @torch.no_grad()
     def initialize_tree(self, cond_combined, past_key_values, logits_processor, cfg_scale, attention_mask = None):
@@ -440,7 +445,7 @@ class EaModel(nn.Module):
         return draft_tokens, retrieve_indices,tree_mask,tree_position_ids, orig, hidden_states, token
     
     @torch.no_grad()
-    def initialize_tree_v1(self, cond_combined, tree_attn_mask, past_key_values, logits_processor, cfg_scale, attention_mask = None, tree_choices=mc_sim_7b_63):
+    def initialize_tree_v1(self, step, cond_combined, tree_attn_mask, past_key_values, logits_processor, cfg_scale, attention_mask = None, tree_choices=mc_sim_7b_63):
         outputs, orig, hidden_states = self(
             cond_idx=cond_combined, past_key_values=past_key_values, output_orig=True, attention_mask=attention_mask
         )
@@ -455,14 +460,20 @@ class EaModel(nn.Module):
         token = torch.cat([token, token], dim=0)
         zero_padding = torch.zeros((token.shape[0], 120), dtype=torch.long, device=token.device)
         input_ids = torch.cat((zero_padding, token.to(cond_combined.device)), dim=1)
+        # print("eagle receives tree_choices: ", tree_choices)
         self.ea_layer.init_tree_v1(tree_choices)
-        tree_logits = self.ea_layer.topK_genrate_v1(hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
+        tree_logits = self.ea_layer.topK_genrate_v1(step, hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
+        # print(f"tree_logits after eagle's topK_genrate_v1: {tree_logits[0].shape}, {tree_logits[1].shape}, {tree_logits[2][0].shape, tree_logits[2][1].shape}")
+        # print("input_ids after eagle: ", input_ids.shape)
         self.base_model.model.tree_mask = tree_attn_mask
         return tree_logits, logits, token
 
     @torch.no_grad()
     def evaluate_posterior_v1(
         self,
+        idx,
+        relaxed,
+        testing,
         logits: torch.Tensor,
         candidates: torch.Tensor,
         logits_processor,
@@ -476,6 +487,10 @@ class EaModel(nn.Module):
         lantern_delta=0.1,
     ) -> Tuple[torch.Tensor, int]:
         # Greedy decoding based on temperature value
+        if testing: 
+            analysis_p_p = []
+            analysis_p = []
+            analysis_r = []
         if logits_processor is None:
             device = logits.device
             batch_size, seq_len, vocab_size = logits.size()
@@ -601,7 +616,8 @@ class EaModel(nn.Module):
             accept_length = 1
             accept_cand = candidates[0][:1]
             best_candidate = 0
-            for i in range(1, candidates.shape[1]):
+            # BFS
+            for i in range(1, candidates.shape[1]): # token depth
                 if i != accept_length:
                     break
                 adjustflag = False
@@ -611,7 +627,7 @@ class EaModel(nn.Module):
                 gt_logits = logits_processor(None, gt_logits)[0]
                 gtp = torch.softmax(gt_logits, dim=0)
                 candidates_set = []
-                for j in range(candidates.shape[0]):
+                for j in range(candidates.shape[0]): # candidate sequences
                     if is_eq[j]:
                         x = candidates[j, i]
                         xi = x.item()
@@ -620,6 +636,8 @@ class EaModel(nn.Module):
                         candidates_set.append(xi)
                         r = random.random()
                         px = gtp[xi]
+                        if testing:
+                            px_prior = px
                         if lantern:
                             nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
                             cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
@@ -639,6 +657,15 @@ class EaModel(nn.Module):
                         if qx <= 0:
                             continue
                         acp = px / qx
+                        if testing and (px_prior/ qx) < acp:
+                            analysis_p.append(px_prior/ qx)
+                            analysis_p_p.append(acp)
+                            analysis_r.append(r)
+                        if relaxed:
+                            if idx < 49 :
+                                acp += acp + 0.5
+                            elif idx < 149 :
+                                acp += acp * 0.5
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                             accept_length += 1
@@ -668,7 +695,10 @@ class EaModel(nn.Module):
                 gt_logits = logits[best_candidate, accept_length - 1][None]
                 gt_logits = logits_processor(None, gt_logits)[0]
                 sample_p = torch.softmax(gt_logits, dim=0)
+            if testing:
+                return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r
             return torch.tensor(best_candidate), accept_length - 1, sample_p
+
     
 
     def reset_tree_mode(self):
@@ -740,7 +770,6 @@ class EaModel(nn.Module):
                         
                         candidates_set.append(xi)
 
-                        r = random.random()
                         px = gtp[xi]
                         if lantern:
                             nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
@@ -761,6 +790,7 @@ class EaModel(nn.Module):
                         
                         qx = 1.0
                         acp = px / qx
+                        r = random.random()
 
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
@@ -895,6 +925,7 @@ class EaModel(nn.Module):
 
                 # Compute posterior mask
                 top_tokens = torch.argmax(gtp, dim=-1)[:, :-1]  # Adjusted to match xi
+
                 posterior_mask = (xi == top_tokens).int() * valid_mask
                 candidates_accept_length = torch.cumprod(posterior_mask, dim=1).sum(dim=1)
                 accept_length = candidates_accept_length.max()
@@ -918,17 +949,25 @@ class EaModel(nn.Module):
         cfg_scale,
         attention_mask = None,
 ): 
-        position_ids = tree_position_ids + input_ids.shape[1]
-        if attention_mask is not None:
+        position_ids = tree_position_ids + input_ids.shape[1] # 58+250 = 308
+        # print("tree_decoding: position_ids: ", position_ids.shape, flush=True)
+        # print("tree_decoding: position_ids: ", position_ids, flush=True)
+        if attention_mask is not None: # [2, 120]
             remaining_length = input_ids.shape[1] + tree_candidates.shape[1] - attention_mask.shape[1]
+            # print("tree_decoding: remaining_length: ", remaining_length, flush=True)
             one_padding = torch.ones((attention_mask.shape[0], remaining_length), dtype=torch.long, device=attention_mask.device)
-            attention_mask = torch.cat([attention_mask, one_padding], dim=1)
+            attention_mask = torch.cat([attention_mask, one_padding], dim=1) 
+        # for x in past_key_values: 
+        #     print("tree_decoding: past_key_values.x: ", x.shape, flush=True)
+        # print("tree_decoding: attention_mask: ", attention_mask.shape, flush=True)
+        # print("tree_decoding: tree_candidates: ", tree_candidates.shape, flush=True)
+
         outputs, tree_logits, hidden_state = self(
-            input_ids=tree_candidates,
+            input_ids=tree_candidates,# [1,58]
             output_orig=True,
             past_key_values=past_key_values,
-            position_ids=position_ids,
-            attention_mask=attention_mask
+            position_ids=position_ids, 
+            attention_mask=attention_mask # [2, 308]
         )
         tree_logits = cfg_logit_process(tree_logits, cfg_scale)
         logits = tree_logits[0, retrieve_indices]
@@ -937,6 +976,10 @@ class EaModel(nn.Module):
     @torch.no_grad()
     def update_inference_inputs(
         self,
+        idx,
+        relaxed,
+        tree_buffers_new,
+        tree_choices_new,
         input_ids,
         candidates,
         best_candidate,
@@ -968,6 +1011,7 @@ class EaModel(nn.Module):
             dst = past_key_values_data[..., prev_input_len: prev_input_len + tgt.shape[-2], :]
             # Copy relevant past information from the source to the destination
             dst.copy_(tgt, non_blocking=True)
+        # print("past_key_values_data.shape: ", past_key_values_data.shape)
 
         # Update the current length tensor (currently only support batch size is 1)
         current_length_data.fill_(prev_input_len + tgt.shape[-2])
@@ -987,7 +1031,14 @@ class EaModel(nn.Module):
         ea_input_ids = torch.cat((input_ids, token.to(input_ids.device)), dim=1).repeat(2, 1)
         
         if static_tree:
-            tree_logits = self.ea_layer.topK_genrate_v1(accept_hidden_state_new,
+            if relaxed:
+                # update tree logic
+                self.tree_buffers = tree_buffers_new
+                self.tree_choices = tree_choices_new
+                self.ea_layer.init_tree_v1(tree_choices_new)
+                self.base_model.model.tree_mask = tree_buffers_new['tree_attn_mask']
+
+            tree_logits = self.ea_layer.topK_genrate_v1(idx, accept_hidden_state_new,
                                                         input_ids=ea_input_ids,
                                                         head=self.base_model.lm_head,logits_processor=logits_processor,
                                                         cfg_scale=cfg_scale)
@@ -1015,9 +1066,10 @@ class EaModel(nn.Module):
         lantern_delta: Optional[float] = None,
         static_tree: Optional[bool] = None,
         tree_choices: Optional[List[List[int]]] = naive_extend_57,
+        testing: bool = False,
+        relaxed: bool= False,
         **model_kwargs,
     ):
-        accept_length_list = []
         caption_embs, emb_masks = self.base_model.t5_model.get_text_embeddings(prompt)
         new_emb_masks = torch.flip(emb_masks, dims=[-1])
         new_caption_embs = []
@@ -1059,6 +1111,7 @@ class EaModel(nn.Module):
                 attention_mask = torch.cat([c_emb_masks, c_emb_masks])
             else:
                 attention_mask = c_emb_masks
+        # print("attention_mask: ", attention_mask.shape)
         cond_combined = cond_combined.to(self.base_model.dtype)
         padding = (torch.zeros(1,1,dtype=torch.long)-1).to(cond_combined.device)
         self.ea_layer.reset_kv()
@@ -1068,74 +1121,227 @@ class EaModel(nn.Module):
         else:
             logits_processor = None
         
-        st = time.time()
+        import models.drafters.choices as choices
         if static_tree:
-            if hasattr(self, "tree_choices") and self.tree_choices == tree_choices:
-                tree_buffers = self.tree_buffers
+            # if hasattr(self, "tree_choices") and self.tree_choices == tree_choices:
+            #     tree_buffers = self.tree_buffers
+            # else:
+            if relaxed:
+                tree_buffers_two, tree_choices_two = self.generate_tree_buffers(
+                        tree_choices, 2, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                    )
+                tree_buffers_three, tree_choices_three = self.generate_tree_buffers(
+                    tree_choices, 3, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_four, tree_choices_four = self.generate_tree_buffers(
+                    tree_choices, 4, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_five, tree_choices_five = self.generate_tree_buffers(
+                    tree_choices, 5, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_six, tree_choices_six = self.generate_tree_buffers(
+                    tree_choices, None, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_seven, tree_choices_seven = self.generate_tree_buffers(
+                    choices.sequoia, 7, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_eight, tree_choices_eight = self.generate_tree_buffers(
+                    choices.sequoia, 8, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_nine, tree_choices_nine = self.generate_tree_buffers(
+                    choices.sequoia, 9, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_ten, tree_choices_ten = self.generate_tree_buffers(
+                    choices.sequoia, 10, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                )
+                tree_buffers_two["retrieve_indices_head"] = tree_buffers_two["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_three["retrieve_indices_head"] = tree_buffers_three["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_four["retrieve_indices_head"] = tree_buffers_four["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_five["retrieve_indices_head"] = tree_buffers_five["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_six["retrieve_indices_head"] = tree_buffers_six["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_seven["retrieve_indices_head"] = tree_buffers_seven["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_eight["retrieve_indices_head"] = tree_buffers_eight["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_nine["retrieve_indices_head"] = tree_buffers_nine["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+                tree_buffers_ten["retrieve_indices_head"] = tree_buffers_ten["retrieve_indices"].to(self.base_model.lm_head.weight.device)
+
+                tree_buffers = tree_buffers_two
+                tree_choices = tree_choices_two
             else:
-                tree_buffers = self.generate_tree_buffers(
-                    tree_choices, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
+                tree_buffers, _ = self.generate_tree_buffers(
+                    tree_choices, None, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
                 )
                 tree_buffers["retrieve_indices_head"] = tree_buffers["retrieve_indices"].to(self.base_model.lm_head.weight.device)
-            self.tree_buffers = tree_buffers
-            self.tree_choices = tree_choices
+                tree_buffers_four = tree_buffers_two = tree_buffers_eight = tree_choices_two = tree_choices_four = tree_choices_eight = None
 
-        if hasattr(self.base_model, "past_key_values"):
-            past_key_values = self.base_model.past_key_values
-            past_key_values_data = self.base_model.past_key_values_data
-            current_length_data = self.base_model.current_length_data
-            current_length_data.zero_()
-        else:
-            (
-                past_key_values,
-                past_key_values_data,
-                current_length_data,
-            ) = initialize_past_key_values(self.base_model, 2)
-            self.base_model.past_key_values = past_key_values
-            self.base_model.past_key_values_data = past_key_values_data
-            self.base_model.current_length_data = current_length_data
+            self.tree_choices = tree_choices
+            self.tree_buffers = tree_buffers
+            # print("tree_indices: ", tree_buffers['tree_indices'])
+            # print("retrieve_indices: ", tree_buffers['retrieve_indices'])
+            # print("tree_position_ids: ", tree_buffers["tree_position_ids"])
+            
+
+        # if hasattr(self.base_model, "past_key_values"):
+        #     past_key_values = self.base_model.past_key_values
+        #     past_key_values_data = self.base_model.past_key_values_data
+        #     current_length_data = self.base_model.current_length_data
+        #     current_length_data.zero_()
+        # else:
+        (
+            past_key_values,
+            past_key_values_data,
+            current_length_data,
+        ) = initialize_past_key_values(self.base_model, 2)
+        self.base_model.past_key_values = past_key_values
+        self.base_model.past_key_values_data = past_key_values_data
+        self.base_model.current_length_data = current_length_data
             
         self.reset_tree_mode()
 
         if static_tree:
             tree_logits, logits, sample_token = self.initialize_tree_v1(
-                cond_combined, tree_buffers['tree_attn_mask'], past_key_values, logits_processor, cfg, attention_mask, tree_choices
+                -1, cond_combined, tree_buffers['tree_attn_mask'], past_key_values, logits_processor, cfg, attention_mask, tree_choices
             )
+            # print("logits after initialize_tree_v1: ", logits.shape, flush=True)
+            # print(f"tree_logits after initialize_tree_v1: {tree_logits[0].shape}, {tree_logits[1].shape}, {tree_logits[2][0].shape, tree_logits[2][1].shape}", flush=True)
         else:
             draft_tokens, retrieve_indices,tree_mask,tree_position_ids, logits, hidden_state, sample_token = self.initialize_tree(
                 cond_combined, past_key_values, logits_processor, cfg, attention_mask
-            )
+            )        
 
         max_steps = max_length
         input_ids = torch.zeros((max_batch_size, 120), dtype=torch.long).to(cond_combined.device)
         new_token=0
+        # print("max steps: ", max_steps)
+        def pad_to_square(ids, pad_token_id=0):
+            B, T = ids.shape
+            if math.ceil(T**0.5) * math.ceil(T**0.5) == T : 
+                return ids
+            pad_len = int((math.ceil(T**0.5)+0.5)) * int((math.ceil(T**0.5)+0.5)) - T        # 9 - 7 = 2
+            # print("pad_len: ", pad_len)
+            if pad_len > 0:
+                pad = torch.full((B, pad_len), pad_token_id, dtype=ids.dtype, device=ids.device)
+                ids_padded = torch.cat([ids, pad], dim=1)
+            else:
+                ids_padded = ids
+
+            return ids_padded
+
+        if testing:
+            accept_list = []
+            analysis_p =[]
+            analysis_p_p=[]
+            analysis_r=[]
+        
+        st = time.time()
         for idx in range(max_steps):
             if static_tree:
+                # print("tree_buffers['tree_attn_mask']: ", tree_buffers['tree_attn_mask'].shape, flush=True)
+                # print("attention_mask: ", attention_mask.shape, flush=True)
+                # print("self.ea_layer.tree_mask: ", self.ea_layer.tree_mask.shape, flush=True)
+                # print("self.base_model.model.tree_mask: ", self.base_model.model.tree_mask.shape, flush=True)
+                # print("len(self.ea_layer.tree_buffer['tree_indices']): ", len(self.ea_layer.tree_buffer['tree_indices']), flush=True)
+                
                 candidates, cart_candidates_prob, tree_candidates = self.generate_candidates(
                     tree_logits, tree_buffers["tree_indices"], tree_buffers["retrieve_indices"], sample_token, logits_processor
                 )
+                # print("candidates after generate_candidates: ", candidates.shape, flush=True)
+                # print("cart_candidates_prob after generate_candidates: ", cart_candidates_prob.shape, flush=True)
+                # print("tree_candidates after generate_candidates: ", tree_candidates.shape, flush=True)
                 tree_candidates = torch.cat([tree_candidates, tree_candidates]).to(self.base_model.device)
                 logits, hidden_state_new, outputs = self.tree_decoding(
                     tree_candidates, past_key_values, tree_buffers["tree_position_ids"], input_ids, tree_buffers["retrieve_indices_head"], cfg, attention_mask
                 )
-                best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
-                    logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
+                # print("logits after tree_decoding: ", logits.shape, flush=True)
+                
+                if testing:
+                    best_candidate, accept_length, sample_p, p, pp, r = self.evaluate_posterior_v1(
+                        idx, relaxed, testing, logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
+                    )
+                    accept_list.append(accept_length)
+                    analysis_p.append(p)
+                    analysis_p_p.append(pp)
+                    analysis_r.append(r)
+                else:
+                    best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
+                    idx, relaxed, testing, logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                 )
-                input_ids, tree_logits, new_token, hidden_state, sample_token= self.update_inference_inputs(
-                    input_ids,
-                    candidates,
-                    best_candidate,
-                    accept_length,
-                    tree_buffers["retrieve_indices_head"],
-                    logits_processor,
-                    new_token,
-                    past_key_values_data,
-                    current_length_data,
-                    hidden_state_new,
-                    sample_p,
-                    cfg,
-                    static_tree=static_tree
-                )
+               
+                if relaxed and idx % 25 == 0 and idx < 201:
+                        tree_buffers_old =  tree_buffers
+                        if idx == 25 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_three
+                            tree_choices = tree_choices_three
+                        elif idx == 50 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_four
+                            tree_choices = tree_choices_four
+                        elif idx == 75 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_five
+                            tree_choices = tree_choices_five
+                        elif idx == 100 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_six
+                            tree_choices = tree_choices_six
+                        elif idx == 125 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_seven
+                            tree_choices = tree_choices_seven
+                        elif idx == 150 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_eight
+                            tree_choices = tree_choices_eight
+                        elif idx == 175 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_nine
+                            tree_choices = tree_choices_nine
+                        elif idx == 200 :
+                            # update tree logic
+                            tree_buffers = tree_buffers_ten
+                            tree_choices = tree_choices_ten
+                        input_ids, tree_logits, new_token, hidden_state, sample_token= self.update_inference_inputs(
+                            idx,
+                            True,
+                            tree_buffers,
+                            tree_choices,
+                            input_ids,
+                            candidates,
+                            best_candidate,
+                            accept_length,
+                            tree_buffers_old["retrieve_indices_head"],
+                            logits_processor,
+                            new_token,
+                            past_key_values_data,
+                            current_length_data,
+                            hidden_state_new,
+                            sample_p,
+                            cfg,
+                            static_tree=static_tree
+                        )
+                        
+                else: 
+                    input_ids, tree_logits, new_token, hidden_state, sample_token= self.update_inference_inputs(
+                            idx,
+                            False,
+                            None,
+                            None,
+                            input_ids,
+                            candidates,
+                            best_candidate,
+                            accept_length,
+                            tree_buffers["retrieve_indices_head"],
+                            logits_processor,
+                            new_token,
+                            past_key_values_data,
+                            current_length_data,
+                            hidden_state_new,
+                            sample_p,
+                            cfg,
+                            static_tree=static_tree
+                        )
+
+                   
 
             else:
                 self.base_model.model.tree_mask = tree_mask
@@ -1149,8 +1355,10 @@ class EaModel(nn.Module):
                 candidates = draft_tokens[0, retrieve_indices]
 
                 best_candidate, accept_length, sample_p = self.evaluate_posterior(logits, candidates,  logits_processor, lantern=lantern, lantern_k=lantern_k, lantern_delta=lantern_delta)
-                
+                if testing:
+                    accept_list.append(accept_length)
                 input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, hidden_state, sample_token = self.update_inference_inputs(
+                    idx,
                     input_ids,
                     candidates,
                     best_candidate,
@@ -1164,13 +1372,27 @@ class EaModel(nn.Module):
                     sample_p,
                     cfg,
                 )
-            if torch.is_tensor(accept_length):
-                accept_length_list.append(accept_length.item()+1)
-            else:
-                accept_length_list.append(accept_length+1)
+            # if torch.is_tensor(accept_length):
+            #     accept_length_list.append(accept_length.item()+1)
+            # else:
+            #     accept_length_list.append(accept_length+1)
+            
+           
+            # ids_padded = pad_to_square(input_ids[:, 120:120+new_token])
+            # _, generated_image = self.base_model.decode_ids(ids_padded)
+            # os.makedirs(f"/home/syildiri/LANTERN/lantern-imgs/{prompt}", exist_ok=True)
+            # save_image(generated_image,  f"/home/syildiri/LANTERN/lantern-imgs/{prompt}/step_{idx}.png", normalize=True, value_range=(-1, 1))
+
             if new_token > max_length:
                 break
-        return input_ids[:, 120:120+max_length], sum(accept_length_list)/len(accept_length_list), time.time()-st
+        
+        if testing:
+            p = [i for p in analysis_p for i in p]
+            pp = [i for p_p in analysis_p_p for i in p_p]
+            r = [i for r in analysis_r for i in r]
+
+            return input_ids[:, 120:120+max_length], time.time()-st, accept_list, p , pp, r 
+        return input_ids[:, 120:120+max_length], time.time()-st
     
     @torch.no_grad()
     def decode_ids(self, ids):
