@@ -1,54 +1,54 @@
 {
     "prompt_13": {
         "prompt": "A man is sitting on a chair looking at a table.",
-        "latency": 14.257116794586182
+        "latency": 10.039403438568115
     },
     "prompt_14": {
         "prompt": "A wooden desk topped with lots of clutter near a chair.",
-        "latency": 12.882147312164307
+        "latency": 13.439141035079956
     },
     "prompt_15": {
         "prompt": "a close up of two cats on a bath room sink",
-        "latency": 11.06000542640686
+        "latency": 10.866608142852783
     },
     "prompt_16": {
         "prompt": "A young man with red hair kicking a soccer ball.",
-        "latency": 12.679370641708374
+        "latency": 10.946052312850952
     },
     "prompt_17": {
         "prompt": "A young boy riding a skateboard on a street in front of a house.",
-        "latency": 16.40017342567444
+        "latency": 11.213207483291626
     },
     "prompt_18": {
         "prompt": "A row of various types of chairs and umbrella with a bridge in the background.",
-        "latency": 13.328556060791016
+        "latency": 11.233381509780884
     },
     "prompt_19": {
         "prompt": "A small  pink statue  holding onto an umbrella",
-        "latency": 14.181578636169434
+        "latency": 12.133036375045776
     },
     "prompt_20": {
         "prompt": "Guy out in the water rides through a wave on his surfboard",
-        "latency": 12.910272359848022
+        "latency": 9.78321123123169
     },
     "prompt_21": {
         "prompt": "A couple of hipsters standing next to each other.",
-        "latency": 12.277583122253418
+        "latency": 11.287055730819702
     },
     "prompt_22": {
         "prompt": "A city traffic light is red with a large billow of smoke in the background.",
-        "latency": 12.216072797775269
+        "latency": 10.172603368759155
     },
     "prompt_23": {
         "prompt": "The bright computer monitor is sitting on the corner desk.",
-        "latency": 9.247968912124634
+        "latency": 9.462256908416748
     },
     "prompt_24": {
         "prompt": "a panda bear walking on a field near a tree",
-        "latency": 10.298538208007812
+        "latency": 12.728830337524414
     },
     "prompt_25": {
         "prompt": "A boy in blue wetsuit on a boogie board.",
-        "latency": 11.331995964050293
+        "latency": 9.31139612197876
     }
 }

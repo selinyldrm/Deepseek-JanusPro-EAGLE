@@ -1436,80 +1436,73 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
 
         next_token, _ = sample(logits, temperature, top_k, top_p)
         seq[:, 0] = next_token.squeeze(1)
-        logit_list = []
+        # logit_list = []
+        # seq_emb_list = []
+        # emb_tokens  = self.get_input_embeddings()
 
         for i in range(1, max_length):
             attention_mask = torch.cat([attention_mask, torch.ones_like(attention_mask)[:, :1]], dim=-1)
             input_ids = torch.cat([next_token, next_token])
-            logit_list.append(logits[:, -1, :].squeeze(0))
+            # logit_list.append(logits[:, -1, :].squeeze(0))
             output = self.forward(input_ids=input_ids, past_key_values=past_key_values, attention_mask=attention_mask)
             combined_logits = output.logits
             logits = cfg_logit_process(combined_logits, cfg)
             
             next_token, _ = sample(logits, temperature, top_k, top_p)
             seq[:, i] = next_token.squeeze(1)
+            # token_emb = emb_tokens(next_token)               # [1, 1, D]
+            # token_emb_vector = token_emb.squeeze(0).squeeze(0)    # [D]
+            # seq_emb_list.append(token_emb_vector)
         
-        masked_logits = torch.stack(logit_list, dim=0)
-        print("masked_logits shape: ", masked_logits.shape)
-        masked_logits[masked_logits == float('-inf')] = 0.0
-        masked_logits = masked_logits.to(torch.float32)
-        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
-        print("normalized shape: ", normalized.shape)
+        # masked_logits = torch.stack(logit_list, dim=0)
+        # print("masked_logits shape: ", masked_logits.shape)
+        # masked_logits[masked_logits == float('-inf')] = 0.0
+        # masked_logits = masked_logits.to(torch.float32)
+        # normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+        # print("normalized shape: ", normalized.shape)
+
+        # image_embeddings = torch.stack(seq_emb_list, dim=0)
+        # image_embeddings = F.normalize(image_embeddings, dim=1)
+        # token_sim_matrix = torch.matmul(image_embeddings, image_embeddings.T).cpu().numpy() # shape: [N, N]
         
-        # probabilities = torch.nn.functional.softmax(logits, dim=1)
-        cosine_sim_matrix = torch.matmul(normalized, normalized.T)
-        # sns.heatmap(cosine_sim_matrix.cpu().numpy(), fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
-        plt.imshow(cosine_sim_matrix.cpu().numpy(), cmap='coolwarm', vmin=0, vmax=1.0)
-        plt.colorbar()
-        plt.title("Cosine Similarity Between Consecutive Tokens")
-        plt.xlabel("Token Index (i)")
-        plt.ylabel("cosine_similarity")
-        plt.grid()
-        os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/", exist_ok=True)
-        plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/cos-{i}.png")
-        plt.close()
+        # # probabilities = torch.nn.functional.softmax(logits, dim=1)
+        # cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
 
-        diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
-        l2_dist_matrix = torch.norm(diffs, dim=2)  # shape: [B, B]
-        l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
-        sns.heatmap(l2_dist_matrix.cpu().numpy(), fmt=".2f", cmap='coolwarm', square=True, vmin=1.0,  vmax=0)
-        plt.title("L2 distance Between Consecutive Tokens")
-        plt.xlabel("Token Index (i)")
-        plt.ylabel("l2_distances")
-        plt.grid()
-        plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/l2-{i}.png")
-        plt.close()
+        # diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
+        # l2_dist_matrix = torch.norm(diffs, dim=2)  # shape: [B, B]
+        # l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
+        # l2_dist_matrix = l2_dist_matrix.cpu().numpy()
 
-        masked_logits = torch.stack(logit_list, dim=0)[:256,:]
-        print("masked_logits shape: ", masked_logits.shape)
-        masked_logits[masked_logits == float('-inf')] = 0.0
-        masked_logits = masked_logits.to(torch.float32)
-        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
-        print("normalized shape: ", normalized.shape)
-        
-        # probabilities = torch.nn.functional.softmax(logits, dim=1)
-        cosine_sim_matrix = torch.matmul(normalized, normalized.T)
-        # sns.heatmap(cosine_sim_matrix.cpu().numpy(), fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
-        plt.imshow(cosine_sim_matrix.cpu().numpy(), cmap='coolwarm', vmin=0, vmax=1.0)
-        plt.colorbar()
-        plt.title("Cosine Similarity Between Consecutive Tokens")
-        plt.xlabel("Token Index (i)")
-        plt.ylabel("cosine_similarity")
-        plt.grid()
-        os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-16x16/{prompt}/", exist_ok=True)
-        plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-16x16/{prompt}/cos-{i}.png")
-        plt.close()
+        # for row in range(32):
 
-        diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
-        l2_dist_matrix = torch.norm(diffs, dim=2)  # shape: [B, B]
-        l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
-        sns.heatmap(l2_dist_matrix.cpu().numpy(), fmt=".2f", cmap='coolwarm', square=True, vmin=1.0,  vmax=0)
-        plt.title("L2 distance Between Consecutive Tokens")
-        plt.xlabel("Token Index (i)")
-        plt.ylabel("l2_distances")
-        plt.grid()
-        plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-16x16/{prompt}/l2-{i}.png")
-        plt.close()
+        #     plt.imshow(token_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+        #     plt.colorbar()
+        #     plt.title("Cosine Similarity Between Tokens")
+        #     plt.xlabel("Token Index (i)")
+        #     plt.ylabel("cosine_similarity")
+        #     plt.grid()
+        #     os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/tokens/", exist_ok=True)
+        #     plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/tokens/row-{row}.png")
+        #     plt.close()
+
+            # sns.heatmap(cosine_sim_matrix.cpu().numpy(), fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
+            # plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+            # plt.colorbar()
+            # plt.title("Cosine Similarity Between Consecutive Tokens")
+            # plt.xlabel("Token Index (i)")
+            # plt.ylabel("cosine_similarity")
+            # plt.grid()
+            # os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/rows/", exist_ok=True)
+            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/rows/cos-{row}.png")
+            # plt.close()
+
+            # sns.heatmap(l2_dist_matrix[32*row:32*row+32, 32*row:32*row+32], fmt=".2f", cmap='coolwarm', square=True, vmin=1.0,  vmax=0)
+            # plt.title("L2 distance Between Consecutive Tokens")
+            # plt.xlabel("Token Index (i)")
+            # plt.ylabel("l2_distances")
+            # plt.grid()
+            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/rows/l2-{row}.png")
+            # plt.close()
         return seq, time.time() - st
     
     @torch.no_grad()

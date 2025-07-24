@@ -2,7 +2,7 @@
     "model": "llamagen2",
     "test": false,
     "relaxed": true,
-    "multigpu": false,
+    "multigpu": true,
     "model_type": "eagle",
     "model_path": "/groups/aig_models_lu_tian/syildiri/LANTERN/LlamaGen-T2I-2",
     "drafter_path": "/home/syildiri/LANTERN/entrypoints/train_drafter/llamagen2_drafter/",
@@ -28,5 +28,5 @@
     "tree_choices": "naive_extend_57",
     "drafter_top_k": null,
     "start_idx": 0,
-    "end_idx": 10000
+    "end_idx": 13
 }

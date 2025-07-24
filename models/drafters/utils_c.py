@@ -100,6 +100,7 @@ class Tree:
 def generate_tree_buffers(tree_choices, device="cuda"):
     tree=Tree(tree_choices)
     sorted_tree_choices = sorted(tree_choices, key=lambda x: (len(x), x))
+    # print("eagle tree: choices ", sorted_tree_choices)
     tree_len = tree.num_node_wchild() # num of node with child
 
 
@@ -161,6 +162,8 @@ def generate_tree_buffers(tree_choices, device="cuda"):
     # for i in range(len(depth_counts)):
     #     position_ids[start: start + depth_counts[i]] = i
     #     start += depth_counts[i]
+    # print("eagle tree: tree_indices ", tree_indices_list)
+    # print("eagle tree: position_ids ", position_ids)
 
     tree_buffers = {
         "attn_mask": [i.unsqueeze(0).unsqueeze(0) for i in tree_attn_mask_list],
