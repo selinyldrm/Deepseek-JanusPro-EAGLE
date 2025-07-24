@@ -1,0 +1,22 @@
+{
+    "prompt_0": {
+        "prompt": "A white sink sitting under a bathroom mirror.",
+        "step_compression": 2.4061032863849765,
+        "latency": 24.599589824676514
+    },
+    "prompt_1": {
+        "prompt": "An apple computer monitor, keyboard and mouse sits on top of a clean wooden desk. ",
+        "step_compression": 2.6015228426395938,
+        "latency": 23.31695032119751
+    },
+    "prompt_2": {
+        "prompt": "A bathroom with a shower curtain that has four palm trees on it and a white tile floor.",
+        "step_compression": 2.92022792022792,
+        "latency": 20.895280361175537
+    },
+    "prompt_3": {
+        "prompt": "A rodeo area with men in cowboy hats, rodeo clowns and an audience in the stands.",
+        "step_compression": 2.690288713910761,
+        "latency": 23.08626675605774
+    }
+}

@@ -931,6 +931,7 @@ class Model(nn.Module):
         return torch.cat(new_hidden, dim=1)
     
     def sample(self,logits, step, logits_processor,k=1):
+        print("logits: ", logits.shape)
         logits = logits_processor(None, logits)
         probabilities = torch.nn.functional.softmax(logits, dim=1)
         bias = []
