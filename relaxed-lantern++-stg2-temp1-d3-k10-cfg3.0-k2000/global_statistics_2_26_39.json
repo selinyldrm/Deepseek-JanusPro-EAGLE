@@ -1,54 +1,54 @@
 {
     "prompt_26": {
         "prompt": "A very nice looking deck area with a small table and a laptop.",
-        "latency": 10.39013671875
+        "latency": 15.052722930908203
     },
     "prompt_27": {
         "prompt": "The bear likes to swim in the water.",
-        "latency": 10.75510025024414
+        "latency": 14.291259527206421
     },
     "prompt_28": {
         "prompt": "An elephant in an enclosure is touching a woman in a pink dress.",
-        "latency": 11.838284969329834
+        "latency": 14.502369403839111
     },
     "prompt_29": {
         "prompt": "A gray and white sitting in front of a TV.",
-        "latency": 9.95444941520691
+        "latency": 15.07926058769226
     },
     "prompt_30": {
         "prompt": "A young boy pushing a cart full of luggage bags.",
-        "latency": 13.589327573776245
+        "latency": 14.910112619400024
     },
     "prompt_31": {
         "prompt": "A giraffe stands beneath a tree beside a marina.",
-        "latency": 10.18347954750061
+        "latency": 14.675206661224365
     },
     "prompt_32": {
         "prompt": "A pan filled with broccoli and onions with oil.",
-        "latency": 10.44836711883545
+        "latency": 14.3091139793396
     },
     "prompt_33": {
         "prompt": "A man riding a wave on top of a surfboard.",
-        "latency": 10.700239181518555
+        "latency": 14.65979266166687
     },
     "prompt_34": {
         "prompt": "A young person standing on a snow covered ground while wearing skies.",
-        "latency": 12.053962469100952
+        "latency": 14.418377161026001
     },
     "prompt_35": {
         "prompt": "A boat is parked near a dock on a lake outside a building.",
-        "latency": 11.249935150146484
+        "latency": 14.542607069015503
     },
     "prompt_36": {
         "prompt": "a close up of food on a plate",
-        "latency": 10.530086994171143
+        "latency": 14.635294198989868
     },
     "prompt_37": {
         "prompt": "A cow is leashed up to a green pole near the civilians.",
-        "latency": 10.767196655273438
+        "latency": 14.320170402526855
     },
     "prompt_38": {
         "prompt": "A little girl is standing in a ladybug raincoat with a ladybug umbrella.",
-        "latency": 11.202742338180542
+        "latency": 14.28359317779541
     }
 }
