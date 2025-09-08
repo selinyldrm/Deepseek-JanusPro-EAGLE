@@ -645,7 +645,8 @@ class EaModel(nn.Module):
                     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                 if i < len(level_bias_list) and len(level_bias_list[i-1]):
                     level_sim = level_bias_list[i-1][0]
-                    level_sim += past_nodes
+                    # BUGFIX
+                    # level_sim += past_nodes
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
                 # fi = list(IDs of only TRUE branches)
