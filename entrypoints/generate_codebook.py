@@ -44,7 +44,7 @@ def run_generate_codebook(args):
     elif args.model == "llamagen":
         from models.base_models.llamagen.vq_model import VQ_16
         vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
-        checkpoint = torch.load('/home/syildiri/LANTERN/entrypoints/vq_ds16_t2i.pt')
+        checkpoint = torch.load('/mnt/shared/gpfs/home/seliny2/LANTERN/entrypoints/vq_ds16_t2i.pt')
         vq_model.load_state_dict(checkpoint['model'])
 
     else:
@@ -62,7 +62,7 @@ def run_generate_codebook(args):
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
 
-    np.save(os.path.join("/home/syildiri/LANTERN/entrypoints/", f"top_{k}_indices.npy"), topk_indices_uint16.cpu().detach().numpy())
+    np.save(os.path.join("/mnt/shared/gpfs/home/seliny2/LANTERN/entrypoints/", f"top_{k}_indices.npy"), topk_indices_uint16.cpu().detach().numpy())
 
 if __name__ == "__main__":
     parser = parse_args()

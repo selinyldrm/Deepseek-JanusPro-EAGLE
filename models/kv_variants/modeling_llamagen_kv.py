@@ -1216,7 +1216,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         self.t5_model = T5Embedder(
             device = 'cuda',
             local_cache=True,
-            cache_dir='/groups/aig_models_lu_tian/syildiri/LANTERN/',
+            cache_dir='/mnt/shared/gpfs/home/seliny2/llamagen/',
             dir_or_name='flan-t5-xl',
             # torch_dtype=torch.bfloat16,
             torch_dtype=torch.float32,
@@ -1399,6 +1399,8 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         
         c_indices = new_caption_embs * new_emb_masks[:,:, None]
         c_emb_masks = new_emb_masks
+        logit_list = []
+
         st = time.time()
         if hasattr(self.model, "past_key_values"):
             past_key_values = self.model.past_key_values
@@ -1433,20 +1435,23 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         output = self.forward(cond_idx=cond_combined, attention_mask=attention_mask, past_key_values=past_key_values)
         combined_logits = output.logits
         logits = cfg_logit_process(combined_logits, cfg)
+        
+        logit_list.append(logits[:, -1, :].squeeze(0))
 
         next_token, _ = sample(logits, temperature, top_k, top_p)
         seq[:, 0] = next_token.squeeze(1)
-        # logit_list = []
         # seq_emb_list = []
         # emb_tokens  = self.get_input_embeddings()
 
         for i in range(1, max_length):
             attention_mask = torch.cat([attention_mask, torch.ones_like(attention_mask)[:, :1]], dim=-1)
-            input_ids = torch.cat([next_token, next_token])
-            # logit_list.append(logits[:, -1, :].squeeze(0))
+            input_ids = torch.cat([next_token, next_token])        
+            # print("logits shape: ", logits.shape)
+            
             output = self.forward(input_ids=input_ids, past_key_values=past_key_values, attention_mask=attention_mask)
             combined_logits = output.logits
             logits = cfg_logit_process(combined_logits, cfg)
+            logit_list.append(logits[:, -1, :].squeeze(0))
             
             next_token, _ = sample(logits, temperature, top_k, top_p)
             seq[:, i] = next_token.squeeze(1)
@@ -1454,11 +1459,11 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
             # token_emb_vector = token_emb.squeeze(0).squeeze(0)    # [D]
             # seq_emb_list.append(token_emb_vector)
         
-        # masked_logits = torch.stack(logit_list, dim=0)
-        # print("masked_logits shape: ", masked_logits.shape)
-        # masked_logits[masked_logits == float('-inf')] = 0.0
-        # masked_logits = masked_logits.to(torch.float32)
-        # normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+        masked_logits = torch.stack(logit_list, dim=0)
+        print("masked_logits shape: ", masked_logits.shape)
+        masked_logits[masked_logits == float('-inf')] = 0.0
+        masked_logits = masked_logits.to(torch.float32)
+        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
         # print("normalized shape: ", normalized.shape)
 
         # image_embeddings = torch.stack(seq_emb_list, dim=0)
@@ -1466,14 +1471,14 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # token_sim_matrix = torch.matmul(image_embeddings, image_embeddings.T).cpu().numpy() # shape: [N, N]
         
         # # probabilities = torch.nn.functional.softmax(logits, dim=1)
-        # cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
+        cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
 
         # diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
         # l2_dist_matrix = torch.norm(diffs, dim=2)  # shape: [B, B]
         # l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
         # l2_dist_matrix = l2_dist_matrix.cpu().numpy()
 
-        # for row in range(32):
+        for row in range(32):
 
         #     plt.imshow(token_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
         #     plt.colorbar()
@@ -1485,16 +1490,15 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         #     plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/tokens/row-{row}.png")
         #     plt.close()
 
-            # sns.heatmap(cosine_sim_matrix.cpu().numpy(), fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
-            # plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
-            # plt.colorbar()
-            # plt.title("Cosine Similarity Between Consecutive Tokens")
-            # plt.xlabel("Token Index (i)")
-            # plt.ylabel("cosine_similarity")
-            # plt.grid()
-            # os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/rows/", exist_ok=True)
-            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/rows/cos-{row}.png")
-            # plt.close()
+            plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+            plt.colorbar()
+            plt.title("Cosine Similarity Between Logits")
+            plt.xlabel("Token Index (i)")
+            plt.ylabel("cosine_similarity")
+            plt.grid()
+            os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/", exist_ok=True)
+            plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/row-{row}.png")
+            plt.close()
 
             # sns.heatmap(l2_dist_matrix[32*row:32*row+32, 32*row:32*row+32], fmt=".2f", cmap='coolwarm', square=True, vmin=1.0,  vmax=0)
             # plt.title("L2 distance Between Consecutive Tokens")
@@ -1510,7 +1514,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         if not hasattr(self, 'vq_model'):
             self.vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
             self.vq_model = self.vq_model.to(self.model.device)
-            checkpoint = torch.load('/home/syildiri/LANTERN/entrypoints/vq_ds16_t2i.pt')
+            checkpoint = torch.load('/mnt/shared/gpfs/home/seliny2/LANTERN/entrypoints/vq_ds16_t2i.pt')
             self.vq_model.load_state_dict(checkpoint['model'])
             self.vq_model.eval()
             del checkpoint

@@ -171,35 +171,40 @@ def load_prompts(args):
                 prompts.append(caption)
     
 
-    if args.slice is not None:
-        assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
+    # if args.slice is not None:
+    #     assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
 
-        start, end = map(int, args.slice.split('-'))
-        assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
-        assert start >= 0 and end >= 0, "Slice values must be non-negative."
+    #     start, end = map(int, args.slice.split('-'))
+    #     assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
+    #     assert start >= 0 and end >= 0, "Slice values must be non-negative."
 
-        prompts = prompts[start:end]
+    #     prompts = prompts[start:end]
     
-    if args.num_images < len(prompts):
-        print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
-        prompts = random.sample(prompts, args.num_images)
-    else:
-        print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
-        pass
+    # if args.num_images < len(prompts):
+    #     print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
+    #     prompts = random.sample(prompts, args.num_images)
+    # else:
+    #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
+    #     pass
 
     # #benchmark 5 prompts only
     # if args.multigpu :
-    #     with open("/home/syildiri/LANTERN/global_statistics_0_100.json", "r") as f:
+    #     with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
     #         data = json.load(f)
     # else:
-    #     with open("/home/syildiri/LANTERN/global_statistics_0_5.json", "r") as f:
-    #         data = json.load(f)
-    
-    # # Extract prompt fields
-    # prompts = [entry["prompt"] for entry in data.values()]
+        # with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+        #     data = json.load(f)
+        
+        #     # Extract prompt fields
+#       prompts = [entry["prompt"] for entry in data.values()]
     
     # if args.multigpu :
     #     return prompts[:100]
+    
+    # delete below before return
+    # with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+    #     data = json.load(f)
+    # prompts = [entry["prompt"] for entry in data.values()]
     
     return prompts
 
@@ -293,7 +298,7 @@ def run_generate_image(args):
         if batch_end[-1] > len(prompts):
             batch_end[-1] = len(prompts)
         import torch.multiprocessing as mp
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
         mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=8, join=True)
     else:
@@ -539,7 +544,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             #     rankr = torch.cat([rankr, pad], dim=0)
             # print(f"Rank {rank} rankr.shape: {rankr.shape}")
         
-            all_gathered_acceptance = [torch.zeros_like(rank_acceptance) for _ in range(8)]
+            all_gathered_acceptance = [torch.zeros_like(rank_acceptance) for _ in range(2)]
             torch.distributed.all_gather(all_gathered_acceptance, rank_acceptance)
 
             # all_gathered_overhead = [torch.zeros_like(rank_oh) for _ in range(8)]
