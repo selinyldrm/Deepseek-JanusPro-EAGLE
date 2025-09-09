@@ -198,21 +198,22 @@ def compute_fid(gt_dir: Path, fake_dir: Path,
 
 def run_eval_fid_clip(opt):
     ### Generated images
-    # dset2 = EvalDataset(data_dir=opt.fake_dir,
-    #                     crop_long_edge=True,
-    #                     resize_size=opt.eval_res,
-    #                     resizer="lanczos",
-    #                     normalize=True,
-    #                     caption_path=opt.caption_path)
+    dset2 = EvalDataset(data_dir=opt.fake_dir,
+                        crop_long_edge=True,
+                        resize_size=opt.eval_res,
+                        resizer="lanczos",
+                        normalize=True,
+                        caption_path=opt.caption_path)
 
-    # dset2_dataloader = DataLoader(dataset=dset2,
-    #                               batch_size=opt.batch_size,
-    #                               shuffle=False,
-    #                               pin_memory=True,
-    #                               drop_last=False)
+    dset2_dataloader = DataLoader(dataset=dset2,
+                                  batch_size=opt.batch_size,
+                                  shuffle=False,
+                                  pin_memory=True,
+                                  drop_last=False,
+                                  num_workers=1)
 
-    # clip_score = compute_clip_score(dset2_dataloader, clip_model=opt.clip_model4eval, how_many=opt.how_many)
-    # print(f"CLIP score: {clip_score}")
+    clip_score = compute_clip_score(dset2_dataloader, clip_model=opt.clip_model4eval, how_many=opt.how_many)
+    print(f"CLIP score: {clip_score}")
 
     fid = compute_fid(
         os.path.join(opt.ref_dir),

@@ -188,46 +188,24 @@ def load_prompts(args):
     #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
     #     pass
 
-    #benchmark 5 prompts only
-    if args.multigpu :
-        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
-            data = json.load(f)
-    else:
-        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
-            data = json.load(f)
+    # #benchmark 5 prompts only
+    # if args.multigpu :
+    #     with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+    #         data = json.load(f)
+    # else:
+        # with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+        #     data = json.load(f)
+        
+        #     # Extract prompt fields
+#       prompts = [entry["prompt"] for entry in data.values()]
     
-    # Extract prompt fields
-    prompts = [entry["prompt"] for entry in data.values()]
-
-    with open("/work1/deming/shared/llamagen/train2017/annotations/captions_train2017.json", "r") as f:
-        annot_val2017 = json.load(f)
-    print(annot_val2017.keys())
-    # → dict_keys(['info', 'licenses', 'images', 'annotations'])
-
-    id_to_captions = {}
-    for ann in annot_val2017["annotations"]:
-        id_to_captions.setdefault(ann["image_id"], []).append(ann["caption"])
-
-    id_to_filename = {img["id"]: img["file_name"] for img in annot_val2017["images"]}
-    img_dir = "/work1/deming/shared/llamagen/train2017"
-    for img_id, file_name in id_to_filename.items():
-        img_file = os.path.join(img_dir, file_name)
-        if not os.path.exists(img_file):
-            continue
-
-        # Keep original zero-padded name
-        stem, _ = os.path.splitext(file_name)
-        out_txt = os.path.join(img_dir, stem + ".txt")
-
-        # Pick first caption
-        captions = id_to_captions.get(img_id, [])
-        if captions:
-            content = f"{captions[0].strip()}"
-            with open(out_txt, "w") as f:
-                f.write(content)
-    print("done prompt processing.")
-    if args.multigpu :
-        return prompts[:100]
+    # if args.multigpu :
+    #     return prompts[:100]
+    
+    # delete below before return
+    # with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+    #     data = json.load(f)
+    # prompts = [entry["prompt"] for entry in data.values()]
     
     return prompts
 
@@ -321,7 +299,7 @@ def run_generate_image(args):
         if batch_end[-1] > len(prompts):
             batch_end[-1] = len(prompts)
         import torch.multiprocessing as mp
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
         mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=8, join=True)
     else:
@@ -567,7 +545,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             #     rankr = torch.cat([rankr, pad], dim=0)
             # print(f"Rank {rank} rankr.shape: {rankr.shape}")
         
-            all_gathered_acceptance = [torch.zeros_like(rank_acceptance) for _ in range(8)]
+            all_gathered_acceptance = [torch.zeros_like(rank_acceptance) for _ in range(2)]
             torch.distributed.all_gather(all_gathered_acceptance, rank_acceptance)
 
             # all_gathered_overhead = [torch.zeros_like(rank_oh) for _ in range(8)]

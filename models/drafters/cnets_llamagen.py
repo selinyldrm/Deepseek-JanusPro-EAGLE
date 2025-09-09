@@ -1032,7 +1032,7 @@ class Model(nn.Module):
         # print("input_ids: ", input_ids.shape, flush=True)
 
         bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
-        bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        # bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
         # print("len(self.tree_buffer['tree_indices']): ", len(self.tree_buffer['tree_indices']), flush=True)
         # print("len(self.tree_buffer['tree_indices']): ", len(self.tree_buffer['tree_indices']))
         # level count on the tree == len(self.tree_buffer['tree_indices'])
@@ -1084,45 +1084,30 @@ class Model(nn.Module):
             # if i > 1 and len(bias_level_list[i-1]) > 0:
             #     prev_accept = bias_level_list[i-1]
             #     filtered_logits = filtered_logits[prev_accept, :]
+
+            ################## comment out LEVEL BIAS here
             # [1, 16384] --> [5, 16384]
-            filtered_logits[filtered_logits == float('-inf')] = 0.0
-            filtered_logits = filtered_logits.to(torch.float32)
-            normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
+            # filtered_logits[filtered_logits == float('-inf')] = 0.0
+            # filtered_logits = filtered_logits.to(torch.float32)
+            # normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
             
             # [5, 16384] --> [7, 16384]
-            last_headout_modified = last_headout.clone()
-            last_headout_modified = logits_processor(None, last_headout_modified)
-            last_headout_modified[last_headout_modified == float('-inf')] = 0.0
-            curr_logits = last_headout_modified.to(torch.float32)
-            normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
+            # last_headout_modified = last_headout.clone()
+            # last_headout_modified = logits_processor(None, last_headout_modified)
+            # last_headout_modified[last_headout_modified == float('-inf')] = 0.0
+            # curr_logits = last_headout_modified.to(torch.float32)
+            # normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
             
             # [1,5], [5,7] etc..
-            cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
+            # cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
             # Now in [0, 1] --> combined with l2 later
-            cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
+            # cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
 
             # logit_sim.append(cosine_sim_matrix)
             
             # [1, 1], [5,1]
             bias_list[i] = bias
-            # if cosine_sim_matrix.shape[0] > 1:
-            #     _, sim_indices = torch.topk(cosine_sim_matrix, k=1, dim=1)
-            # if sim_indices.shape[0] > 1 :
-            #     # shape: [N, 1]
-            #     top1_values = cosine_sim_matrix.gather(dim=1, index=sim_indices)  
-            #     max_index_x = torch.argmax(top1_values)         # scalar
-            #     max_index_y = sim_indices[max_index_x].item()         # scalar
-            # else: 
-            #     max_index_x = 0
-            #     max_index_y = sim_indices[0].item()
-            # print("max_index_x: ", max_index_x, flush=True)
-            # print("max_index_y: ", max_index_y, flush=True)
-            # if cosine_sim_matrix[max_index_x][max_index_y] > 0.7 :
-            #     if i >= 1 and len(bias_level_list[i-1]) == 0:
-            #         bias_level_list[i-1].append(max_index_x)
-            #     bias_level_list[i].append(max_index_y)
-            bias_level_list[i].append(cosine_sim_matrix)
-            # print("bias_level_list: ", bias_level_list, flush=True)
+            # bias_level_list[i].append(cosine_sim_matrix)
 
         if logits_processor is not None:
             topk_index,topk_prob,op, bias, _ = self.sample(recent_logits, last_headout,step, logits_processor,k=self.top_k)
@@ -1136,7 +1121,8 @@ class Model(nn.Module):
         ss_op.append(op)
         bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
-        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
+        # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
+        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
 
     @torch.no_grad()
     def acc(self, data, head, max_length=5):

@@ -50,7 +50,6 @@ class T5Embedder:
                                 force_filename=filename, token=self.hf_token)
             tokenizer_path = cache_dir
 
-        print(tokenizer_path)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         self.model = T5EncoderModel.from_pretrained(path, **t5_model_kwargs).eval()
         self.model_max_length = model_max_length
