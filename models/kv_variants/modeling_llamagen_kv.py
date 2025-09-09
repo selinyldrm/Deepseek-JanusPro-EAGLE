@@ -440,9 +440,10 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
 class LlamaAttention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
-    def __init__(self, config: LlamaConfig):
+    def __init__(self, config: LlamaConfig, idx:int):
         super().__init__()
         self.config = config
+        self.layer_idx = idx
         self.hidden_size = config.hidden_size
         self.num_heads = config.num_attention_heads
         self.head_dim = self.hidden_size // self.num_heads
@@ -535,10 +536,10 @@ class LlamaAttention(nn.Module):
         key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
 
+
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value[0].shape[-2]
-        
         # TODO: Modify applying rotary pos emb for LlamaGen
         # cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
         # query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
@@ -554,12 +555,11 @@ class LlamaAttention(nn.Module):
             value_states = past_key_value[1].cat(value_states, dim=2)
         # Reset past_key_value to avoid return past_key_value.
         past_key_value = None
-
         past_key_value = (key_states, value_states) if use_cache else None
 
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
-
+        
         attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
@@ -576,8 +576,25 @@ class LlamaAttention(nn.Module):
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
+        # [2, 20, 58, 58]
         attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
+        # Sum over heads, then average over batch
+        # attn_matrix = attn_weights[:,:,:,-kv_seq_len+attn_weights.shape[-1]:].sum(dim=1).mean(dim=0).to(torch.float32)  # [58, 58]
+        # plt.imshow(attn_matrix.cpu().numpy(), cmap='coolwarm', vmin=0, vmax=1.0)
+        # plt.colorbar()
+        # plt.title(f"Attention Weights on Layer-{self.layer_idx}")
+        # plt.xlabel("KV sequence")
+        # plt.ylabel("KV Sequence")
+        # plt.grid()
+        # os.makedirs(f"/work1/deming/shared/llamagen/attn-exp/", exist_ok=True)
+        # plt.savefig(f"/work1/deming/shared/llamagen/attn-exp/layer-{self.layer_idx}.png")
+        # plt.close()
+
+        # print("attn_weights.shape: ", attn_weights.shape)
+        
+        # [2, 20, 58, 64]
         attn_output = torch.matmul(attn_weights, value_states)
+        # print("attn_output.shape: ", attn_output.shape)
 
         if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
             raise ValueError(
@@ -597,8 +614,8 @@ class LlamaAttention(nn.Module):
             attn_output = self.o_proj(attn_output)
         attn_output = self.resid_dropout(attn_output)
 
-        if not output_attentions:
-            attn_weights = None
+        # if not output_attentions:
+        #     attn_weights = None
 
         return attn_output, attn_weights, past_key_value
 
@@ -785,11 +802,12 @@ class LlamaFlashAttention2(LlamaAttention):
 
 
 class LlamaDecoderLayer(nn.Module):
-    def __init__(self, config: LlamaConfig):
+    def __init__(self, config: LlamaConfig, layer_idx: int):
         super().__init__()
         self.hidden_size = config.hidden_size
+        self.layer_idx = layer_idx
         self.self_attn = (
-            LlamaAttention(config=config)
+            LlamaAttention(config=config, idx=layer_idx)
             if not getattr(config, "_flash_attn_2_enabled", False)
             else LlamaFlashAttention2(config=config)
         )
@@ -847,11 +865,11 @@ class LlamaDecoderLayer(nn.Module):
 
         outputs = (hidden_states,)
 
-        if output_attentions:
-            outputs += (self_attn_weights,)
+        # if output_attentions:
+        outputs += (self_attn_weights,)
 
-        if use_cache:
-            outputs += (present_key_value,)
+        # if use_cache:
+        #     outputs += (present_key_value,)
 
         return outputs
 
@@ -991,7 +1009,7 @@ class LlamaModel(LlamaPreTrainedModel):
             self.cls_embedding = CaptionEmbedder(config.caption_dim, config.hidden_size, config.class_dropout_p)
         else:
             raise Exception("Invalid model type")
-        self.layers = nn.ModuleList([LlamaDecoderLayer(config) for _ in range(config.num_hidden_layers)])
+        self.layers = nn.ModuleList([LlamaDecoderLayer(config, idx) for idx in range(config.num_hidden_layers)])
         self.norm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
         self.gradient_checkpointing = False
@@ -1146,8 +1164,11 @@ class LlamaModel(LlamaPreTrainedModel):
 
         # decoder layers
         all_hidden_states = () if output_hidden_states else None
-        all_self_attns = () if output_attentions else None
+        # all_self_attns = () if output_attentions else None
+        all_self_attns = () 
         next_decoder_cache = () if use_cache else None
+
+        last_attn_weights = None
         for idx, decoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
@@ -1180,11 +1201,11 @@ class LlamaModel(LlamaPreTrainedModel):
 
             hidden_states = layer_outputs[0]
 
-            if use_cache:
-                next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
+            # if use_cache:
+            #     next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
 
-            if output_attentions:
-                all_self_attns += (layer_outputs[1],)
+            # if output_attentions:
+            all_self_attns += (layer_outputs[1],)
         hidden_states = self.norm(hidden_states)
 
         # add hidden states from the last decoder layer
@@ -1216,7 +1237,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         self.t5_model = T5Embedder(
             device = 'cuda',
             local_cache=True,
-            cache_dir='/groups/aig_models_lu_tian/syildiri/LANTERN/',
+            cache_dir='/work1/deming/shared/llamagen/',
             dir_or_name='flan-t5-xl',
             # torch_dtype=torch.bfloat16,
             torch_dtype=torch.float32,
@@ -1377,6 +1398,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         return reordered_past
     
     @torch.no_grad()
+    # this function is used for generating image with base model (no eagle case)
     def generate(
         self,
         prompt: Optional[List[str]] = None,
@@ -1510,7 +1532,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         if not hasattr(self, 'vq_model'):
             self.vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
             self.vq_model = self.vq_model.to(self.model.device)
-            checkpoint = torch.load('/home/syildiri/LANTERN/entrypoints/vq_ds16_t2i.pt')
+            checkpoint = torch.load('/work1/deming/seliny2/LANTERN/entrypoints/vq_ds16_t2i.pt')
             self.vq_model.load_state_dict(checkpoint['model'])
             self.vq_model.eval()
             del checkpoint

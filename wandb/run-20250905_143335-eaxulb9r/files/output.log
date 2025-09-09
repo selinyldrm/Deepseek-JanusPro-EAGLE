@@ -1,0 +1,15 @@
+  0%|                                                                                                                                                                                                            | 0/1188 [00:00<?, ?it/s]/work1/deming/seliny2/miniconda3/lib/python3.10/site-packages/torch/_dynamo/eval_frame.py:929: UserWarning: torch.utils.checkpoint: the use_reentrant parameter should be passed explicitly. In version 2.5 we will raise an exception if use_reentrant is not passed. use_reentrant=False is recommended, but if you need to preserve the current default behavior, you can pass use_reentrant=True. Refer to docs for more details on the differences between the two variants.
+  return fn(*args, **kwargs)
+ 38%|█████████████████████████████████████████████████████████████████████████▎                                                                                                                        | 449/1188 [00:59<01:37,  7.56it/s]
+Traceback (most recent call last):
+  File "/work1/deming/seliny2/LANTERN/main.py", line 82, in <module>
+    main()
+  File "/work1/deming/seliny2/LANTERN/main.py", line 79, in main
+    task_runner(task_args)
+  File "/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/main.py", line 335, in run_train_drafter
+    = run_epoch(args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, train_mode=True)
+  File "/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/main.py", line 181, in run_epoch
+    correct_batch, total_batch = update_metrics(out_head, target_head, p_loss_mask, top_3acc)
+  File "/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/main.py", line 89, in update_metrics
+    total = loss_mask.sum().item()
+KeyboardInterrupt

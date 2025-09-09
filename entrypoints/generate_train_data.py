@@ -46,6 +46,7 @@ class SupervisedDataset(Dataset):
             self.text_base_path = os.path.join(data_path, "text_features")
             self.uncond_embedding = uncond_embedding
             self.cond_length = uncond_embedding.shape[0]
+            print("joined path: ", os.path.join(self.code_base_path, self.code_data[0]))
             input_ids = np.load(os.path.join(self.code_base_path, self.code_data[0]))
             input_ids = torch.from_numpy(input_ids).long()
             self.input_length = input_ids.shape[1]
@@ -180,7 +181,7 @@ def run_generate_data(args):
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
     elif args.model == "llamagen2":
         from models.kv_variants.modeling_llamagen_kv import LlamaForCausalLM
-        model = LlamaForCausalLM.from_pretrained('ckpts/llamagen/LlamaGen-T2I-2').to(dtype=dtype, device='cuda')
+        model = LlamaForCausalLM.from_pretrained('/work1/deming/shared/llamagen/LlamaGen-T2I-2').to(dtype=dtype, device='cuda')
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
     else:
         raise NotImplementedError(f"Model {args.model} not supported")

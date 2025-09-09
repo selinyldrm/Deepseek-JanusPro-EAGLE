@@ -6,4 +6,5 @@ __pycache__/**
 *.npz
 *.pyc
 *.npy
-
+*.bin
+/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/llamagen2_drafter

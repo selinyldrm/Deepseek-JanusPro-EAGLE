@@ -1,0 +1,12 @@
+/work1/deming/shared/llamagen/flan-t5-xl
+generated token count:  1026
+generate time=11.253604650497437 seconds
+generated token count:  1025
+generate time=11.420462608337402 seconds
+generated token count:  1029
+generate time=11.242430686950684 seconds
+generated token count:  1028
+generate time=11.042675971984863 seconds
+generated token count:  1025
+generate time=11.235384702682495 seconds
+Avg latency: 11.238912582397461 per image, with (5,) images.

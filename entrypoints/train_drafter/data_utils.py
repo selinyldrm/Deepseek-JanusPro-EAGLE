@@ -4,6 +4,8 @@ import torch
 
 from typing import Any, Dict, List
 from torch.utils.data import Dataset
+import numpy as np
+
 
 def list_files(path):
     datapath = []
@@ -62,7 +64,9 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         data = torch.load(self.data[index], weights_only=True)
-        
+        # print("self.data[index]: ", self.data[index])
+        # data = np.load(self.data[index])
+        # print("loaded data: ", data)
         if self.model == "lumina_mgpt" or self.model == "anole":
 
             if random.random() < 0.9:

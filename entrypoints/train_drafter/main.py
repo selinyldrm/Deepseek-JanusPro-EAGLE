@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument('--max_len', type=int, default=4096)
     parser.add_argument('--eval_freq', type=int, default=1)
     parser.add_argument('--save_freq', type=int, default=5)
-    parser.add_argument('--wandb', action='store_true', default=False)
+    parser.add_argument('--wandb', action='store_true', default=True)
 
     return parser
 
@@ -99,7 +99,7 @@ def update_metrics(out_head, target_head, loss_mask, top_3acc):
 
     return correct, total
 
-def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, wandb):
+def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, wandb_check):
     
     logdict = {
         f"{phase}/lr": optimizer.param_groups[0]["lr"] if phase == "train" else None,
@@ -111,7 +111,7 @@ def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, 
 
     for id, i in enumerate(top_3acc):
         logdict[f'{phase}/top_{id + 1}_acc'] = i.item() / total
-    if wandb:
+    if wandb_check:
         wandb.log(logdict)
 
 def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup, train_mode=True):
@@ -212,7 +212,7 @@ def run_train_drafter(args):
     
     if accelerator.is_main_process:
         if args.wandb:
-            wandb.login(key="726be770e2a351a53a5aab7e7f7772dfc603a233")
+            wandb.login(key="46d0f4a8c52a34c94859af9091c680cd79990fd6")
 
         run_name = f"{args.model}_lr{args.lr}_p_w{args.p_w}_bsz{args.bs}_gradacc_{args.gradient_accumulation_steps}"
         run_name += f"_epochs{args.num_epochs}"
@@ -224,7 +224,7 @@ def run_train_drafter(args):
             run_name += f"_embed_upscale_{args.embed_upscale}"
         run_name += "_mscoco2017train30k"
         if args.wandb:
-            wandb.init(project="eagle-lumina-mGPT", name=run_name, config=args)
+            wandb.init(project="lantern-llamagen", name=run_name, config=args)
     if args.model == "lumina_mgpt":
         from models.configs.configuration_lumina_mgpt import ChameleonConfig
         from models.drafters.cnets_lumina_mgpt import Model

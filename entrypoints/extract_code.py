@@ -128,8 +128,11 @@ def writedata(name, data_point):
         os.makedirs(name)
     current_length=len(os.listdir(os.path.join(name, "codes")))
     idx=current_length
+    # if idx == 0 :
+    #     print("data_point['caption_emb']: ", data_point['caption_emb'])
+    #     print("data_point['codes']: ", data_point['codes'])
     np.save(os.path.join(name, os.path.join("text_features", f"{idx}.npy")), data_point['caption_emb'])
-    np.save(os.path.join(name, os.path.join("codes", f"{idx}.npy")), data_point['codes'])
+    np.save(os.path.join(name, os.path.join("codes", f"{idx}.npy")), data_point['codes'].cpu())
 
 
 def run_extract_code(args):
@@ -151,7 +154,7 @@ def run_extract_code(args):
     if "llamagen" in args.model:
         vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
         vq_model.to(device)
-        checkpoint = torch.load('ckpts/llamagen/vq_ds16_t2i.pt')
+        checkpoint = torch.load('/work1/deming/seliny2/LANTERN/entrypoints/vq_ds16_t2i.pt')
         vq_model.load_state_dict(checkpoint['model'])
         vq_model.eval()
         del checkpoint
@@ -159,7 +162,7 @@ def run_extract_code(args):
         t5_model = T5Embedder(
             device = device,
             local_cache=True,
-            cache_dir='ckpts/llamagen/t5',
+            cache_dir='/work1/deming/shared/llamagen',
             dir_or_name='flan-t5-xl',
             # torch_dtype=torch.float16,
             torch_dtype=torch.float32,

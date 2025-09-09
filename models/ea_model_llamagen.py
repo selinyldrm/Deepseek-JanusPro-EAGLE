@@ -144,7 +144,7 @@ class EaModel(nn.Module):
         self.ea_layer.to(self.base_model.dtype).to(device)
         self.ea_layer.init_tree()
         ea_model_dir = os.path.dirname(ea_model_path)
-        self.nearest_latents = np.load("/home/syildiri/LANTERN/entrypoints/top_16383_indices.npy")
+        self.nearest_latents = np.load("/work1/deming/seliny2/LANTERN/entrypoints/top_16383_indices.npy")
 
     # def get_tokenizer(self):
     #     """Get the tokenizer of the base model.
@@ -200,8 +200,6 @@ class EaModel(nn.Module):
             threshold,
             ea_layer_state_dict
         )
-
-
 
         if total_token==-1:
             device = model.base_model.model.layers[0].self_attn.q_proj.weight.device
@@ -645,7 +643,8 @@ class EaModel(nn.Module):
                     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                 if i < len(level_bias_list) and len(level_bias_list[i-1]):
                     level_sim = level_bias_list[i-1][0]
-                    level_sim += past_nodes
+                    ## BUG here !!!
+                    # level_sim += past_nodes
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
                 # fi = list(IDs of only TRUE branches)
@@ -654,8 +653,11 @@ class EaModel(nn.Module):
                 gt_logits = logits[fi, i - 1][None]
                 # target logits --> 1D [16384]
                 gt_logits = logits_processor(None, gt_logits)[0]
+                # trick to eliminate NaNs ???
+                gt_logits = torch.nan_to_num(gt_logits, nan=0.0, posinf=1e9, neginf=-1e9)
                 # [16384]
                 gtp = torch.softmax(gt_logits, dim=0)
+                gtp = torch.nan_to_num(gtp, nan=0.0, posinf=1e9, neginf=-1e9)
                 candidates_set = []
                 for j in range(candidates.shape[0]): # candidate sequences
                     if is_eq[j]:
@@ -673,7 +675,6 @@ class EaModel(nn.Module):
                         if level_sim is not None:
                             if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
                                 lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                                
                                 inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                                 combined_score = (lev_sim_score + inv_l2_d) / 2
                                 px +=  r * combined_score
@@ -770,10 +771,10 @@ class EaModel(nn.Module):
                             gtp = gtp - q
                             gtp[gtp < 0] = 0
 
-                            if gtp.sum() == 0:
+                            if gtp.float().sum() < 1e-8 and gtp.float().sum() >= -1e-8:
                                 gtp = torch.ones_like(gtp)
 
-                            gtp = gtp / gtp.sum()
+                            gtp = gtp / (gtp.float().sum() + 1e-8)
                             adjustflag = True
             if adjustflag and accept_length != candidates.shape[1]:
                 sample_p = gtp
@@ -1067,6 +1068,8 @@ class EaModel(nn.Module):
         tree_buffers_new,
         tree_choices_new,
         recent_logits,
+        attn_weights,
+        glob_attn_weights,
         input_ids,
         candidates,
         best_candidate,
@@ -1083,8 +1086,16 @@ class EaModel(nn.Module):
     ):
         prev_input_len = input_ids.shape[1]
 
+        acc_filter = retrieve_indices[best_candidate, : accept_length + 1]
+        # last_attn = attn_weights[-1]
+        last_attn = sum(attn_weights)/36.0
+        cum_attn_weights = last_attn.mean(dim=0).sum(dim=0)
+        if cum_attn_weights.shape[1] - 120 - 58 > 0 :
+            cum_attn_weights = cum_attn_weights[acc_filter, 178-cum_attn_weights.shape[-1]:]
+            cum_attn_weights = cum_attn_weights.sum(dim=0)
+            glob_attn_weights[:cum_attn_weights.shape[-1]] += cum_attn_weights
         select_indices = (
-                retrieve_indices[best_candidate, : accept_length + 1] + prev_input_len
+                acc_filter + prev_input_len
         )
 
         input_ids = torch.cat(
@@ -1098,7 +1109,6 @@ class EaModel(nn.Module):
             dst = past_key_values_data[..., prev_input_len: prev_input_len + tgt.shape[-2], :]
             # Copy relevant past information from the source to the destination
             dst.copy_(tgt, non_blocking=True)
-        # print("past_key_values_data.shape: ", past_key_values_data.shape)
 
         # Update the current length tensor (currently only support batch size is 1)
         current_length_data.fill_(prev_input_len + tgt.shape[-2])
@@ -1200,7 +1210,6 @@ class EaModel(nn.Module):
                 attention_mask = torch.cat([c_emb_masks, c_emb_masks])
             else:
                 attention_mask = c_emb_masks
-        # print("attention_mask: ", attention_mask.shape)
         cond_combined = cond_combined.to(self.base_model.dtype)
         padding = (torch.zeros(1,1,dtype=torch.long)-1).to(cond_combined.device)
         self.ea_layer.reset_kv()
@@ -1336,6 +1345,7 @@ class EaModel(nn.Module):
         recent_acc_logits = None
 
         # print("input ids shape: ", input_ids.shape, flush=True)
+        glob_attn_weights = torch.zeros((1024), dtype=torch.bfloat16).to(cond_combined.device)
         st = time.time()
         for idx in range(max_steps):
             
@@ -1355,6 +1365,9 @@ class EaModel(nn.Module):
                 logits, hidden_state_new, outputs = self.tree_decoding(
                     tree_candidates, past_key_values, tree_buffers["tree_position_ids"], input_ids, tree_buffers["retrieve_indices_head"], cfg, attention_mask
                 )
+                # tuple of 36 layers
+                attn_weights = outputs.attentions
+
                 # [13, 3, 16384]
                 # print("logits after tree_decoding: ", logits.shape, flush=True)
                 if testing:
@@ -1420,6 +1433,8 @@ class EaModel(nn.Module):
                         tree_buffers,
                         tree_choices,
                         recent_acc_logits,
+                        attn_weights,
+                        glob_attn_weights,
                         input_ids,
                         candidates,
                         best_candidate,
@@ -1442,6 +1457,8 @@ class EaModel(nn.Module):
                             None,
                             None,
                             recent_acc_logits,
+                            attn_weights,
+                            glob_attn_weights,
                             input_ids,
                             candidates,
                             best_candidate,
@@ -1501,6 +1518,25 @@ class EaModel(nn.Module):
 
             if new_token > max_length:
                 break
+        print("generated token count: ", new_token)
+        
+        glob_attn_weights = glob_attn_weights.to(torch.float32)
+        num_queries_per_k = torch.arange(205, 0, -1).repeat_interleave(5).cuda()  
+        evened_attn = glob_attn_weights / num_queries_per_k[:1024]
+
+        glob_attn_weights = glob_attn_weights.view(32, 32)  
+        # attn_pooled = F.avg_pool2d(glob_attn_weights.unsqueeze(0).unsqueeze(0), kernel_size=4, stride=4)
+        # attn_pooled = attn_pooled.squeeze()  # [8, 8]
+        x_min = glob_attn_weights.min()
+        x_max = glob_attn_weights.max()
+        glob_attn_weights = (glob_attn_weights - x_min) / (x_max - x_min)
+
+        plt.imshow(glob_attn_weights.cpu().numpy(), cmap='coolwarm', vmin=0, vmax=1.0)
+        plt.colorbar()
+        plt.title("Attention Weights Accumulated on Image Tokens")
+        plt.grid()
+        plt.savefig(f"./{prompt}-attn.png")
+        plt.close()
         
         if testing:
             p = [i for p in analysis_p for i in p]

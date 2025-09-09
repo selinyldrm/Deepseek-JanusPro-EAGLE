@@ -140,14 +140,15 @@ def load_model(args):
         
         elif args.model_type == 'base':
             from models.kv_variants.modeling_llamagen_kv import LlamaForCausalLM
-            # dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
-            dtype = torch.float32
+            dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+            # dtype = torch.float32
             model = LlamaForCausalLM.from_pretrained(args.model_path).to(dtype=dtype, device='cuda')
             model.eval()
         
         elif args.model_type == 'eagle':
             from models.ea_model_llamagen import EaModel
             dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+            # dtype = torch.float32
             model = EaModel.from_pretrained(base_model_path=args.model_path, ea_model_path=args.drafter_path).to(dtype=dtype, device='cuda')
             model.eval()
         else:
@@ -159,47 +160,74 @@ def load_model(args):
 
 def load_prompts(args):
     prompts = []
-    if args.prompt == "PartiPrompts":
-        with open('data/prompts/PartiPrompts.tsv', 'r') as f:
-            tsv_reader = csv.DictReader(f, delimiter='\t')
-            for row in tsv_reader:
-                prompts.append(row['Prompt'])
-    elif args.prompt == "MSCOCO2017Val":
-        with open('data/prompts/captions_val2017_longest.json', 'r') as f:
-            captions = json.load(f)
-            for caption in captions:
-                prompts.append(caption)
+    # if args.prompt == "PartiPrompts":
+    #     with open('data/prompts/PartiPrompts.tsv', 'r') as f:
+    #         tsv_reader = csv.DictReader(f, delimiter='\t')
+    #         for row in tsv_reader:
+    #             prompts.append(row['Prompt'])
+    # elif args.prompt == "MSCOCO2017Val":
+    #     with open('data/prompts/captions_val2017_longest.json', 'r') as f:
+    #         captions = json.load(f)
+    #         for caption in captions:
+    #             prompts.append(caption)
     
 
-    if args.slice is not None:
-        assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
+    # if args.slice is not None:
+    #     assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
 
-        start, end = map(int, args.slice.split('-'))
-        assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
-        assert start >= 0 and end >= 0, "Slice values must be non-negative."
+    #     start, end = map(int, args.slice.split('-'))
+    #     assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
+    #     assert start >= 0 and end >= 0, "Slice values must be non-negative."
 
-        prompts = prompts[start:end]
+    #     prompts = prompts[start:end]
     
-    if args.num_images < len(prompts):
-        print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
-        prompts = random.sample(prompts, args.num_images)
-    else:
-        print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
-        pass
-
-    # #benchmark 5 prompts only
-    # if args.multigpu :
-    #     with open("/home/syildiri/LANTERN/global_statistics_0_100.json", "r") as f:
-    #         data = json.load(f)
+    # if args.num_images < len(prompts):
+    #     print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
+    #     prompts = random.sample(prompts, args.num_images)
     # else:
-    #     with open("/home/syildiri/LANTERN/global_statistics_0_5.json", "r") as f:
-    #         data = json.load(f)
+    #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
+    #     pass
+
+    #benchmark 5 prompts only
+    if args.multigpu :
+        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+            data = json.load(f)
+    else:
+        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+            data = json.load(f)
     
-    # # Extract prompt fields
-    # prompts = [entry["prompt"] for entry in data.values()]
-    
-    # if args.multigpu :
-    #     return prompts[:100]
+    # Extract prompt fields
+    prompts = [entry["prompt"] for entry in data.values()]
+
+    with open("/work1/deming/shared/llamagen/train2017/annotations/captions_train2017.json", "r") as f:
+        annot_val2017 = json.load(f)
+    print(annot_val2017.keys())
+    # → dict_keys(['info', 'licenses', 'images', 'annotations'])
+
+    id_to_captions = {}
+    for ann in annot_val2017["annotations"]:
+        id_to_captions.setdefault(ann["image_id"], []).append(ann["caption"])
+
+    id_to_filename = {img["id"]: img["file_name"] for img in annot_val2017["images"]}
+    img_dir = "/work1/deming/shared/llamagen/train2017"
+    for img_id, file_name in id_to_filename.items():
+        img_file = os.path.join(img_dir, file_name)
+        if not os.path.exists(img_file):
+            continue
+
+        # Keep original zero-padded name
+        stem, _ = os.path.splitext(file_name)
+        out_txt = os.path.join(img_dir, stem + ".txt")
+
+        # Pick first caption
+        captions = id_to_captions.get(img_id, [])
+        if captions:
+            content = f"{captions[0].strip()}"
+            with open(out_txt, "w") as f:
+                f.write(content)
+    print("done prompt processing.")
+    if args.multigpu :
+        return prompts[:100]
     
     return prompts
 
