@@ -173,7 +173,9 @@ class EaModel(nn.Module):
                 base_model_path, **kwargs
             )
 
-        configpath=os.path.join(ea_model_path,"config.json")
+        # configpath=os.path.join(ea_model_path,"config.json")
+        # [SY] fix
+        configpath="/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/llamagen2_drafter/config.json"
         if not os.path.exists(configpath):
             # configpath = hf_hub_download(ea_model_path, "config.json")
             configpath = '/home/server38/doohyuk_workspace/VisionSpec/EAGLE/eagle/train/llamagen_3B_config.json'
@@ -648,7 +650,7 @@ class EaModel(nn.Module):
                 #         level_sim = sim_list[0]
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
-                # fi = list(IDs of only TRUE branches)
+                # fi = list(IDs of only TRUE branches), choose the first true logit
                 fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
                 # target logits of the nodes on the candidate sequences returned True by fi and current depth
                 gt_logits = logits[fi, i - 1][None]
@@ -684,13 +686,14 @@ class EaModel(nn.Module):
                         lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
                         # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                         # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        if lev_sim_score > 0.75 :
+                        if lev_sim_score > 0.625 :
                             px +=  r * lev_sim_score 
                             # print("lev_sim_score: ", lev_sim_score, " r * combined_score: ", r * combined_score )
 
                         curr_tree_node_idx = retrieve_indices[j,i]
+                        
+                        ## OLD CODE BASED ON DRAFTER-GUIDED CROSS-LEVEL MERGING BELOW. it used to get filled in sample() of ea_model.py
                         # if level_sim is not None:
-                            ## OLD CODE BASED ON DRAFTER BELOW
                             # if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
                             #     lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
                                 

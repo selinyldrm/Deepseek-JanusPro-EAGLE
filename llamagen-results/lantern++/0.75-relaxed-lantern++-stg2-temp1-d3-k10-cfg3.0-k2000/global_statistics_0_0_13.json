@@ -1,0 +1,54 @@
+{
+    "prompt_0": {
+        "prompt": "A picture of a fire hydrant that is cut in half.",
+        "latency": 12.747559785842896
+    },
+    "prompt_1": {
+        "prompt": "A clock with street lights on the sidewalk near a white building.",
+        "latency": 14.632569074630737
+    },
+    "prompt_2": {
+        "prompt": "a person in a white t shirt cooking on a stove",
+        "latency": 13.724851846694946
+    },
+    "prompt_3": {
+        "prompt": "Some people in high visibility jackets putting suitcases onto a conveyer belt from a container",
+        "latency": 13.329169034957886
+    },
+    "prompt_4": {
+        "prompt": "In the foreground of the picture there are couples riding on motorcycles on a city street",
+        "latency": 13.93540644645691
+    },
+    "prompt_5": {
+        "prompt": "A laptop computer sits on a black surface next to a wireless mouse.",
+        "latency": 15.353473901748657
+    },
+    "prompt_6": {
+        "prompt": "Two peanut butter and jelly sandwiches sliced in half",
+        "latency": 13.010209321975708
+    },
+    "prompt_7": {
+        "prompt": "A decorative flower vase with lavender in it.",
+        "latency": 13.364001274108887
+    },
+    "prompt_8": {
+        "prompt": "A couple of women sitting in front of a deep dish pizza.",
+        "latency": 14.564515829086304
+    },
+    "prompt_9": {
+        "prompt": "A person sitting in front of a laptop computer.",
+        "latency": 14.276975870132446
+    },
+    "prompt_10": {
+        "prompt": "Woman wearing glasses eating a large slice of cheese pizza.",
+        "latency": 15.680593729019165
+    },
+    "prompt_11": {
+        "prompt": "A room with a fireplace and a wooden table.",
+        "latency": 14.065604448318481
+    },
+    "prompt_12": {
+        "prompt": "a close up of a toilet in a bath room",
+        "latency": 15.432581424713135
+    }
+}

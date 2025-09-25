@@ -1,0 +1,2502 @@
+{
+    "prompt_0": {
+        "prompt": "Ma motorcycle parked on the gravel in front of a garage",
+        "latency": 22.614604473114014
+    },
+    "prompt_1": {
+        "prompt": "An office cubicle with four different types of computers.",
+        "latency": 23.693256378173828
+    },
+    "prompt_2": {
+        "prompt": "This is an advanced toilet with a sink and control panel.",
+        "latency": 20.684249877929688
+    },
+    "prompt_3": {
+        "prompt": "A woman sitting on a bench and a woman standing behind the bench at a bus stop",
+        "latency": 16.418635368347168
+    },
+    "prompt_4": {
+        "prompt": "There is a piece of cake on a plate with decorations on it.",
+        "latency": 14.517733573913574
+    },
+    "prompt_5": {
+        "prompt": "Grey house cat devours a song bird on a door step",
+        "latency": 16.289953231811523
+    },
+    "prompt_6": {
+        "prompt": "An older man is wearing a funny hat in his dining room.",
+        "latency": 17.133392572402954
+    },
+    "prompt_7": {
+        "prompt": "A grey and white cat standing in the grass in a parking lot. ",
+        "latency": 16.960567474365234
+    },
+    "prompt_8": {
+        "prompt": "An office desk with two computer screens, books diagrams and a phone on it.",
+        "latency": 16.126784086227417
+    },
+    "prompt_9": {
+        "prompt": "A group of motorcycles down a long street filled with trees on either side.",
+        "latency": 15.893833637237549
+    },
+    "prompt_10": {
+        "prompt": "A young man and his cute cat enjoy a nap together.",
+        "latency": 17.176684856414795
+    },
+    "prompt_11": {
+        "prompt": "Close up of a white kitchen setup with a coffee maker on counter.",
+        "latency": 15.71837043762207
+    },
+    "prompt_12": {
+        "prompt": "The telephone has a banana where the receiver should be.",
+        "latency": 15.633598566055298
+    },
+    "prompt_13": {
+        "prompt": "A dog sitting between its masters feet on a footstool watching tv\n",
+        "latency": 15.89538311958313
+    },
+    "prompt_14": {
+        "prompt": "Group of three motorcyclists standing in front of their motorcycles.",
+        "latency": 15.378888845443726
+    },
+    "prompt_15": {
+        "prompt": "Set of toy animals sitting in front of a red wooden wagon.",
+        "latency": 16.795713186264038
+    },
+    "prompt_16": {
+        "prompt": "A woman wearing a hat & pink top takes a selfie in front of a bathroom mirror.",
+        "latency": 15.839438915252686
+    },
+    "prompt_17": {
+        "prompt": "A striped plane flying up into the sky as the sun shines behind it.",
+        "latency": 13.829081773757935
+    },
+    "prompt_18": {
+        "prompt": "A dog driving an SUV in an open grass covered field.",
+        "latency": 14.734951496124268
+    },
+    "prompt_19": {
+        "prompt": "A customized motorcycle with a large rear and skinny front tire",
+        "latency": 14.488015174865723
+    },
+    "prompt_20": {
+        "prompt": "A sculpture of two women stting on a bench with their purses on the ground while people standing in a line behind them. ",
+        "latency": 16.535515785217285
+    },
+    "prompt_21": {
+        "prompt": "There is very little traffic at this city intersection.",
+        "latency": 16.90756869316101
+    },
+    "prompt_22": {
+        "prompt": "An orange reddish rose in a vase filled with water on top of a table.",
+        "latency": 15.11364197731018
+    },
+    "prompt_23": {
+        "prompt": "A cat sitting on a street corner looking at the camera.",
+        "latency": 15.50087594985962
+    },
+    "prompt_24": {
+        "prompt": "The bathroom has a wall sink, medicine cabinet, toothbrush holder, and bare walls.",
+        "latency": 18.022398948669434
+    },
+    "prompt_25": {
+        "prompt": "Spacious white kitchen with brown cabinetry, sink and appliances. ",
+        "latency": 16.719804286956787
+    },
+    "prompt_26": {
+        "prompt": "A glass bowl filled with oranges on a table.",
+        "latency": 15.91977858543396
+    },
+    "prompt_27": {
+        "prompt": "A young attractive woman sitting on a toilette on the side of a street.",
+        "latency": 16.66166925430298
+    },
+    "prompt_28": {
+        "prompt": "A young woman using a laptop computer while sitting on a bunk bed.",
+        "latency": 16.905723571777344
+    },
+    "prompt_29": {
+        "prompt": "A bed in a bedroom with a white covering next to a doorway.",
+        "latency": 14.418930053710938
+    },
+    "prompt_30": {
+        "prompt": "A lap top computer next to a computer monitor sitting on top of a desk.",
+        "latency": 15.427929162979126
+    },
+    "prompt_31": {
+        "prompt": "a cream themed bathroom with a toilet, sink with mirror, and shower",
+        "latency": 16.773217916488647
+    },
+    "prompt_32": {
+        "prompt": "The bicycle is locked to the metal pole as the young man waits to board the mass  transit train.",
+        "latency": 18.55183458328247
+    },
+    "prompt_33": {
+        "prompt": "A young boy with a spoon looking at a birthday cupcake.",
+        "latency": 18.749261617660522
+    },
+    "prompt_34": {
+        "prompt": "A giraffe and a zebra are on a grassy field by the water.",
+        "latency": 15.988064765930176
+    },
+    "prompt_35": {
+        "prompt": "A train sits on the track at a deserted station overlooked by a tower.",
+        "latency": 14.812420129776001
+    },
+    "prompt_36": {
+        "prompt": "A group of people standing near the motorcycles on the street. ",
+        "latency": 16.710886478424072
+    },
+    "prompt_37": {
+        "prompt": "An airplane on the runway either just landed or ready to take off.",
+        "latency": 14.690736055374146
+    },
+    "prompt_38": {
+        "prompt": "A pickup truck is parked underneath multiple flying kites.",
+        "latency": 16.281947374343872
+    },
+    "prompt_39": {
+        "prompt": "An single passanger in an airplane flying through the sky",
+        "latency": 14.469099044799805
+    },
+    "prompt_40": {
+        "prompt": "Part of train car with a door to the rear connected to the car behind it",
+        "latency": 19.10099482536316
+    },
+    "prompt_41": {
+        "prompt": "A very clean and cozy looking kitchen that could be in a home magazine.",
+        "latency": 14.701141834259033
+    },
+    "prompt_42": {
+        "prompt": "A bathroom with a sliding shower door next to a toilet.",
+        "latency": 17.434859037399292
+    },
+    "prompt_43": {
+        "prompt": "A view of a kitchen with cabinets, a sink and a clothes washer.",
+        "latency": 15.52279019355774
+    },
+    "prompt_44": {
+        "prompt": "A full dressed marine is looking at his cell phone.",
+        "latency": 18.317760705947876
+    },
+    "prompt_45": {
+        "prompt": "A fancy bathroom with a clean toilet and piping.",
+        "latency": 18.37660026550293
+    },
+    "prompt_46": {
+        "prompt": "A public bathroom with two urinals on a wall, and sink with a mirror over it on another wall",
+        "latency": 17.034753799438477
+    },
+    "prompt_47": {
+        "prompt": "A beautiful woman sitting on a bench next to a stone building.",
+        "latency": 17.063108921051025
+    },
+    "prompt_48": {
+        "prompt": "A colorful public restroom with striped walls and yellow counter.",
+        "latency": 16.498615026474
+    },
+    "prompt_49": {
+        "prompt": "A deep freezer and refrigerator are displayed together.",
+        "latency": 15.056046485900879
+    },
+    "prompt_50": {
+        "prompt": "A car driving in an intersection, past a furniture shop. ",
+        "latency": 15.202687501907349
+    },
+    "prompt_51": {
+        "prompt": "A bathroom that has been gutted with the shower basin the only thing left.",
+        "latency": 15.193612575531006
+    },
+    "prompt_52": {
+        "prompt": "A bathroom with a bathtub and a sink overlooking a blue ocean.",
+        "latency": 17.389450311660767
+    },
+    "prompt_53": {
+        "prompt": "A baseball player bobble head next to two computer monitors on a desk.",
+        "latency": 16.636685132980347
+    },
+    "prompt_54": {
+        "prompt": "From the rear, we see a horse standing between two cars parked in a parking lot.",
+        "latency": 17.85767889022827
+    },
+    "prompt_55": {
+        "prompt": "An empty street at night with bright lights shining from the light poles, and one very bight light reflecting off the pavement.",
+        "latency": 13.727281093597412
+    },
+    "prompt_56": {
+        "prompt": "A loan bike sits by itself on a dirt road on a bend in a wooded area",
+        "latency": 15.822834014892578
+    },
+    "prompt_57": {
+        "prompt": "Two men doing a stunt show on four wheeler ATV vehicles.",
+        "latency": 16.59565758705139
+    },
+    "prompt_58": {
+        "prompt": "A painted white kitchen with a refrigerator and an automatic dish washer next to an oven stove.",
+        "latency": 16.78164291381836
+    },
+    "prompt_59": {
+        "prompt": "A cat sitting on the hood of a parked black car in a garage.",
+        "latency": 16.623839378356934
+    },
+    "prompt_60": {
+        "prompt": "A man in a tropical print shirt with glasses and long hair is eating a banana.",
+        "latency": 15.888476371765137
+    },
+    "prompt_61": {
+        "prompt": "View of kitchen sink, stainless refrigerator and breakfast room",
+        "latency": 15.789433479309082
+    },
+    "prompt_62": {
+        "prompt": "an airplane sitting on the tarmac with clouds above it",
+        "latency": 15.318373680114746
+    },
+    "prompt_63": {
+        "prompt": "A piece of dutch chocolate cake with a fork  on a plate. ",
+        "latency": 15.348790168762207
+    },
+    "prompt_64": {
+        "prompt": "A person with a giraffe costume greets people coming through the gate.",
+        "latency": 16.047503232955933
+    },
+    "prompt_65": {
+        "prompt": "A well decorated toilet seat with undecorated surroundings.",
+        "latency": 17.177032709121704
+    },
+    "prompt_66": {
+        "prompt": "A lone motorcycle is parked in the lighted parking lot.",
+        "latency": 15.696007490158081
+    },
+    "prompt_67": {
+        "prompt": "A herd of animals traveling down a country road surrounded by a lush green landscape.",
+        "latency": 15.491495132446289
+    },
+    "prompt_68": {
+        "prompt": "A blurry black an white image of a girl laying down.",
+        "latency": 14.453063011169434
+    },
+    "prompt_69": {
+        "prompt": "a cat sitting in a bathtub not looking amused",
+        "latency": 15.317471981048584
+    },
+    "prompt_70": {
+        "prompt": "Two people sitting on a motorcycle in the street next to a beach.",
+        "latency": 17.91325092315674
+    },
+    "prompt_71": {
+        "prompt": "Motorcycle parked in front of a tent with the sun going down behind them. ",
+        "latency": 16.172389030456543
+    },
+    "prompt_72": {
+        "prompt": "Police officer laying a speed trap for the purpose of writing a ticket.",
+        "latency": 16.157262086868286
+    },
+    "prompt_73": {
+        "prompt": "The nomadic sheepherd walks behind a large group of livestock in their desert habitat.",
+        "latency": 15.756171464920044
+    },
+    "prompt_74": {
+        "prompt": "A living room and dining room have two tables, couches, and multiple chairs.",
+        "latency": 18.24881339073181
+    },
+    "prompt_75": {
+        "prompt": "A black and white cat laying on top of a jeep. ",
+        "latency": 17.084270000457764
+    },
+    "prompt_76": {
+        "prompt": "A plane flying straight up and high in the sky leaves a tail of smoke.",
+        "latency": 13.69062876701355
+    },
+    "prompt_77": {
+        "prompt": "A white car and a white bus parked parallel from one another. ",
+        "latency": 16.415603399276733
+    },
+    "prompt_78": {
+        "prompt": "People cross the street at the corner of luxury buildings.",
+        "latency": 15.430983543395996
+    },
+    "prompt_79": {
+        "prompt": "An airplane being prepped for flight, as another plane passes by.",
+        "latency": 14.577439785003662
+    },
+    "prompt_80": {
+        "prompt": "An office desk with a row of books and a desktop computer and laptop computer on the desk.",
+        "latency": 16.090107917785645
+    },
+    "prompt_81": {
+        "prompt": "A bathroom with a sink, toilet and tub in front of a large mirror.",
+        "latency": 18.31923747062683
+    },
+    "prompt_82": {
+        "prompt": "A residential bathroom has a modern motel look with upgraded fixtures and accessories.",
+        "latency": 15.373364686965942
+    },
+    "prompt_83": {
+        "prompt": "A small bathroom on an airplane with handles on either side.",
+        "latency": 17.79834747314453
+    },
+    "prompt_84": {
+        "prompt": "An air hanger with two world war two airplanes parked next to each other.",
+        "latency": 16.154241800308228
+    },
+    "prompt_85": {
+        "prompt": "An empty parking lot features green trees and a single white bicycle.",
+        "latency": 15.635701179504395
+    },
+    "prompt_86": {
+        "prompt": "A pink monster made out of a toilet seat with googley eyes.",
+        "latency": 16.113912343978882
+    },
+    "prompt_87": {
+        "prompt": "Ten porcelain pieces with floral patterns painted on them.",
+        "latency": 15.643796920776367
+    },
+    "prompt_88": {
+        "prompt": "Three women sitting on a park bench next to each other.",
+        "latency": 18.671650886535645
+    },
+    "prompt_89": {
+        "prompt": "a group of people gathered around an old dirty vintage motorcycle",
+        "latency": 16.13595962524414
+    },
+    "prompt_90": {
+        "prompt": "A bathroom scene with a modern toilet and wooden fixtures",
+        "latency": 17.426451206207275
+    },
+    "prompt_91": {
+        "prompt": "I black cat with yellow eyes sitting in the grass.",
+        "latency": 14.491321325302124
+    },
+    "prompt_92": {
+        "prompt": "Partial picture of a kitchen and a table and chairs under a lamp.",
+        "latency": 17.377314805984497
+    },
+    "prompt_93": {
+        "prompt": "A group of cars waiting at an intersection for the light to change",
+        "latency": 15.234376668930054
+    },
+    "prompt_94": {
+        "prompt": "Two empty toilet paper roll holders hang in the stall while the empties lay around and a nice roll sets on the bar.",
+        "latency": 17.147265434265137
+    },
+    "prompt_95": {
+        "prompt": "A black cat meanders up the walkway in front of a motorcycle in front of a house.",
+        "latency": 15.892999410629272
+    },
+    "prompt_96": {
+        "prompt": "A white and black motorcycle sits next to a van in a parking lot.",
+        "latency": 19.94860577583313
+    },
+    "prompt_97": {
+        "prompt": "A banana and a nearly empty bowl of food resting on top of a table.",
+        "latency": 14.273113250732422
+    },
+    "prompt_98": {
+        "prompt": "Bicycle parked by the side of busy highway on a concrete slab. ",
+        "latency": 15.242592811584473
+    },
+    "prompt_99": {
+        "prompt": "Two almost identical photos with some minor cropping show two young girls standing on the coast with people in the water in the background as a plane flies overhead",
+        "latency": 14.898394346237183
+    },
+    "prompt_100": {
+        "prompt": "Large brick building with a clock tower at its height. ",
+        "latency": 13.94732141494751
+    },
+    "prompt_101": {
+        "prompt": "In the desert, two people are sitting next to a small propeller plane next to a tent with other planes in the background.",
+        "latency": 16.51416301727295
+    },
+    "prompt_102": {
+        "prompt": "The tiny kitten looks sad sitting in the bathroom sink with a scrub brush on the rim.",
+        "latency": 16.38788914680481
+    },
+    "prompt_103": {
+        "prompt": "a small plane taking off from a run way in mid air",
+        "latency": 13.894360303878784
+    },
+    "prompt_104": {
+        "prompt": "A photo of a video game in the middle of a large mirror in a bathroom. ",
+        "latency": 15.393299579620361
+    },
+    "prompt_105": {
+        "prompt": "An aerial view of an open toilet seat that someone is standing in front of.",
+        "latency": 15.344300985336304
+    },
+    "prompt_106": {
+        "prompt": "A man wearing a hat while standing in front of a bathroom mirror.",
+        "latency": 15.001834869384766
+    },
+    "prompt_107": {
+        "prompt": "A vacant bus has seats facing in multiple directions.",
+        "latency": 16.965686559677124
+    },
+    "prompt_108": {
+        "prompt": "Compact bathroom area, tub, toilet, magazine area and sink.",
+        "latency": 20.16124415397644
+    },
+    "prompt_109": {
+        "prompt": "A bunch of bananas sitting on top of a wooden table.",
+        "latency": 14.968281030654907
+    },
+    "prompt_110": {
+        "prompt": "A woman carrying a bunch of bananas on her head walking down a street.",
+        "latency": 15.54861831665039
+    },
+    "prompt_111": {
+        "prompt": "A person bundled up while frying something on the stove indoors.",
+        "latency": 17.699960947036743
+    },
+    "prompt_112": {
+        "prompt": "a room with a television set  a stool and some pictures",
+        "latency": 17.01778221130371
+    },
+    "prompt_113": {
+        "prompt": "A picture of two motorcross people skidding in the dirtroad.",
+        "latency": 14.897232294082642
+    },
+    "prompt_114": {
+        "prompt": "Cat attempting to get a drink out of a faucet.",
+        "latency": 15.836141109466553
+    },
+    "prompt_115": {
+        "prompt": "A man on a piece of equipment resembling a bicycle that has very large wheels.",
+        "latency": 14.547255754470825
+    },
+    "prompt_116": {
+        "prompt": "A person at an airport terminal with planed in view outside of the windows.",
+        "latency": 16.621878385543823
+    },
+    "prompt_117": {
+        "prompt": "A gray and white tiger striped cat sitting in front of a brickwall",
+        "latency": 14.777425289154053
+    },
+    "prompt_118": {
+        "prompt": "In an unfinished room a counter sits with three chairs while a stove and cabinets sit in the distance.",
+        "latency": 15.218163967132568
+    },
+    "prompt_119": {
+        "prompt": "A large truck is parked beside an old, wooden bench.",
+        "latency": 16.188820123672485
+    },
+    "prompt_120": {
+        "prompt": "This bathroom has a pattern of blue tiles on the floor",
+        "latency": 18.720401763916016
+    },
+    "prompt_121": {
+        "prompt": "A colorful plane leaves a trail of smoke on a clear blue sky.",
+        "latency": 14.500456809997559
+    },
+    "prompt_122": {
+        "prompt": "A person riding a motorcycle in an abandoned stone building",
+        "latency": 15.767412424087524
+    },
+    "prompt_123": {
+        "prompt": "A man wearing a helmet while holding a banana next to a woman wearing a helmet.",
+        "latency": 16.782368898391724
+    },
+    "prompt_124": {
+        "prompt": "An orange tabby cat lies down outside a door on a house porch.",
+        "latency": 16.332993745803833
+    },
+    "prompt_125": {
+        "prompt": "Soap and a water bottle are on top of a vanity in a teal bathroom.",
+        "latency": 16.507760047912598
+    },
+    "prompt_126": {
+        "prompt": "a homeless man holding a cup and standing next to a shopping cart on a street",
+        "latency": 16.73274803161621
+    },
+    "prompt_127": {
+        "prompt": "A bus sits diagonal from the curb next to a building and people.",
+        "latency": 15.697956800460815
+    },
+    "prompt_128": {
+        "prompt": "A large passenger jet sitting on top of an airport runway.",
+        "latency": 15.336606740951538
+    },
+    "prompt_129": {
+        "prompt": "A bathroom with a round sink and red tile backsplash",
+        "latency": 17.041916847229004
+    },
+    "prompt_130": {
+        "prompt": "A herd of cattle sitting in front of a church with a steeple.",
+        "latency": 18.104087829589844
+    },
+    "prompt_131": {
+        "prompt": "A contemporary kitchen featuring wood floors and a stainless steel oven.",
+        "latency": 16.109920263290405
+    },
+    "prompt_132": {
+        "prompt": "The large living room has been decorated in modern furnishings.",
+        "latency": 15.774937868118286
+    },
+    "prompt_133": {
+        "prompt": "A small bathroom with two containers catching plumbing drips.",
+        "latency": 17.520775079727173
+    },
+    "prompt_134": {
+        "prompt": "Black cat with green eyes sitting in a bathroom sink. ",
+        "latency": 15.333221912384033
+    },
+    "prompt_135": {
+        "prompt": "A kitchen with wooden furniture and a vase filled with red flowers.",
+        "latency": 16.115303993225098
+    },
+    "prompt_136": {
+        "prompt": "Two planes fly over a bridge in Sydney, Australia, with the Sydney Opera House in the background.",
+        "latency": 15.29457426071167
+    },
+    "prompt_137": {
+        "prompt": "A tower white with yellow trim tower features a large clock.",
+        "latency": 17.876983165740967
+    },
+    "prompt_138": {
+        "prompt": "A small bathroom with a white toilet next to a shower curtain covered bath tub.",
+        "latency": 16.104822635650635
+    },
+    "prompt_139": {
+        "prompt": "A park bench surrounded by floral arrangements on either side.",
+        "latency": 16.6812801361084
+    },
+    "prompt_140": {
+        "prompt": "Man blowing out white candles on top of a brown cake. ",
+        "latency": 18.723472595214844
+    },
+    "prompt_141": {
+        "prompt": "Unfinished bathroom with only a shower base installed",
+        "latency": 15.899170160293579
+    },
+    "prompt_142": {
+        "prompt": "A show floor with a shiny blue motorcycle surrounded by bars.",
+        "latency": 17.27148413658142
+    },
+    "prompt_143": {
+        "prompt": "A photo taken from a vehicle at a man on a yellow motorcycle.",
+        "latency": 15.632381677627563
+    },
+    "prompt_144": {
+        "prompt": "The neon purple toilet with lid lifted is in the bathroom with brown tile. ",
+        "latency": 18.120059728622437
+    },
+    "prompt_145": {
+        "prompt": "a close up of a person brushing her teeth in the bathroom",
+        "latency": 16.78928518295288
+    },
+    "prompt_146": {
+        "prompt": "A man standing in front of a fruit stand containing several bunches of bananas.",
+        "latency": 16.10739827156067
+    },
+    "prompt_147": {
+        "prompt": "A red car next to a gas station sign and parked blue and silver motorcycles.",
+        "latency": 16.023792505264282
+    },
+    "prompt_148": {
+        "prompt": "Several people standing around and a black dog with a collar walking around.",
+        "latency": 17.796689748764038
+    },
+    "prompt_149": {
+        "prompt": "Two people skateboarding down a roadway in a downhill descent.",
+        "latency": 16.561416625976562
+    },
+    "prompt_150": {
+        "prompt": "a city scene of a sidewalk with a red fire hydrant on a sidewalk next to an ATM",
+        "latency": 15.825042486190796
+    },
+    "prompt_151": {
+        "prompt": "A calico cat with eyes closed is perched upon a Mercedes.",
+        "latency": 14.038702249526978
+    },
+    "prompt_152": {
+        "prompt": "this floor has a pattern of black and white tiles the sink is the same pattern",
+        "latency": 23.33011794090271
+    },
+    "prompt_153": {
+        "prompt": "Boy standing on a skate board as seen from under the board.",
+        "latency": 14.793103218078613
+    },
+    "prompt_154": {
+        "prompt": "A bathroom with a tub on the side and a large bowl sink under a large bathroom mirror.",
+        "latency": 15.545225381851196
+    },
+    "prompt_155": {
+        "prompt": "This black and white photo shows many motorcycles parked next to each other",
+        "latency": 14.689647436141968
+    },
+    "prompt_156": {
+        "prompt": "Man laughing standing next to his motorcycle with his bicycle attached to it.  ",
+        "latency": 17.324592351913452
+    },
+    "prompt_157": {
+        "prompt": "A dog jumping through the air above a pool of water that has been marked for distance, with people watching in the distance.",
+        "latency": 14.45258355140686
+    },
+    "prompt_158": {
+        "prompt": "A kitchen with a stove top oven next to a white fridge.",
+        "latency": 18.101083755493164
+    },
+    "prompt_159": {
+        "prompt": "A dog uses its mouth to grab toilet paper off of the roll.",
+        "latency": 18.360334634780884
+    },
+    "prompt_160": {
+        "prompt": "A black cat looking out the windshield of a car.",
+        "latency": 17.515923023223877
+    },
+    "prompt_161": {
+        "prompt": "A room with a mirrored closet, keyboard and a dog on a bed.",
+        "latency": 17.44987988471985
+    },
+    "prompt_162": {
+        "prompt": "Historic buildings cover an area with architectural elements alongside the street.",
+        "latency": 15.293231725692749
+    },
+    "prompt_163": {
+        "prompt": "A person on a motorcycle talking to a person with a watermelon.",
+        "latency": 17.306546211242676
+    },
+    "prompt_164": {
+        "prompt": "A small glider flying through the sky with a pilot.",
+        "latency": 14.047390460968018
+    },
+    "prompt_165": {
+        "prompt": "Traffic stopped at an intersection waiting for the light to turn green.",
+        "latency": 15.868732452392578
+    },
+    "prompt_166": {
+        "prompt": "A person covered with an orange sleeping bag rests his head on a blue back pack as he sleeps on a park bench. ",
+        "latency": 14.736232042312622
+    },
+    "prompt_167": {
+        "prompt": "A man standing on a hillside next to a lake holding frisbee.",
+        "latency": 14.639496803283691
+    },
+    "prompt_168": {
+        "prompt": "a person walking across the street with a traffic light above",
+        "latency": 14.934811115264893
+    },
+    "prompt_169": {
+        "prompt": "A white toilet with a black seat sitting in a small stall.",
+        "latency": 17.07022738456726
+    },
+    "prompt_170": {
+        "prompt": "Some yellow street lights on some poles in the middle of a street.",
+        "latency": 15.246533870697021
+    },
+    "prompt_171": {
+        "prompt": "A passenger train's door is open at the station platform.",
+        "latency": 16.472394227981567
+    },
+    "prompt_172": {
+        "prompt": "A computer workstation with a laptop and two additional monitors.",
+        "latency": 14.222675561904907
+    },
+    "prompt_173": {
+        "prompt": "A kitchen scene complete with an oven, range and a refrigerator.",
+        "latency": 16.774478435516357
+    },
+    "prompt_174": {
+        "prompt": "A person that is cooking some food in a kitchen.",
+        "latency": 14.737190961837769
+    },
+    "prompt_175": {
+        "prompt": "A woman bending over in a living room to pet her dog.",
+        "latency": 17.41934823989868
+    },
+    "prompt_176": {
+        "prompt": "A black and white cat standing in a white bathroom sink.",
+        "latency": 16.824886798858643
+    },
+    "prompt_177": {
+        "prompt": "A person on skis and with poles in the snow and facing the blue sky.",
+        "latency": 14.138924837112427
+    },
+    "prompt_178": {
+        "prompt": "A rodeo area with men in cowboy hats, rodeo clowns and an audience in the stands.",
+        "latency": 17.224945068359375
+    },
+    "prompt_179": {
+        "prompt": "An empty clean kitchen with cabinetry, stove and dishwasher.",
+        "latency": 15.962470054626465
+    },
+    "prompt_180": {
+        "prompt": "A middle-aged man leans on a sports bike, smiling",
+        "latency": 19.63128685951233
+    },
+    "prompt_181": {
+        "prompt": "A stone street with bicycles and motor bikes parked on the side and people standing on the sidewalks in front of buildings.",
+        "latency": 15.079400300979614
+    },
+    "prompt_182": {
+        "prompt": "An elderly man and woman sit on a bench on a busy sidewalk.",
+        "latency": 19.345633506774902
+    },
+    "prompt_183": {
+        "prompt": "A bicyclist performs a wheelie near a rocky shore",
+        "latency": 15.23522162437439
+    },
+    "prompt_184": {
+        "prompt": "A golden cross ornament sits in the middle of an empty church.",
+        "latency": 15.536051273345947
+    },
+    "prompt_185": {
+        "prompt": "A street scene with motorcycles parked along the side of the road with people dining outside.",
+        "latency": 15.671268463134766
+    },
+    "prompt_186": {
+        "prompt": "A boy sitting in front of cake fashioned to look like a skateboard.",
+        "latency": 16.73202419281006
+    },
+    "prompt_187": {
+        "prompt": "A giraffe stares into the camera while standing on green grass in front of a shade tree.",
+        "latency": 17.50968837738037
+    },
+    "prompt_188": {
+        "prompt": "There are two rolls of toilet paper and a hand dispenser on the bathroom wall.",
+        "latency": 16.95868158340454
+    },
+    "prompt_189": {
+        "prompt": "A bathroom with a shower curtain that has four palm trees on it and a white tile floor.",
+        "latency": 16.81899881362915
+    },
+    "prompt_190": {
+        "prompt": "A toilet area features some shelving with silver accents and towels and a white toilet.",
+        "latency": 20.1323401927948
+    },
+    "prompt_191": {
+        "prompt": "A woman digging through the storage compartment on her moped.",
+        "latency": 18.08825922012329
+    },
+    "prompt_192": {
+        "prompt": "A black and white photo of four elderly people sitting in a bench overlooking the ocean.",
+        "latency": 16.218332290649414
+    },
+    "prompt_193": {
+        "prompt": "A man on a motor scooter waiting in a group of motor scooters.",
+        "latency": 18.560338973999023
+    },
+    "prompt_194": {
+        "prompt": "Photo of a bathtub with two towels placed on a rack at the far end of the tub. ",
+        "latency": 17.503300666809082
+    },
+    "prompt_195": {
+        "prompt": "A man riding a horse drawn carriage on a race track.",
+        "latency": 17.31834888458252
+    },
+    "prompt_196": {
+        "prompt": "A counter with a flower, tomatoes in a bowl and silver canister. ",
+        "latency": 15.910820960998535
+    },
+    "prompt_197": {
+        "prompt": "A modern home kitchen and sitting area looking out towards the back yard",
+        "latency": 16.37855339050293
+    },
+    "prompt_198": {
+        "prompt": "a parked red motorcycle a fence and some trees",
+        "latency": 16.404338359832764
+    },
+    "prompt_199": {
+        "prompt": "a tray of food on a wooden table with bread, carrots, sauce, nuts and a muffin.",
+        "latency": 14.419039011001587
+    },
+    "prompt_200": {
+        "prompt": "A kitchen filled with a wooden cabinet and a large window.",
+        "latency": 15.866547584533691
+    },
+    "prompt_201": {
+        "prompt": "A bath scene with a toilet and a wallpaper with a woman on it.",
+        "latency": 17.707578420639038
+    },
+    "prompt_202": {
+        "prompt": "A desktop containing various computers missing their screens.",
+        "latency": 16.041709184646606
+    },
+    "prompt_203": {
+        "prompt": "Two men who are wearing suits and hats standing next to each other.",
+        "latency": 15.130263566970825
+    },
+    "prompt_204": {
+        "prompt": "Someone is driving a cart near a single engine airplane.",
+        "latency": 16.684221744537354
+    },
+    "prompt_205": {
+        "prompt": "People standing behind bales of straw as a protection from motorcycles on a track.",
+        "latency": 13.844441175460815
+    },
+    "prompt_206": {
+        "prompt": "A small propeller plane sitting on top of an airport tarmac.",
+        "latency": 18.15593695640564
+    },
+    "prompt_207": {
+        "prompt": "Man in tan suit walking down a city street lighting a cigarette.",
+        "latency": 17.09985852241516
+    },
+    "prompt_208": {
+        "prompt": "A blue toilet sitting in a corner of a bathroom.",
+        "latency": 15.8387930393219
+    },
+    "prompt_209": {
+        "prompt": "Fighter Jet with afterburners on flying almost vertically.",
+        "latency": 15.592306852340698
+    },
+    "prompt_210": {
+        "prompt": "Man sitting on a sidewalk next to a bicycle talking on his cell phone.",
+        "latency": 16.943052053451538
+    },
+    "prompt_211": {
+        "prompt": "A motorbike parked, with several bicycles stacked on on the back of it.",
+        "latency": 17.02383828163147
+    },
+    "prompt_212": {
+        "prompt": "A stoplight that has turned red on a road lined with trees that are in bloom.",
+        "latency": 14.862298488616943
+    },
+    "prompt_213": {
+        "prompt": "Motorcyclist on chromed motorcycle rounding a curve roadway.",
+        "latency": 15.397626638412476
+    },
+    "prompt_214": {
+        "prompt": "a woman in a blue dress some black chairs and another person looking in an oven",
+        "latency": 17.484896659851074
+    },
+    "prompt_215": {
+        "prompt": "A young girl speaking on a cell phone near a produce vendor.",
+        "latency": 17.627629280090332
+    },
+    "prompt_216": {
+        "prompt": "a bathroom with red walls a shower a sink mirror and toilet",
+        "latency": 17.93023705482483
+    },
+    "prompt_217": {
+        "prompt": "A bathroom with a white toilet and a sink net to a shower.",
+        "latency": 17.88080334663391
+    },
+    "prompt_218": {
+        "prompt": "Person wearing grey clothing on a motorcycle on a city street. ",
+        "latency": 20.101454496383667
+    },
+    "prompt_219": {
+        "prompt": "A bathroom with a sink and television inside of the mirror.",
+        "latency": 17.93550682067871
+    },
+    "prompt_220": {
+        "prompt": "An angled shot of a fully stocked kitchen with wooden cabinets.",
+        "latency": 16.851067543029785
+    },
+    "prompt_221": {
+        "prompt": "An airplane flying high in the sky on a partly cloudy day.",
+        "latency": 13.310310363769531
+    },
+    "prompt_222": {
+        "prompt": "A black and stainless steel kitchen with a snack bar and bar stools. ",
+        "latency": 17.65420174598694
+    },
+    "prompt_223": {
+        "prompt": "a brown black and white dog wearing a helmet and a black scooter",
+        "latency": 17.917508363723755
+    },
+    "prompt_224": {
+        "prompt": "A Chinese street showing business signs hanging over the store fronts.",
+        "latency": 16.421961784362793
+    },
+    "prompt_225": {
+        "prompt": "The jet fighter sits on a pedestal across the street from a building.",
+        "latency": 15.839555025100708
+    },
+    "prompt_226": {
+        "prompt": "A box of donuts and a bag of nuts sitting on a table.",
+        "latency": 16.710670471191406
+    },
+    "prompt_227": {
+        "prompt": "Three Finnair planes are parked at the gates on this side of the terminal.",
+        "latency": 16.89497184753418
+    },
+    "prompt_228": {
+        "prompt": "Two people are sitting on chairs talking on at a corner.",
+        "latency": 17.361668586730957
+    },
+    "prompt_229": {
+        "prompt": "A large dining room features wooden cabinets and a marble counter top.",
+        "latency": 15.374746084213257
+    },
+    "prompt_230": {
+        "prompt": "A lady is preparing pancakes in a charming white kitchen.",
+        "latency": 16.73122811317444
+    },
+    "prompt_231": {
+        "prompt": "A bathroom with gray painted walls and white tile near the bathtub.",
+        "latency": 17.9678475856781
+    },
+    "prompt_232": {
+        "prompt": "A baby tabby cat walking behind a bicycle leaning against a wall",
+        "latency": 19.10396957397461
+    },
+    "prompt_233": {
+        "prompt": "A kitchen with white appliances, countertop and oak cabinets.",
+        "latency": 14.981406211853027
+    },
+    "prompt_234": {
+        "prompt": "A brightly colored single engine plane is high in the clear sky.",
+        "latency": 16.764918327331543
+    },
+    "prompt_235": {
+        "prompt": "A woman is wearing a wetsuit while holding a surfboard.",
+        "latency": 17.717998266220093
+    },
+    "prompt_236": {
+        "prompt": "A seaplane parked on the shallow end of the sea as a man approaches. ",
+        "latency": 14.529228687286377
+    },
+    "prompt_237": {
+        "prompt": "A man slices meat in his kitchen while his dog begs from the floor.",
+        "latency": 17.9240243434906
+    },
+    "prompt_238": {
+        "prompt": "A fairly curmudgeonly looking old gentleman grimaces for the camera. ",
+        "latency": 14.896977424621582
+    },
+    "prompt_239": {
+        "prompt": "Urban downtown city center with a bicyclist. and pedestrians ",
+        "latency": 14.712122440338135
+    },
+    "prompt_240": {
+        "prompt": "A woman sitting on a wooden bench viewing some beautiful trees.",
+        "latency": 16.83468723297119
+    },
+    "prompt_241": {
+        "prompt": "Someone demonstrating how a remote control toilet works.",
+        "latency": 19.098045587539673
+    },
+    "prompt_242": {
+        "prompt": "Many motorcycles are parked in the ground.A middle aged person standing near a bike.",
+        "latency": 19.181776762008667
+    },
+    "prompt_243": {
+        "prompt": "A crowded city street with cars a bus and a couple riding on a motorcycle. ",
+        "latency": 16.897793769836426
+    },
+    "prompt_244": {
+        "prompt": "A man sitting on a motorcycle near several bicycles with a partially visible person standing nearby.",
+        "latency": 18.86089015007019
+    },
+    "prompt_245": {
+        "prompt": "The bottom of a jumbo jet is flying through the air.  ",
+        "latency": 14.768205881118774
+    },
+    "prompt_246": {
+        "prompt": "A motorcyclist is driving down the road next to the road barrier.",
+        "latency": 16.39401364326477
+    },
+    "prompt_247": {
+        "prompt": "A full view of some items in a living huts made of straws. ",
+        "latency": 15.939637184143066
+    },
+    "prompt_248": {
+        "prompt": "parked cars, motorcycles and buses on a cobblestone parking lot next to a street.",
+        "latency": 16.62964105606079
+    },
+    "prompt_249": {
+        "prompt": "A motorcycle club stopping along the highway to take a break and talk.",
+        "latency": 15.698949098587036
+    },
+    "prompt_250": {
+        "prompt": "A bathroom sink, toilet and shower with the curtain half open.",
+        "latency": 16.06711506843567
+    },
+    "prompt_251": {
+        "prompt": "Night picture of a car parked and some parking lights in the distance.",
+        "latency": 16.57556176185608
+    },
+    "prompt_252": {
+        "prompt": "An unadorned kitchen with oven, sink, cabinets, microwave, wood floor, and a window.",
+        "latency": 16.230047464370728
+    },
+    "prompt_253": {
+        "prompt": "A hand holding a spraying hose to a toilet bowl in a small toilet stall.",
+        "latency": 16.637633085250854
+    },
+    "prompt_254": {
+        "prompt": "A bathroom with the sink and medicine cabinet visible.",
+        "latency": 20.0619900226593
+    },
+    "prompt_255": {
+        "prompt": "A man stands in between a gas pump and a motorcycle while a woman in heels stands next to them.",
+        "latency": 19.1266508102417
+    },
+    "prompt_256": {
+        "prompt": "many animals in a field with trees and bushes in the background",
+        "latency": 15.187535524368286
+    },
+    "prompt_257": {
+        "prompt": "A man talking in front of a photo of an orange sofa with black and white fence behind it.",
+        "latency": 18.13590931892395
+    },
+    "prompt_258": {
+        "prompt": "A woman wearing shorts bends over a frying pan on a stove.",
+        "latency": 17.444571018218994
+    },
+    "prompt_259": {
+        "prompt": "A person wearing a red biker shirt stands next to his bike.",
+        "latency": 18.51139807701111
+    },
+    "prompt_260": {
+        "prompt": "A bathroom with a white tub and white cabinets has a black pattern on the floor.",
+        "latency": 16.512698888778687
+    },
+    "prompt_261": {
+        "prompt": "a small yellow Cessna plane flying on a clear day",
+        "latency": 15.405986309051514
+    },
+    "prompt_262": {
+        "prompt": "A dog sticks its head out of the car and is reflected in the side mirror. ",
+        "latency": 16.84313201904297
+    },
+    "prompt_263": {
+        "prompt": "Blue motorcycle parked in small area with wall marked with lots of graffiti.",
+        "latency": 16.65388250350952
+    },
+    "prompt_264": {
+        "prompt": "A banana is sitting beside a large bowl storage container.",
+        "latency": 15.206801176071167
+    },
+    "prompt_265": {
+        "prompt": "Small group of sheep being herded by three border collies.",
+        "latency": 16.924114227294922
+    },
+    "prompt_266": {
+        "prompt": "A woman holding a cell phone and standing in a littered field with others.",
+        "latency": 17.231935262680054
+    },
+    "prompt_267": {
+        "prompt": "Cat wedged between two large oak doors trying to get out.",
+        "latency": 18.10399889945984
+    },
+    "prompt_268": {
+        "prompt": "An adult giraffe standing near a white duck in a field of grass.",
+        "latency": 16.014562606811523
+    },
+    "prompt_269": {
+        "prompt": "A cat being lazy and a cat being nozy in a living room with tv and a laptop displaying the same things.",
+        "latency": 16.104248523712158
+    },
+    "prompt_270": {
+        "prompt": "A large passenger jet sitting on top of an airport tarmac.",
+        "latency": 16.722882986068726
+    },
+    "prompt_271": {
+        "prompt": "a cheese pizza on a gray tray and an orange pizza cutter",
+        "latency": 16.714077949523926
+    },
+    "prompt_272": {
+        "prompt": "a bathroom with two sinks with a light on above them.",
+        "latency": 16.85801339149475
+    },
+    "prompt_273": {
+        "prompt": "A small very dark and dingy looking rest room with old equipment.",
+        "latency": 15.623432874679565
+    },
+    "prompt_274": {
+        "prompt": "Two men cooking in a stainless steel restaurant kitchen",
+        "latency": 17.815873384475708
+    },
+    "prompt_275": {
+        "prompt": "A motorcycle parked on a gravel road near a park.",
+        "latency": 17.12859296798706
+    },
+    "prompt_276": {
+        "prompt": "A grey and black plane on a runway with trees in the background.",
+        "latency": 16.35703468322754
+    },
+    "prompt_277": {
+        "prompt": "A view of a narrow kitchen with the only light coming from a glass door.",
+        "latency": 14.097208738327026
+    },
+    "prompt_278": {
+        "prompt": "A bathroom with a toilet, sink, bath tub, and a small cabinet.",
+        "latency": 15.2955904006958
+    },
+    "prompt_279": {
+        "prompt": "Frizzy haired guy standing at a keyboard listening to the music.",
+        "latency": 15.703471899032593
+    },
+    "prompt_280": {
+        "prompt": "A busy kitchen next to a dining table and counters with chairs and tables",
+        "latency": 15.792718648910522
+    },
+    "prompt_281": {
+        "prompt": "An old fashion sink with the cover painted pink near the mirror. ",
+        "latency": 14.219682216644287
+    },
+    "prompt_282": {
+        "prompt": "A banana sitting on a yellow beach chair next to a small umbrella  looking out a window at the blue water.",
+        "latency": 16.560307502746582
+    },
+    "prompt_283": {
+        "prompt": "a male in a white shirt is sitting on a bench and a building",
+        "latency": 15.451687812805176
+    },
+    "prompt_284": {
+        "prompt": "A couple of motorcycles in front of sign, with people standing around.",
+        "latency": 16.857853651046753
+    },
+    "prompt_285": {
+        "prompt": "A kitchen in the process of being remodeled with wiring hanging from the ceiling",
+        "latency": 15.16226601600647
+    },
+    "prompt_286": {
+        "prompt": "View of a public men's' room with a  cot on the side.",
+        "latency": 15.303984642028809
+    },
+    "prompt_287": {
+        "prompt": "a woman taking a picture in a bathroom mirror and a toilet and sink",
+        "latency": 17.744017601013184
+    },
+    "prompt_288": {
+        "prompt": "two covered motorcycles in a row of motorcycles parked on the street",
+        "latency": 16.710795164108276
+    },
+    "prompt_289": {
+        "prompt": "Black and white cat sitting in leaves outside a window.",
+        "latency": 16.278974771499634
+    },
+    "prompt_290": {
+        "prompt": "The man is walking with an umbrella near other pedestrians.",
+        "latency": 15.035952806472778
+    },
+    "prompt_291": {
+        "prompt": "A smiling man in a jungle holds a bunch of plant parts.",
+        "latency": 16.61141014099121
+    },
+    "prompt_292": {
+        "prompt": "A group of women standing around a cake sitting on top of a table.",
+        "latency": 17.028491020202637
+    },
+    "prompt_293": {
+        "prompt": "A purple bathroom with three sinks and a purple countertop with a mirror surrounded with light bulbs.",
+        "latency": 16.57612156867981
+    },
+    "prompt_294": {
+        "prompt": "The large jumbo jet has it's landing gear lowered.",
+        "latency": 14.5582914352417
+    },
+    "prompt_295": {
+        "prompt": "A man standing next to a motorcycle talking to several other men wearing yellow vests. ",
+        "latency": 18.648067712783813
+    },
+    "prompt_296": {
+        "prompt": "A yellow oblong upside down triangular street sign stands in the middle of the street. ",
+        "latency": 15.708684921264648
+    },
+    "prompt_297": {
+        "prompt": "A motorcycle just outside a building with green, peeling paint",
+        "latency": 16.160917282104492
+    },
+    "prompt_298": {
+        "prompt": "A white bowl filled with green Granny Smith apples.",
+        "latency": 16.872092485427856
+    },
+    "prompt_299": {
+        "prompt": "A traffic light with a frowning face on the red light and a city street and buildings behind it.",
+        "latency": 18.170849084854126
+    },
+    "prompt_300": {
+        "prompt": "an extremely nasty toilet in front of pipes and cable",
+        "latency": 17.075376272201538
+    },
+    "prompt_301": {
+        "prompt": "A kitchen area features a white refrigerator a stove and other appliances and brown cabinets.",
+        "latency": 16.710581064224243
+    },
+    "prompt_302": {
+        "prompt": "A car that has slid into a light pole on a snow covered road.",
+        "latency": 14.365457773208618
+    },
+    "prompt_303": {
+        "prompt": "A man holding a camera reflected in a bathroom mirror that sits above a sink and next to a door.",
+        "latency": 17.822474241256714
+    },
+    "prompt_304": {
+        "prompt": "Streetlights and traffic lights light up the night on an empty street.",
+        "latency": 14.591620206832886
+    },
+    "prompt_305": {
+        "prompt": "A row of motorcycles parked together on a grass yard area with a house in the background.",
+        "latency": 16.15703535079956
+    },
+    "prompt_306": {
+        "prompt": "a white mug  showing pirate skull and bones and a large knife on a counter top.",
+        "latency": 16.79947829246521
+    },
+    "prompt_307": {
+        "prompt": "There is a large white, red and blue plane flying high in the sky",
+        "latency": 16.141561031341553
+    },
+    "prompt_308": {
+        "prompt": "A white sink placed in the middle of a constructed kitchen.",
+        "latency": 16.45967674255371
+    },
+    "prompt_309": {
+        "prompt": "A man stands beside his black and red motorcycle near a park.",
+        "latency": 18.601869344711304
+    },
+    "prompt_310": {
+        "prompt": "A calico cat is sitting on the roof of a car at night.",
+        "latency": 16.4468412399292
+    },
+    "prompt_311": {
+        "prompt": "Some type of vehicle with a number on its side is pared inside a garage.",
+        "latency": 17.091108083724976
+    },
+    "prompt_312": {
+        "prompt": "a green traffic light a street  some buildings and some other lights",
+        "latency": 17.870160579681396
+    },
+    "prompt_313": {
+        "prompt": "Point of view of a man peeing in an airplane restroom.",
+        "latency": 18.425343990325928
+    },
+    "prompt_314": {
+        "prompt": "A girl holding a half eaten banana in her hands.",
+        "latency": 16.12761926651001
+    },
+    "prompt_315": {
+        "prompt": "A dirty public bathroom with a handicap sign located above the toilet. ",
+        "latency": 16.888070583343506
+    },
+    "prompt_316": {
+        "prompt": "Toilet with a black lid and rolls of toilet tissue in a bathroom",
+        "latency": 17.682998180389404
+    },
+    "prompt_317": {
+        "prompt": "A plane is in the sky as several are parked on a runway.",
+        "latency": 18.344849348068237
+    },
+    "prompt_318": {
+        "prompt": "a group of young men are riding their motocycles down the street",
+        "latency": 17.597129344940186
+    },
+    "prompt_319": {
+        "prompt": "A vintage, colored drawing of people on motorcycles pulled into a gas station.",
+        "latency": 15.236147403717041
+    },
+    "prompt_320": {
+        "prompt": "A gold clock with ornate iron hands keeps time on a large clock with roman numerals.",
+        "latency": 15.513581991195679
+    },
+    "prompt_321": {
+        "prompt": "A computer desktop with other office supplies and papers.",
+        "latency": 15.285623550415039
+    },
+    "prompt_322": {
+        "prompt": "A person on dirt bike riding down a hill with mountains in background.",
+        "latency": 14.538908958435059
+    },
+    "prompt_323": {
+        "prompt": "A couple of men as one points to the right next to a bicycle.",
+        "latency": 17.53140664100647
+    },
+    "prompt_324": {
+        "prompt": "Blue bathroom with two white towels hanging by the shower.",
+        "latency": 17.259790420532227
+    },
+    "prompt_325": {
+        "prompt": "Seven jets fly in formation leaving trails of smoke behind them.",
+        "latency": 15.31109094619751
+    },
+    "prompt_326": {
+        "prompt": "a single parking meter sitting next to some plants and a tree ",
+        "latency": 17.020645141601562
+    },
+    "prompt_327": {
+        "prompt": "Two laptops,computer,keyboard and other electrical gadgets are on the table.",
+        "latency": 15.99181842803955
+    },
+    "prompt_328": {
+        "prompt": "Two toothbrushes sits on the opposite side of each other on the double faucet sink.",
+        "latency": 16.210719347000122
+    },
+    "prompt_329": {
+        "prompt": "Multiple aircraft suspended from the ceiling of a museum. ",
+        "latency": 15.350278854370117
+    },
+    "prompt_330": {
+        "prompt": "A group of women in military outfits helping other women in a kitchen.",
+        "latency": 18.31991171836853
+    },
+    "prompt_331": {
+        "prompt": "a wooden dinette table and two chairs with place settings",
+        "latency": 16.150073051452637
+    },
+    "prompt_332": {
+        "prompt": "School buses, cars and trucks sit at a red light at a busy corner",
+        "latency": 15.78433632850647
+    },
+    "prompt_333": {
+        "prompt": "A group of people in chefs uniforms standing around a counter.",
+        "latency": 17.2064266204834
+    },
+    "prompt_334": {
+        "prompt": "a country kitchen has a blue, wooden table, open shelves and white counters and a white sink.",
+        "latency": 15.274425268173218
+    },
+    "prompt_335": {
+        "prompt": "An man standing in a kitchen with a small puppy.",
+        "latency": 17.84673237800598
+    },
+    "prompt_336": {
+        "prompt": "a person riding a motorcycle on a city road with a sky background",
+        "latency": 15.49287462234497
+    },
+    "prompt_337": {
+        "prompt": "A pair of yellow and green motorcylces with flame designs running down them.",
+        "latency": 17.569222688674927
+    },
+    "prompt_338": {
+        "prompt": "Some people are checking in at the ticket counter somewhere in Asia.",
+        "latency": 16.627066135406494
+    },
+    "prompt_339": {
+        "prompt": "People serving themselves food from a buffet table in a private home.",
+        "latency": 16.331758499145508
+    },
+    "prompt_340": {
+        "prompt": "Aerial view of an airplane ascending in to the sky.",
+        "latency": 15.189516305923462
+    },
+    "prompt_341": {
+        "prompt": "A man sitting on a bench with a view of the ocean behind him.",
+        "latency": 16.977784395217896
+    },
+    "prompt_342": {
+        "prompt": "A toilet sits in a small bathroom with a tile floor.",
+        "latency": 18.2580668926239
+    },
+    "prompt_343": {
+        "prompt": "Kitchen view with brick framework around the sink and by the oven",
+        "latency": 15.575616121292114
+    },
+    "prompt_344": {
+        "prompt": "A workplace break room kitchenette, with refrigerator, two microwave ovens, a toaster and sink.",
+        "latency": 16.803334951400757
+    },
+    "prompt_345": {
+        "prompt": "large mustard yellow commercial airplane parked in the airport",
+        "latency": 15.779920816421509
+    },
+    "prompt_346": {
+        "prompt": "Look in the kitchen shows refrigerator, sink, tv and a microwave",
+        "latency": 16.342113971710205
+    },
+    "prompt_347": {
+        "prompt": "a bunch of already peeled oranges grouped together ",
+        "latency": 15.450807094573975
+    },
+    "prompt_348": {
+        "prompt": "A man riding a snowboard down a snow covered slope.",
+        "latency": 15.464944124221802
+    },
+    "prompt_349": {
+        "prompt": "A back end of a vehicle with a metal rack and an antennae.",
+        "latency": 16.845895290374756
+    },
+    "prompt_350": {
+        "prompt": " A whimsical artistic toaster has eyes, a mouth, a nose, spoon feet, spoon ears, and a mixing beater tail.",
+        "latency": 17.004032135009766
+    },
+    "prompt_351": {
+        "prompt": "A motorcycle sitting in front of a classic Ford Mustang Car.",
+        "latency": 17.173537015914917
+    },
+    "prompt_352": {
+        "prompt": "A bottle of water that is ornately placed on the back of a stove.",
+        "latency": 16.50839138031006
+    },
+    "prompt_353": {
+        "prompt": " a river.A group of people with life jacket rowing a long boat in",
+        "latency": 15.83979058265686
+    },
+    "prompt_354": {
+        "prompt": "A crowd of people standing around a bus next to a parked jetliner.",
+        "latency": 17.795627117156982
+    },
+    "prompt_355": {
+        "prompt": "A group of giraffes standing in dirt field with trees in background.",
+        "latency": 16.21010136604309
+    },
+    "prompt_356": {
+        "prompt": "The airplane in the sky is doing tricks while spitting out smoke. ",
+        "latency": 15.075598955154419
+    },
+    "prompt_357": {
+        "prompt": "A brick structure with a clock tower in the background.",
+        "latency": 13.755611181259155
+    },
+    "prompt_358": {
+        "prompt": "The view of a restroom toilet and sink through an open door.",
+        "latency": 17.94577169418335
+    },
+    "prompt_359": {
+        "prompt": "Small family kitchen with picture covered refrigerator next to dining room.",
+        "latency": 17.106680154800415
+    },
+    "prompt_360": {
+        "prompt": "Three women cooking in a professional kitchen together.",
+        "latency": 18.91197109222412
+    },
+    "prompt_361": {
+        "prompt": "small gathering of people at a friends house for drinks",
+        "latency": 16.696685314178467
+    },
+    "prompt_362": {
+        "prompt": "A line of motorcycles backed in and parked in a line at the edge of a sidewalk.",
+        "latency": 16.646472930908203
+    },
+    "prompt_363": {
+        "prompt": "A kitchen area with a stove, cabinets and a refrigerator.",
+        "latency": 15.337686777114868
+    },
+    "prompt_364": {
+        "prompt": "A toaster and blender are sitting on a tile kitchen counter.",
+        "latency": 18.026362419128418
+    },
+    "prompt_365": {
+        "prompt": "A professional photograph of a motorcycle rider in the air.",
+        "latency": 18.27203369140625
+    },
+    "prompt_366": {
+        "prompt": "A cup, toothbrushes, and other items sit on the side of a small sink.",
+        "latency": 18.56377649307251
+    },
+    "prompt_367": {
+        "prompt": "A cat sitting on the edge of the toilet looking toward the open bathroom door.",
+        "latency": 15.51244831085205
+    },
+    "prompt_368": {
+        "prompt": "The front end of a red motorcycle that is on display.",
+        "latency": 17.392120361328125
+    },
+    "prompt_369": {
+        "prompt": "A beach dock area lined with boats, and a small shack with a scooter and small cart near it.",
+        "latency": 16.741703987121582
+    },
+    "prompt_370": {
+        "prompt": "A lady is standing in pastel colored bathroom in front of the bathtub and there are christmas lights hanging up outside of the doorway. ",
+        "latency": 17.93956208229065
+    },
+    "prompt_371": {
+        "prompt": "Bar stools at a bar separating a dining area from a kitchen.",
+        "latency": 14.90644645690918
+    },
+    "prompt_372": {
+        "prompt": "A table with pies being made and a person standing near a wall with pots and pans hanging on the wall.",
+        "latency": 15.985172986984253
+    },
+    "prompt_373": {
+        "prompt": "Young girl with helmet on hold on tight to her father driving the motorcycle.",
+        "latency": 17.213289976119995
+    },
+    "prompt_374": {
+        "prompt": "Poplewalk on the sidewalk near the colorfully striped building.",
+        "latency": 16.026668071746826
+    },
+    "prompt_375": {
+        "prompt": "A dog looks interested as he sits in the front seat of a car.",
+        "latency": 15.80543851852417
+    },
+    "prompt_376": {
+        "prompt": "A luggage rack that has various pieces of luggage and containers on it.",
+        "latency": 17.61746048927307
+    },
+    "prompt_377": {
+        "prompt": "The older airplane is about ready to take off from the runway. ",
+        "latency": 17.362130880355835
+    },
+    "prompt_378": {
+        "prompt": "A pro plane and a jet play flying close to each other in the sky.",
+        "latency": 16.273763418197632
+    },
+    "prompt_379": {
+        "prompt": "A bathroom area with a toilet, trashcan and dresser.",
+        "latency": 16.5509135723114
+    },
+    "prompt_380": {
+        "prompt": "A man sitting on a toilet that isn't connected to anything. ",
+        "latency": 16.021926403045654
+    },
+    "prompt_381": {
+        "prompt": "A person's hand flushing a toilet with a button on top of the tank. ",
+        "latency": 16.72272229194641
+    },
+    "prompt_382": {
+        "prompt": "The inside of a warehouse building with brown couches",
+        "latency": 17.39724564552307
+    },
+    "prompt_383": {
+        "prompt": "two women sitting on a park bench, one looking over her shoulder",
+        "latency": 19.529151439666748
+    },
+    "prompt_384": {
+        "prompt": "A crowded city street filled with motorcycle and car traffic. ",
+        "latency": 17.08698868751526
+    },
+    "prompt_385": {
+        "prompt": "A large white kitchen range with gold towels on the front.",
+        "latency": 16.278899908065796
+    },
+    "prompt_386": {
+        "prompt": "A black dog laying down not watching the TV that is turned on.",
+        "latency": 16.104780435562134
+    },
+    "prompt_387": {
+        "prompt": "A bathroom stall with a toilet decorated with an outdoor mountain lake theme.",
+        "latency": 17.9292209148407
+    },
+    "prompt_388": {
+        "prompt": "A herd of sheep that are walking through a large group of people.",
+        "latency": 17.872171640396118
+    },
+    "prompt_389": {
+        "prompt": "A white toilet sitting next to a bath tub filled with paintings.",
+        "latency": 16.810044765472412
+    },
+    "prompt_390": {
+        "prompt": "A small bathroom with a toilet, shower, and a white curtain.",
+        "latency": 17.677894353866577
+    },
+    "prompt_391": {
+        "prompt": "Crowd of people walking across the street under umbrellas",
+        "latency": 13.822816133499146
+    },
+    "prompt_392": {
+        "prompt": "A motorcyclist riding alongside an airplane that is just taking off.",
+        "latency": 17.96829581260681
+    },
+    "prompt_393": {
+        "prompt": "someone opened a hood on a car and he cat jumped up on the edge",
+        "latency": 16.626405954360962
+    },
+    "prompt_394": {
+        "prompt": "A red bicycle leaned against a red stucco building with a graffiti covered door. ",
+        "latency": 15.664053678512573
+    },
+    "prompt_395": {
+        "prompt": "People standing on the street by parked bicycles with a skateboard",
+        "latency": 17.20811438560486
+    },
+    "prompt_396": {
+        "prompt": "A pillow covered reading chair in the corner of the living room",
+        "latency": 16.859297037124634
+    },
+    "prompt_397": {
+        "prompt": "A commercial airplane with propellers flying through the air.",
+        "latency": 16.050674200057983
+    },
+    "prompt_398": {
+        "prompt": "a man with his foot on a toilet and a man holding something in his hand",
+        "latency": 16.635931730270386
+    },
+    "prompt_399": {
+        "prompt": "a small dog wearing a shirt and sniffing something on the ground",
+        "latency": 16.73606514930725
+    },
+    "prompt_400": {
+        "prompt": "An airliner as seen from the ground, through some power lines.",
+        "latency": 15.40448522567749
+    },
+    "prompt_401": {
+        "prompt": "The passage between the modern buildings is used by bicycle riders.",
+        "latency": 17.64907670021057
+    },
+    "prompt_402": {
+        "prompt": "There is a bike that is parked by a bench, and an airplane that is high in the sky",
+        "latency": 18.453030109405518
+    },
+    "prompt_403": {
+        "prompt": "A young man that is wearing a nice suite coat with a skirt and a purse.",
+        "latency": 17.63594388961792
+    },
+    "prompt_404": {
+        "prompt": "A commercial plane flying by the perspective of a half moon.",
+        "latency": 15.419089078903198
+    },
+    "prompt_405": {
+        "prompt": "A flat screen TV sitting in a living room in front of a dining room table.",
+        "latency": 15.665884256362915
+    },
+    "prompt_406": {
+        "prompt": "Two jumbo jet air planes on a runway facing each other.",
+        "latency": 17.81584930419922
+    },
+    "prompt_407": {
+        "prompt": "Bathroom scene showing a television and a hair dryer.",
+        "latency": 16.44239330291748
+    },
+    "prompt_408": {
+        "prompt": "A bathroom with a toilet, shower and an hanging chain to flush the toilet. ",
+        "latency": 16.711159706115723
+    },
+    "prompt_409": {
+        "prompt": "White toilet in a restroom with three seashells on the tank.",
+        "latency": 17.084290742874146
+    },
+    "prompt_410": {
+        "prompt": "A airplane coming in for a landing with a full moon above it.",
+        "latency": 15.389241695404053
+    },
+    "prompt_411": {
+        "prompt": "A small passenger airplane sits in the grass at the airport.",
+        "latency": 15.661332368850708
+    },
+    "prompt_412": {
+        "prompt": "A small engine plane flying over in the blue sky.",
+        "latency": 16.848495960235596
+    },
+    "prompt_413": {
+        "prompt": "Bicycles and scooters lined up along the sidewalk in a quaint town.",
+        "latency": 16.18192744255066
+    },
+    "prompt_414": {
+        "prompt": "A toilet missing the back section sitting next to a tree.",
+        "latency": 16.60950493812561
+    },
+    "prompt_415": {
+        "prompt": "A modern bathroom with square sink and backlit mirror.",
+        "latency": 19.696499347686768
+    },
+    "prompt_416": {
+        "prompt": "Fancy designed sink in a bathroom with stained glass window pattern",
+        "latency": 16.234445810317993
+    },
+    "prompt_417": {
+        "prompt": "A fighter jet gaining altitude in a cloudy sky.",
+        "latency": 15.232404708862305
+    },
+    "prompt_418": {
+        "prompt": "A filthy bathroom has a dirt covered sink and a rusty toilet.",
+        "latency": 15.696655511856079
+    },
+    "prompt_419": {
+        "prompt": "A double image of a comedian and a singer on the television screen.  ",
+        "latency": 18.081917762756348
+    },
+    "prompt_420": {
+        "prompt": "A big thick tasty looking pastry with icing on it.",
+        "latency": 13.922893524169922
+    },
+    "prompt_421": {
+        "prompt": "Toilet with white splatter paint on a black seat in a restroom stall.",
+        "latency": 15.274014711380005
+    },
+    "prompt_422": {
+        "prompt": "People watch from a large boat as a smaller boat is lowered into the ocean.",
+        "latency": 14.225616693496704
+    },
+    "prompt_423": {
+        "prompt": "A passenger train is yellow and blue, and stands at a station.",
+        "latency": 17.703138828277588
+    },
+    "prompt_424": {
+        "prompt": "A policeman on a motorcycle at night watching pedestrians cross a street",
+        "latency": 16.340481281280518
+    },
+    "prompt_425": {
+        "prompt": "A large and small giraffe are looking at something while standing next to a log.",
+        "latency": 21.05190086364746
+    },
+    "prompt_426": {
+        "prompt": "The woman in the diner and the man looking into the window are making eye contact.",
+        "latency": 16.270719528198242
+    },
+    "prompt_427": {
+        "prompt": "Cars waiting at a red traffic light with a dome shaped building in the distance.",
+        "latency": 14.648542404174805
+    },
+    "prompt_428": {
+        "prompt": "A group of people look at the dark green motorcycle parked on the grass.",
+        "latency": 15.91584587097168
+    },
+    "prompt_429": {
+        "prompt": "A laptop and a desktop monitor are displayed on top of the desk.",
+        "latency": 15.63134503364563
+    },
+    "prompt_430": {
+        "prompt": "A man in thought sitting in front of a laptop with a pen in his hand. ",
+        "latency": 15.644176006317139
+    },
+    "prompt_431": {
+        "prompt": "A bathroom area with a sink, toilet and bathtub.",
+        "latency": 16.17186689376831
+    },
+    "prompt_432": {
+        "prompt": "Vehicles are traveling at both ends of the intersection with no traffic control.",
+        "latency": 18.473295211791992
+    },
+    "prompt_433": {
+        "prompt": "A bicycle is chained to a fixture on a city street",
+        "latency": 17.094024419784546
+    },
+    "prompt_434": {
+        "prompt": "Two boys riding on a single bicycle on a city street ",
+        "latency": 17.56822180747986
+    },
+    "prompt_435": {
+        "prompt": "A person riding a very tall bike in the street.",
+        "latency": 17.451385736465454
+    },
+    "prompt_436": {
+        "prompt": "A black and white scene with two couples under umbrellas and rain jackets sitting at a stadium.",
+        "latency": 15.968966960906982
+    },
+    "prompt_437": {
+        "prompt": "A grey dog with a black collar sits outside in the sun. ",
+        "latency": 16.889064073562622
+    },
+    "prompt_438": {
+        "prompt": "Chefs and cooks are preparing meals in a restaurant kichen",
+        "latency": 19.122819900512695
+    },
+    "prompt_439": {
+        "prompt": "A woman sitting down with a large cell phone holder on her pants.",
+        "latency": 17.126744031906128
+    },
+    "prompt_440": {
+        "prompt": "A very old fashioned kitchen with retro floor tiles.",
+        "latency": 15.874543190002441
+    },
+    "prompt_441": {
+        "prompt": "A man rides with a child on a motorcycle down a busy street with other pedestrians and bicyclists",
+        "latency": 16.32047200202942
+    },
+    "prompt_442": {
+        "prompt": "A woman standing at a kitchen counter with a child and a dog is behind her.",
+        "latency": 17.00215744972229
+    },
+    "prompt_443": {
+        "prompt": "A sidewalk next to the outdoor sitting area of a restaurant.",
+        "latency": 15.621201276779175
+    },
+    "prompt_444": {
+        "prompt": "Several giraffe peering their heads out in sequential order.",
+        "latency": 21.243852376937866
+    },
+    "prompt_445": {
+        "prompt": "A police officer on a motorcycle drives through a parade.",
+        "latency": 17.726234674453735
+    },
+    "prompt_446": {
+        "prompt": "The people in the photo are all reaching your hands up high.",
+        "latency": 17.051556825637817
+    },
+    "prompt_447": {
+        "prompt": "A bunch of dirty looking white toilets in a row outside.",
+        "latency": 16.345909357070923
+    },
+    "prompt_448": {
+        "prompt": "A bicycle with a blue umbrella and baskets attached to carry things.",
+        "latency": 17.370819091796875
+    },
+    "prompt_449": {
+        "prompt": "An airplane is getting ready to land at the airport.",
+        "latency": 16.56874918937683
+    },
+    "prompt_450": {
+        "prompt": "bright red microwave sitting on the kitchen counter",
+        "latency": 15.697258710861206
+    },
+    "prompt_451": {
+        "prompt": "Commercial jet passing overhead on bright cloudless sky.",
+        "latency": 14.673991203308105
+    },
+    "prompt_452": {
+        "prompt": "A bus and other cars are traveling on a street.",
+        "latency": 14.757038831710815
+    },
+    "prompt_453": {
+        "prompt": "This is a commercial bathroom with orange and gray mosaic tiles and three sinks.",
+        "latency": 17.912378787994385
+    },
+    "prompt_454": {
+        "prompt": "Searchlights in front view and a plane on a wide runway in the background.",
+        "latency": 15.02246379852295
+    },
+    "prompt_455": {
+        "prompt": "There is a group of motorcycles that are parked together.",
+        "latency": 17.577415704727173
+    },
+    "prompt_456": {
+        "prompt": "A red and white plane flying through a cloudy sky.",
+        "latency": 16.093087673187256
+    },
+    "prompt_457": {
+        "prompt": "Two birds preparing to eat food off of a plate that was left on a table outside by the ocean.",
+        "latency": 16.629815340042114
+    },
+    "prompt_458": {
+        "prompt": "A red airplane jet flies over power lines in an empty sky.",
+        "latency": 17.244966506958008
+    },
+    "prompt_459": {
+        "prompt": "The bathroom is painted a light blue and has pink ceramic tile that adorns the shower wall along with a maple color vanity and door.",
+        "latency": 17.462202787399292
+    },
+    "prompt_460": {
+        "prompt": "A man holds an object as he looks at himself in the mirror.",
+        "latency": 18.977164030075073
+    },
+    "prompt_461": {
+        "prompt": "A man is standing on a grassy hill with some sheep and dogs.",
+        "latency": 15.295298337936401
+    },
+    "prompt_462": {
+        "prompt": "Cars are parked on the street next to an old fire hydrant.",
+        "latency": 15.216477155685425
+    },
+    "prompt_463": {
+        "prompt": "A woman taking a picture of herself while brushing her teeth",
+        "latency": 17.691986560821533
+    },
+    "prompt_464": {
+        "prompt": "a white and silver subway train filled with several bicycles",
+        "latency": 16.900275707244873
+    },
+    "prompt_465": {
+        "prompt": "A cup and a plate with food on it on a table next to a toilet.",
+        "latency": 16.40626549720764
+    },
+    "prompt_466": {
+        "prompt": "A counter with porcelain figurines, an umbrella and a bowl. ",
+        "latency": 15.751328468322754
+    },
+    "prompt_467": {
+        "prompt": "Stylish circular shower stall, next to a toilet in a compact bathroom.",
+        "latency": 17.711817741394043
+    },
+    "prompt_468": {
+        "prompt": "A kitchen with sunshine shining off of black and white tiles",
+        "latency": 16.94910168647766
+    },
+    "prompt_469": {
+        "prompt": "A black stuffed animal sitting on top of a toilet in a bathroom stall with blue floor tile. ",
+        "latency": 17.04698157310486
+    },
+    "prompt_470": {
+        "prompt": "A large motorcycle that is sitting outside of a building.",
+        "latency": 16.78286051750183
+    },
+    "prompt_471": {
+        "prompt": "Large black motorcycle sitting next to a white building.",
+        "latency": 16.465816736221313
+    },
+    "prompt_472": {
+        "prompt": "A young girl that is in a very clean and well stocked kitchen. ",
+        "latency": 16.001776456832886
+    },
+    "prompt_473": {
+        "prompt": "A white toilet filled with crap with two pink roles of toilet paper.",
+        "latency": 16.657175540924072
+    },
+    "prompt_474": {
+        "prompt": "A kitchen with all the appliances such as a fridge, microwave and stove. ",
+        "latency": 13.680932521820068
+    },
+    "prompt_475": {
+        "prompt": "A street filled with lots of cars next to a boat.",
+        "latency": 16.880428552627563
+    },
+    "prompt_476": {
+        "prompt": "A small bathroom, with a commode, and a bathtub with bath toys in and around it.",
+        "latency": 16.76358127593994
+    },
+    "prompt_477": {
+        "prompt": "A picture of a bathroom with a fern plant near the sink and a photo of a city above the toilet. ",
+        "latency": 16.43673586845398
+    },
+    "prompt_478": {
+        "prompt": "An airplane with the Swiss flag symbol is flying through the mountains.",
+        "latency": 16.546687126159668
+    },
+    "prompt_479": {
+        "prompt": "A commercial airplane sits on a runway at an airport. ",
+        "latency": 16.955901861190796
+    },
+    "prompt_480": {
+        "prompt": "A small bathroom has a sink and a storage rack over the toilet.",
+        "latency": 17.11467146873474
+    },
+    "prompt_481": {
+        "prompt": "An old TV and a flat screen TV on a homemade entertainment center.",
+        "latency": 16.044490814208984
+    },
+    "prompt_482": {
+        "prompt": "French bread on a plate with eggs, bacon and banana slices atop the bread.",
+        "latency": 14.881531953811646
+    },
+    "prompt_483": {
+        "prompt": "An airplane flies high above in the sky with telephone lines in the picture as well. ",
+        "latency": 17.42645025253296
+    },
+    "prompt_484": {
+        "prompt": "A wooden handle in a pot with soup or stew next to an empty bowl.",
+        "latency": 16.563077688217163
+    },
+    "prompt_485": {
+        "prompt": "A tv on with a man holding a knife at a guy's head and a bottle of mineral water in the foreground ",
+        "latency": 14.305473804473877
+    },
+    "prompt_486": {
+        "prompt": "A small cat sits on top of a white toilet missing its seat in a bathroom.",
+        "latency": 17.73148822784424
+    },
+    "prompt_487": {
+        "prompt": "A guy and a girl looking into the bathroom mirror taking a selfie photo with toothbrushes in their mouths.",
+        "latency": 18.068074941635132
+    },
+    "prompt_488": {
+        "prompt": "The image of a man holding a camera is in this motorcycle side mirror. ",
+        "latency": 16.910757780075073
+    },
+    "prompt_489": {
+        "prompt": "Two girls are smoking cigarettes while one is playing on the laptop.",
+        "latency": 17.00043249130249
+    },
+    "prompt_490": {
+        "prompt": "Bicycle leaning up against a dirty board, near outdoor market.",
+        "latency": 15.821486234664917
+    },
+    "prompt_491": {
+        "prompt": "The restored old time car is parked near a four engine airplane.",
+        "latency": 18.98189401626587
+    },
+    "prompt_492": {
+        "prompt": "Several cars and people at bikes sitting at a red light.",
+        "latency": 16.84649896621704
+    },
+    "prompt_493": {
+        "prompt": "A statue of a woman holding a ball stands in front of the old church.",
+        "latency": 16.317851781845093
+    },
+    "prompt_494": {
+        "prompt": "a bathroom with a long counter that has cleaning products on it ",
+        "latency": 17.70470929145813
+    },
+    "prompt_495": {
+        "prompt": "SMALL BATHROOM WITH COMMODE, STAND UP SHOWER, AND SMALL SINK",
+        "latency": 16.40755820274353
+    },
+    "prompt_496": {
+        "prompt": "Several motorcycles are parked at a red light in the road in a city with tall buildings.",
+        "latency": 15.319400072097778
+    },
+    "prompt_497": {
+        "prompt": "A kitchen and dining area in a house with an open floor plan that looks out over the landscape from a large set of windows.",
+        "latency": 14.863483428955078
+    },
+    "prompt_498": {
+        "prompt": "MOTOR CROSS BIKE AND RIDER IN THE AIR DOING TRICKS",
+        "latency": 17.108361959457397
+    },
+    "prompt_499": {
+        "prompt": "A green bench sitting on the side of a sidewalk.",
+        "latency": 16.417056798934937
+    },
+    "prompt_500": {
+        "prompt": "A women brushing on a preservative liquid on a ceiling pot holder",
+        "latency": 16.214831829071045
+    },
+    "prompt_501": {
+        "prompt": "A woman bending over and looking inside of a mini fridge.",
+        "latency": 17.282469511032104
+    },
+    "prompt_502": {
+        "prompt": "A large group of people watching a bu g group of bikers go by.",
+        "latency": 14.79733681678772
+    },
+    "prompt_503": {
+        "prompt": "A kitchen with a center white island topped with a bowl of greens.",
+        "latency": 16.08230972290039
+    },
+    "prompt_504": {
+        "prompt": "A book about understanding and maintaining a ten-speed bicycle.",
+        "latency": 16.424859285354614
+    },
+    "prompt_505": {
+        "prompt": "Many people are sitting on two benches next to a light pole.",
+        "latency": 16.46286129951477
+    },
+    "prompt_506": {
+        "prompt": "A light blue bicycle chained to a pole on the sidewalk in front of a red building.",
+        "latency": 16.077499866485596
+    },
+    "prompt_507": {
+        "prompt": "a double sink with a bowl of food on the sink counter top",
+        "latency": 15.162050247192383
+    },
+    "prompt_508": {
+        "prompt": "A bathroom looks clean but is missing tile at the shower stall.",
+        "latency": 17.097246408462524
+    },
+    "prompt_509": {
+        "prompt": "Bright orange bathroom with spackling on the walls.",
+        "latency": 14.540522336959839
+    },
+    "prompt_510": {
+        "prompt": "Someone sitting on the toilet in the bathroom holding their camera at the mirror. ",
+        "latency": 17.834623336791992
+    },
+    "prompt_511": {
+        "prompt": "A worker passes through a cluttered restaurant kitchen.",
+        "latency": 16.53564167022705
+    },
+    "prompt_512": {
+        "prompt": "People riding bikes between a food truck and a building.",
+        "latency": 15.489676237106323
+    },
+    "prompt_513": {
+        "prompt": "Individauls gathered outside a building and an American flag at half mast.",
+        "latency": 16.79188084602356
+    },
+    "prompt_514": {
+        "prompt": "A puppy has pulled toilet paper across the bathroom floor.",
+        "latency": 16.495386600494385
+    },
+    "prompt_515": {
+        "prompt": "A bathroom containing a toilet, sink and bathtub with shower, with no accessories.",
+        "latency": 17.106090307235718
+    },
+    "prompt_516": {
+        "prompt": "The bathtub takes up one wall of the small bathroom.",
+        "latency": 13.66995120048523
+    },
+    "prompt_517": {
+        "prompt": "A small toilet on the ground with a pipe running to the camode.",
+        "latency": 15.82612419128418
+    },
+    "prompt_518": {
+        "prompt": "A bedroom with  a large bed facing a fireplace that has a television over the top of it, in a shelf space.",
+        "latency": 14.749828100204468
+    },
+    "prompt_519": {
+        "prompt": "A dinner plate that has white steamed rice with stir fry vegetables and chicken.",
+        "latency": 14.306636333465576
+    },
+    "prompt_520": {
+        "prompt": "A freshly paved road with a bicycle lane marker on the pavement.",
+        "latency": 13.031192302703857
+    },
+    "prompt_521": {
+        "prompt": "a boat with some people on it drive through a water way ",
+        "latency": 15.548385858535767
+    },
+    "prompt_522": {
+        "prompt": "A cat drinking from a sink faucet that was left running.",
+        "latency": 15.973876953125
+    },
+    "prompt_523": {
+        "prompt": "A man takes a photo of his reflection in a public restroom.",
+        "latency": 19.04548478126526
+    },
+    "prompt_524": {
+        "prompt": "A toilet and bathtub in a dark room with abnormal plumbing.",
+        "latency": 17.48534321784973
+    },
+    "prompt_525": {
+        "prompt": "The woman has a knife and fork for eating the big pizza.",
+        "latency": 15.774386882781982
+    },
+    "prompt_526": {
+        "prompt": "A motorcycle frame that has been made in to a tricycle. ",
+        "latency": 16.167914867401123
+    },
+    "prompt_527": {
+        "prompt": "A cheese pizza sitting on top of white paper and a large plate. ",
+        "latency": 18.942251920700073
+    },
+    "prompt_528": {
+        "prompt": "A kitchen has light wooden colored cabinetry, beige countertops, and stainless steel appliances in an open concept house.",
+        "latency": 15.965978384017944
+    },
+    "prompt_529": {
+        "prompt": "A room with a cluttered desk, lots of collectible items on shelves and many posters on the walls.",
+        "latency": 14.703621864318848
+    },
+    "prompt_530": {
+        "prompt": "A room with an empty and open refrigerator and a shelf of bottles.",
+        "latency": 15.412794589996338
+    },
+    "prompt_531": {
+        "prompt": "A dog eats people food from a plate on the floor next to a plaid bed.",
+        "latency": 15.32495903968811
+    },
+    "prompt_532": {
+        "prompt": " a bench sitting in the grass facing the water and boats ",
+        "latency": 16.04775047302246
+    },
+    "prompt_533": {
+        "prompt": "A cat lying inside a sink with a hair brush, sanitizer and toothpaste on top",
+        "latency": 15.339896440505981
+    },
+    "prompt_534": {
+        "prompt": "A skateboarder riding his board down the sidewalk.",
+        "latency": 14.834564685821533
+    },
+    "prompt_535": {
+        "prompt": "A desk with a computer, computer keyboard, mug, empty plastic bottle, red pen, and a laptop.",
+        "latency": 17.77194881439209
+    },
+    "prompt_536": {
+        "prompt": "View from gate of jet connected to jet way for passengers to board or deplane",
+        "latency": 15.480346202850342
+    },
+    "prompt_537": {
+        "prompt": "A bus with a flat tire sitting in traffic on a street.",
+        "latency": 16.47393798828125
+    },
+    "prompt_538": {
+        "prompt": "An old advertisement shows a large kitchen with white cabinets and appliances and yellow walls.",
+        "latency": 15.079134941101074
+    },
+    "prompt_539": {
+        "prompt": "a view of mountains from the window of a jet airplane",
+        "latency": 14.90784215927124
+    },
+    "prompt_540": {
+        "prompt": "A white sink sitting under a bathroom mirror.",
+        "latency": 15.28366494178772
+    },
+    "prompt_541": {
+        "prompt": "A view of a bathroom in what appears to be a hotel.",
+        "latency": 15.981357336044312
+    },
+    "prompt_542": {
+        "prompt": "The underside of an airplane taking off into the cloudy sky.",
+        "latency": 13.485854387283325
+    },
+    "prompt_543": {
+        "prompt": "Group of old ornaments sitting on the ground of an old building. ",
+        "latency": 15.65363097190857
+    },
+    "prompt_544": {
+        "prompt": "A cabinet with several different items that have price tags on them.",
+        "latency": 17.102147102355957
+    },
+    "prompt_545": {
+        "prompt": "A group of people riding motorcycles on a road and stopping and a stop sign.",
+        "latency": 15.638711214065552
+    },
+    "prompt_546": {
+        "prompt": "An Alaska Air Lines passenger jet at an airport terminal.",
+        "latency": 16.64930748939514
+    },
+    "prompt_547": {
+        "prompt": "A prop plane parked at an airport with support vehicles around it.",
+        "latency": 16.24027109146118
+    },
+    "prompt_548": {
+        "prompt": "A building wall and pair of doors that are open, along with vases of flowers on the outside of the building.",
+        "latency": 17.458525896072388
+    },
+    "prompt_549": {
+        "prompt": "A group of people who are standing outside by a plane and a car.",
+        "latency": 16.138678789138794
+    },
+    "prompt_550": {
+        "prompt": "A toilet from above; flanked by a toilet brush and a small trash can.  ",
+        "latency": 16.96955132484436
+    },
+    "prompt_551": {
+        "prompt": "A bathroom with a toilet, a plant, a stand and several footwear on the floor. ",
+        "latency": 16.493095636367798
+    },
+    "prompt_552": {
+        "prompt": "Japanese airliner just taking off with snow capped mountains in the background.",
+        "latency": 16.00818157196045
+    },
+    "prompt_553": {
+        "prompt": "Plane taking off the runway with it's landing gears still out.",
+        "latency": 14.222129821777344
+    },
+    "prompt_554": {
+        "prompt": "A bathroom with a toilet, bathtub, and a cat in a bathroom.",
+        "latency": 16.360509634017944
+    },
+    "prompt_555": {
+        "prompt": "Several cars parked along the side of a street next to a street sign.",
+        "latency": 16.108590364456177
+    },
+    "prompt_556": {
+        "prompt": "A man standing on a purple bed playing an electric guitar",
+        "latency": 16.574378490447998
+    },
+    "prompt_557": {
+        "prompt": "People looking at a stop light on the other side of the road. ",
+        "latency": 15.708974123001099
+    },
+    "prompt_558": {
+        "prompt": "A woman talking on a cell phone while holding luggage.",
+        "latency": 17.91019105911255
+    },
+    "prompt_559": {
+        "prompt": "A group of children carrying stuffed animals walks across the grass. ",
+        "latency": 17.661088705062866
+    },
+    "prompt_560": {
+        "prompt": "A bathroom vanity sink with a large mirror and hairdryer on the wall.",
+        "latency": 17.416107654571533
+    },
+    "prompt_561": {
+        "prompt": "A bathroom with blue walls, black and white checkered floor, toilet, urinal and bathtub.",
+        "latency": 15.612081050872803
+    },
+    "prompt_562": {
+        "prompt": "A pile of oranges, apples and pears next to each other.",
+        "latency": 13.963998794555664
+    },
+    "prompt_563": {
+        "prompt": "Two giraffe stand in an enclosure, on giraffe leans over the wall.",
+        "latency": 17.42191982269287
+    },
+    "prompt_564": {
+        "prompt": "A man standing in a kitchen preparing food next to other cooks.",
+        "latency": 17.292771100997925
+    },
+    "prompt_565": {
+        "prompt": "A black and white motorcycle parked on the sidewalk outside a store.",
+        "latency": 19.573010444641113
+    },
+    "prompt_566": {
+        "prompt": "A person on a motorcycles driving past a group of people behind a fence.",
+        "latency": 14.425721645355225
+    },
+    "prompt_567": {
+        "prompt": "Someone is online inside the slightly crowded restaurant.",
+        "latency": 16.397672653198242
+    },
+    "prompt_568": {
+        "prompt": "View from an airplane looking looking out over large parking lot.",
+        "latency": 14.633896112442017
+    },
+    "prompt_569": {
+        "prompt": "An all-white bathroom with a light fixture and small mirror above a sink",
+        "latency": 17.27192258834839
+    },
+    "prompt_570": {
+        "prompt": "A painting of a candlestick holder with a candle, several pieces of fruit and a vase, with a gold frame around the painting.",
+        "latency": 14.57060694694519
+    },
+    "prompt_571": {
+        "prompt": "A man sitting at a table in front of a plate of food.",
+        "latency": 16.152546167373657
+    },
+    "prompt_572": {
+        "prompt": "A raised white toilet seat with a sticker stands in front of square tiles.",
+        "latency": 17.285629987716675
+    },
+    "prompt_573": {
+        "prompt": "People riding motorcycles across a bridge beside each other.",
+        "latency": 15.693490743637085
+    },
+    "prompt_574": {
+        "prompt": "This is a clear bowl that is filled with oranges. ",
+        "latency": 14.027784585952759
+    },
+    "prompt_575": {
+        "prompt": "A woman in white crosses the road against the flow of motorcycle traffic.",
+        "latency": 17.904197931289673
+    },
+    "prompt_576": {
+        "prompt": "A bathroom with a glass shower door, a toilet and a towel handle. ",
+        "latency": 17.66786551475525
+    },
+    "prompt_577": {
+        "prompt": "A black and white cat lays on the hood of a car.",
+        "latency": 15.358739376068115
+    },
+    "prompt_578": {
+        "prompt": "Pair of small planes flying near each other on stormy day.",
+        "latency": 15.641709566116333
+    },
+    "prompt_579": {
+        "prompt": "This picture looks like a janitors closet with buckets on the floor.",
+        "latency": 15.930359840393066
+    },
+    "prompt_580": {
+        "prompt": "Woman working with large assortment of baked goods at kitchen table.",
+        "latency": 16.7744083404541
+    },
+    "prompt_581": {
+        "prompt": "a kitchen full of cabinets, a stove, sink and refridgeratio",
+        "latency": 16.165789365768433
+    },
+    "prompt_582": {
+        "prompt": "The fruit is placed in a bowl out in the open to be eaten",
+        "latency": 13.821721315383911
+    },
+    "prompt_583": {
+        "prompt": "A woman holding an umbrella walks past the side of a bus with a large advertisement on the side. ",
+        "latency": 15.435664415359497
+    },
+    "prompt_584": {
+        "prompt": "A bathroom with toilet and sink with lots of items on the sink counter.",
+        "latency": 17.38621735572815
+    },
+    "prompt_585": {
+        "prompt": "A man is taking a picture of himself in the bathroom using the mirror for a reflection.",
+        "latency": 19.328657865524292
+    },
+    "prompt_586": {
+        "prompt": "a black and green parked motorcycle some cars and buildings",
+        "latency": 16.557560920715332
+    },
+    "prompt_587": {
+        "prompt": "Several men stand next to other men as they sit on motorcycles.",
+        "latency": 14.364643812179565
+    },
+    "prompt_588": {
+        "prompt": "A green door opens into a toilet stall containing a white toilet bowl.",
+        "latency": 17.5849552154541
+    },
+    "prompt_589": {
+        "prompt": "An open-mouthed, leashed dog has its head outside of an unlocked car door window as a blurry park-like vista rushes by.",
+        "latency": 15.799506902694702
+    },
+    "prompt_590": {
+        "prompt": "Some giraffes are standing in the middle of the zoo exhibit. ",
+        "latency": 15.891019344329834
+    },
+    "prompt_591": {
+        "prompt": "A line up of motorcycles parked on the side of the street.",
+        "latency": 16.766847610473633
+    },
+    "prompt_592": {
+        "prompt": "A vanity stink area with a marble counter top and wooden cabinets.",
+        "latency": 17.246746063232422
+    },
+    "prompt_593": {
+        "prompt": "The dining table near the kitchen has a bowl of fruit on it.",
+        "latency": 16.555642127990723
+    },
+    "prompt_594": {
+        "prompt": "A bathroom with a toilet, window and toilet tissue holder. ",
+        "latency": 15.079037189483643
+    },
+    "prompt_595": {
+        "prompt": "A wall urinal in a stall with an auto sensor flushing system.",
+        "latency": 18.084194660186768
+    },
+    "prompt_596": {
+        "prompt": "A group of people on bicycles at a traffic light by vehicles.",
+        "latency": 15.842710018157959
+    },
+    "prompt_597": {
+        "prompt": "A picture of an open air zone that looks incredible.\n",
+        "latency": 16.23476505279541
+    },
+    "prompt_598": {
+        "prompt": "A compact kitchen with white appliances and shelving units for storage.",
+        "latency": 14.048049449920654
+    },
+    "prompt_599": {
+        "prompt": "A fancy mirror and vanity counter top enhance this bathroom.",
+        "latency": 15.031219720840454
+    },
+    "prompt_600": {
+        "prompt": "A brown dog laying on the ground with a metal bowl in front of him.",
+        "latency": 15.467146396636963
+    },
+    "prompt_601": {
+        "prompt": "A white small bathroom showing the toilet bowl and sink with beige tiles.",
+        "latency": 17.5038423538208
+    },
+    "prompt_602": {
+        "prompt": "A dark room with an open laptop and a computer monitor behind it.",
+        "latency": 15.953837156295776
+    },
+    "prompt_603": {
+        "prompt": "A cat is walking in a kitchen that has cookware hanging on the wall.",
+        "latency": 17.668089866638184
+    },
+    "prompt_604": {
+        "prompt": "A photo of an outside with various things in the scene.\n",
+        "latency": 16.055854320526123
+    },
+    "prompt_605": {
+        "prompt": "A person sits on a bench with a water bottle next to him",
+        "latency": 15.162631273269653
+    },
+    "prompt_606": {
+        "prompt": "A urinal next to a red table with a plate sitting on the table.",
+        "latency": 16.87976908683777
+    },
+    "prompt_607": {
+        "prompt": "A man cooks in a kitchen that is made of all stainless steel.",
+        "latency": 16.53120493888855
+    },
+    "prompt_608": {
+        "prompt": "A bathroom not being used contains a toilet, sink, shower and bathtub.",
+        "latency": 18.74764132499695
+    },
+    "prompt_609": {
+        "prompt": "Adult displaying several bowls of fruits in kitchen area.",
+        "latency": 16.332407474517822
+    },
+    "prompt_610": {
+        "prompt": "A person lying under a large black suitcase near a block wall.",
+        "latency": 14.421453475952148
+    },
+    "prompt_611": {
+        "prompt": "a massive variety of pots and other objects are displayed along a long kitchen counter with a sink and a clock on the wall.",
+        "latency": 15.687073945999146
+    },
+    "prompt_612": {
+        "prompt": "a cat sitting next to a bunch of bikes parked next to each other",
+        "latency": 17.538912773132324
+    },
+    "prompt_613": {
+        "prompt": "A silver sports car is parked beside horse droppings left by a group of horses.",
+        "latency": 16.38779067993164
+    },
+    "prompt_614": {
+        "prompt": "A BLACK CAT SITTING INSIDE OF A SINK IN THE BATHROOM ",
+        "latency": 17.53071880340576
+    },
+    "prompt_615": {
+        "prompt": "A papia, orange and bruised banana sitting in a bowl.",
+        "latency": 15.283837080001831
+    },
+    "prompt_616": {
+        "prompt": "Someone has crawled under the plane to check that everything is operational.",
+        "latency": 15.453251838684082
+    },
+    "prompt_617": {
+        "prompt": "A modern bathroom with hardwood flooring and counter tops. ",
+        "latency": 16.697272539138794
+    },
+    "prompt_618": {
+        "prompt": "A cat laying in a green bowl on a wooden table.",
+        "latency": 15.400955438613892
+    },
+    "prompt_619": {
+        "prompt": "A motorcycle that is sitting in the street on a stand.",
+        "latency": 18.6682288646698
+    },
+    "prompt_620": {
+        "prompt": "A woman holds a sick child who is getting her temperature taken.",
+        "latency": 16.51945424079895
+    },
+    "prompt_621": {
+        "prompt": "A rural road with trees, road signs of a squiggly arrow and of 55 MPH, and motorcycle parked beside it.",
+        "latency": 14.827303409576416
+    },
+    "prompt_622": {
+        "prompt": "The loading dock is attached to the side of a four engine airliner.",
+        "latency": 16.869166374206543
+    },
+    "prompt_623": {
+        "prompt": "A sleek white, red and blue motorcycle parked opposite of several others.",
+        "latency": 19.491673231124878
+    },
+    "prompt_624": {
+        "prompt": "A line of parked motorcycles with the edges of image blurred.",
+        "latency": 16.882654428482056
+    }
+}

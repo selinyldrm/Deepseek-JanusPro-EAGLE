@@ -1056,6 +1056,7 @@ class Model(nn.Module):
     def sample(self,logits, logits_processor,k=1):
         logits = logits_processor(None, logits)
         probabilities = torch.nn.functional.softmax(logits, dim=1)
+                    
         sampled_indices = torch.multinomial(probabilities, k, replacement=False)
         sampled_probs = torch.gather(probabilities, 1, sampled_indices)
 
@@ -1069,7 +1070,7 @@ class Model(nn.Module):
 
         sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
 
-        return sampled_indices, sampled_probs,probabilities
+        return sampled_indices, sampled_probs, probabilities
     
     @torch.no_grad()
     def topK_genrate_v1(self, hidden_states, input_ids, head, logits_processor, cfg_scale, input_position_diff, attention_mask= None):
@@ -1111,9 +1112,11 @@ class Model(nn.Module):
         last_headout = cfg_logit_process(last_headout, cfg_scale)
         last_headout[:, self.non_image_tokens] = torch.finfo(last_headout.dtype).min
 
+        # bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
         for i in range(len(self.tree_buffer['tree_indices'])):
+            bias = []
             if logits_processor is not None:
-                topk_index,topk_prob,op=self.sample(last_headout,logits_processor,k=self.top_k)
+                topk_index,topk_prob,op =self.sample(last_headout,logits_processor,k=self.top_k)
             else:
                 top=torch.topk(last_headout, self.top_k, dim=-1)
                 topk_index,topk_prob = top.indices,top.values
@@ -1125,6 +1128,21 @@ class Model(nn.Module):
             #topk_index = torch.topk(last_headout, top_k, dim=-1).indices
             topk_index = topk_index.view(-1)
             select_index=topk_index[self.tree_buffer['tree_indices'][i]]
+            # if select_index.shape[0] > 1 :
+            #     token_embs = self.embed_tokens(select_index)  
+            #     # Compute cosine similarity matrix: [B, B]
+            #     sim_matrix = F.cosine_similarity(
+            #         token_embs.unsqueeze(1),  # [5,1,d]
+            #         token_embs.unsqueeze(0),  # [1,5,d]
+            #         dim=-1
+            #     )  # shape [5,5]
+            #     high_sim_mask = sim_matrix > 0.5  # shape [B, B]
+            #     # Get indices
+            #     rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+            #     for r, c in zip(rows.tolist(), cols.tolist()):
+            #         if r != c:
+            #             bias.append((r, c, sim_matrix[r, c].item()))
+            #     bias_list[i] = bias
             #len_sq=select_index.shape[0]
             input_ids=select_index[None,:]
             input_ids = torch.cat([input_ids, input_ids])
@@ -1154,12 +1172,13 @@ class Model(nn.Module):
                     last_headout = F.linear(out_hidden, self.headweight)
             last_headout = cfg_logit_process(last_headout, cfg_scale)[0]
             last_headout[:, self.non_image_tokens] = torch.finfo(last_headout.dtype).min
+
             #last_headout = head(out_hidden[0])
             #sslogits.append(last_headout)
             #print(select_index)
 
         if logits_processor is not None:
-            topk_index,topk_prob,op=self.sample(last_headout,logits_processor,k=self.top_k)
+            topk_index,topk_prob,op =self.sample(last_headout,logits_processor,k=self.top_k)
         else:
             top = torch.topk(last_headout, self.top_k, dim=-1)
             topk_index, topk_prob = top.indices, top.values
@@ -1167,6 +1186,26 @@ class Model(nn.Module):
         ss_token.append(topk_index)
         ss_prob.append(topk_prob)
         ss_op.append(op)
+
+        # per-level similarity of final candidate tokens
+        # bias = []
+        # topk_index = topk_index.view(-1)
+        # select_index=topk_index[self.tree_buffer['tree_indices'][i]]
+        # if select_index.shape[0] > 1 :
+        #     token_embs = self.embed_tokens(select_index)  
+        #     # Compute cosine similarity matrix: [B, B]
+        #     sim_matrix = F.cosine_similarity(
+        #         token_embs.unsqueeze(1),  # [5,1,d]
+        #         token_embs.unsqueeze(0),  # [1,5,d]
+        #         dim=-1
+        #     )  # shape [5,5]
+        #     high_sim_mask = sim_matrix > 0.9  # shape [B, B]
+        #     # # Get indices
+        #     rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+        #     for r, c in zip(rows.tolist(), cols.tolist()):
+        #         if r != c:
+        #             bias.append((r, c, sim_matrix[r, c].item()))
+        #     bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
         return (torch.cat(ss_token),torch.cat(ss_prob),ss_op)
 

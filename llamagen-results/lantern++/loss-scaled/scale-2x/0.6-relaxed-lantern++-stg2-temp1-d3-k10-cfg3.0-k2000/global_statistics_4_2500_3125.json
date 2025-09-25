@@ -1,0 +1,2502 @@
+{
+    "prompt_2500": {
+        "prompt": "A small bowl of broccoli with some slices of apple and a lemon wedge.",
+        "latency": 20.175095319747925
+    },
+    "prompt_2501": {
+        "prompt": "A herd of zebra standing next to each other against a stone wall.",
+        "latency": 21.4949471950531
+    },
+    "prompt_2502": {
+        "prompt": "Two zebras standing in a rocky area in the wild.",
+        "latency": 17.090717315673828
+    },
+    "prompt_2503": {
+        "prompt": "Four black horses being driven across the sky on this ancient vase. ",
+        "latency": 16.822410106658936
+    },
+    "prompt_2504": {
+        "prompt": "A baseball pitcher throwing a baseball during a baseball game.",
+        "latency": 17.058133125305176
+    },
+    "prompt_2505": {
+        "prompt": "A yellow dog runs to grab a yellow frisbee in the grass ",
+        "latency": 15.88456130027771
+    },
+    "prompt_2506": {
+        "prompt": "Several men are playing sports on a field near some trees, wall, bus, and several buildings in the background.",
+        "latency": 15.222119331359863
+    },
+    "prompt_2507": {
+        "prompt": "Man in mid air reaching between his legs to reach a frisbee. ",
+        "latency": 15.618358135223389
+    },
+    "prompt_2508": {
+        "prompt": "These platters display healthy food choices of two entrees with a side  vegetable and fruit",
+        "latency": 15.052578210830688
+    },
+    "prompt_2509": {
+        "prompt": "A cream based soup in a while bowl with a chopped green vegetable on top.",
+        "latency": 15.73243498802185
+    },
+    "prompt_2510": {
+        "prompt": "orange slice with fork and various greens on plate",
+        "latency": 15.999168157577515
+    },
+    "prompt_2511": {
+        "prompt": "A person riding skis down a snow covered slope past a flag.",
+        "latency": 15.818475484848022
+    },
+    "prompt_2512": {
+        "prompt": "a table with plates of food with drinks in the middle",
+        "latency": 16.37220335006714
+    },
+    "prompt_2513": {
+        "prompt": "A woman is attempting to ski on flat ground while others in the background are playing around.",
+        "latency": 15.980759620666504
+    },
+    "prompt_2514": {
+        "prompt": "A pizza covered in cheese dripping down onto the bottom of an oven burning.",
+        "latency": 15.929260015487671
+    },
+    "prompt_2515": {
+        "prompt": "A boy baseball player running to steal a base while another boy stops him.",
+        "latency": 17.564973831176758
+    },
+    "prompt_2516": {
+        "prompt": "The elderly man  on skis is making his way down the edge of the snow-covered road. ",
+        "latency": 15.329224109649658
+    },
+    "prompt_2517": {
+        "prompt": "The young girl wearing red and black rides atop the white pony.",
+        "latency": 19.76983404159546
+    },
+    "prompt_2518": {
+        "prompt": "Three large horses eating hay while a small horse stands behind.",
+        "latency": 18.25123167037964
+    },
+    "prompt_2519": {
+        "prompt": "A dusty old chalkboard fills the background of this image, which features a wooden teacher's desk that has blue books, a red apple, and a bell placed on top. ",
+        "latency": 15.96443223953247
+    },
+    "prompt_2520": {
+        "prompt": "A group of pictures featuring different scenes of baked goods sitting on tables.",
+        "latency": 14.40799856185913
+    },
+    "prompt_2521": {
+        "prompt": "Baskets are displaying carrots, leafy greens, and other vegetables. ",
+        "latency": 16.842822313308716
+    },
+    "prompt_2522": {
+        "prompt": "A small white dog catching a green frisbee on a lush green field.",
+        "latency": 16.407239198684692
+    },
+    "prompt_2523": {
+        "prompt": "Three trapped, captive zebras standing around a food or water trough. ",
+        "latency": 16.722689151763916
+    },
+    "prompt_2524": {
+        "prompt": "A man covering his eyes while standing next to multiple boxes filled with bananas.",
+        "latency": 16.740774393081665
+    },
+    "prompt_2525": {
+        "prompt": "A man throwing a white frisbee in a tree covered park.",
+        "latency": 14.740546464920044
+    },
+    "prompt_2526": {
+        "prompt": "Three zebras gather to stand and graze in their enclosure.",
+        "latency": 18.62198257446289
+    },
+    "prompt_2527": {
+        "prompt": "A tall multi layer cake sitting on top of a blue table cloth.",
+        "latency": 14.517062664031982
+    },
+    "prompt_2528": {
+        "prompt": "A large black bear with a long tongue hanging out of it's mouth.",
+        "latency": 14.9774169921875
+    },
+    "prompt_2529": {
+        "prompt": "Two brown bears swimming in a lake next to green and yellow plants.",
+        "latency": 14.16462779045105
+    },
+    "prompt_2530": {
+        "prompt": "A couple of plates with sandwiches on them sitting next to an open can of spam.",
+        "latency": 16.505540370941162
+    },
+    "prompt_2531": {
+        "prompt": "A large black horse standing on a field filled with green and brown grass.",
+        "latency": 15.86980390548706
+    },
+    "prompt_2532": {
+        "prompt": "The meal of chicken and rice has green brocolli with it.",
+        "latency": 15.145398616790771
+    },
+    "prompt_2533": {
+        "prompt": "There are a group of friends laughing together and licking out there tongue",
+        "latency": 17.842660188674927
+    },
+    "prompt_2534": {
+        "prompt": "A skillet filled with a bunch of vegetables being cooked.",
+        "latency": 16.296233654022217
+    },
+    "prompt_2535": {
+        "prompt": "A group of red, yellow and orange fruit  mixed together.",
+        "latency": 16.060651779174805
+    },
+    "prompt_2536": {
+        "prompt": "Man cross country skiing on slight down hill slope.",
+        "latency": 14.652441024780273
+    },
+    "prompt_2537": {
+        "prompt": "A horse standing near a wood fence being looked at through a camera lens",
+        "latency": 18.161604642868042
+    },
+    "prompt_2538": {
+        "prompt": "A family of bears in front of a fence at a humane facility.",
+        "latency": 16.21691060066223
+    },
+    "prompt_2539": {
+        "prompt": "Thin-striped zebras huddle near the wall of their zoo enclosure",
+        "latency": 17.169765949249268
+    },
+    "prompt_2540": {
+        "prompt": "A black and white photo of a dog sleeping on a plaid bedspread.",
+        "latency": 18.63551926612854
+    },
+    "prompt_2541": {
+        "prompt": "Three zebra standing next to each other on a dirt hillside.",
+        "latency": 18.8174045085907
+    },
+    "prompt_2542": {
+        "prompt": "A lazy zebra lays in the straw near a rocky field.",
+        "latency": 14.961973428726196
+    },
+    "prompt_2543": {
+        "prompt": "A woman in a yellow shirt is about to catch a white frisbee.",
+        "latency": 15.608724594116211
+    },
+    "prompt_2544": {
+        "prompt": "A person snowboarding outside while the sun is setting . ",
+        "latency": 15.500784635543823
+    },
+    "prompt_2545": {
+        "prompt": "A laptop computer sits near a roll of tape and a laptop computer.",
+        "latency": 17.079537391662598
+    },
+    "prompt_2546": {
+        "prompt": "The skier is on the flat   with front ski edges together and holding ski poles.",
+        "latency": 14.57958722114563
+    },
+    "prompt_2547": {
+        "prompt": "A group of kids play on a grassy area and lift their arms up as a Frisbee is just above their heads.",
+        "latency": 15.838101625442505
+    },
+    "prompt_2548": {
+        "prompt": "Young man on skate board balancing on concrete barrier near sidewalk with small park area near by.",
+        "latency": 16.085230827331543
+    },
+    "prompt_2549": {
+        "prompt": "A little kid that is snowboarding in the snow.",
+        "latency": 21.02310824394226
+    },
+    "prompt_2550": {
+        "prompt": "Two very sexy women in bikinis riding horses in the ocean.",
+        "latency": 18.81339406967163
+    },
+    "prompt_2551": {
+        "prompt": "Skateboarder grinding his board on the side of a pavement course. ",
+        "latency": 14.975078105926514
+    },
+    "prompt_2552": {
+        "prompt": "A man purses his lips while holding up an orange in front of his face.",
+        "latency": 17.08917784690857
+    },
+    "prompt_2553": {
+        "prompt": "A baseball player practicing his swing at a baseball game.",
+        "latency": 16.48356008529663
+    },
+    "prompt_2554": {
+        "prompt": "A pair of people ride a small, horse drawn buggy near a large puddle of water.",
+        "latency": 15.25273323059082
+    },
+    "prompt_2555": {
+        "prompt": "A little kid that is doing a skateboard trick in the air.",
+        "latency": 17.572729110717773
+    },
+    "prompt_2556": {
+        "prompt": "Broccoli and cauliflower florets cut into small pieces and spread around.",
+        "latency": 14.59629487991333
+    },
+    "prompt_2557": {
+        "prompt": "A piece of cake sitting on top of a blue and white paper plate.",
+        "latency": 15.092299461364746
+    },
+    "prompt_2558": {
+        "prompt": "A llama and white horse standing next to each other in a grassy field.",
+        "latency": 15.872532844543457
+    },
+    "prompt_2559": {
+        "prompt": "A group of young children riding skis down a snow covered mountain.",
+        "latency": 16.467050552368164
+    },
+    "prompt_2560": {
+        "prompt": "A man riding skis down the side of a snow covered ski slope.",
+        "latency": 16.41677474975586
+    },
+    "prompt_2561": {
+        "prompt": "Two dogs are in a backyard playground area equipped with a kiddie pool.",
+        "latency": 16.547054529190063
+    },
+    "prompt_2562": {
+        "prompt": "A white plate topped with orange peel slices.",
+        "latency": 14.811680793762207
+    },
+    "prompt_2563": {
+        "prompt": "A zebra grazing in a field near a pile of branches.",
+        "latency": 17.135413646697998
+    },
+    "prompt_2564": {
+        "prompt": "Two zebras, one grazing and one staring straight ahead in a grassy field",
+        "latency": 16.32198715209961
+    },
+    "prompt_2565": {
+        "prompt": "A white dog is on a sandy beach while the sea foam washes ashore behind it.",
+        "latency": 16.223187923431396
+    },
+    "prompt_2566": {
+        "prompt": "A horse pulling a large carriage down the street with several people on the carriage.",
+        "latency": 16.747671604156494
+    },
+    "prompt_2567": {
+        "prompt": "A small bowl filled with chopped vegetables and spoon",
+        "latency": 17.67308807373047
+    },
+    "prompt_2568": {
+        "prompt": "A small dog with a chain collar looking at another dog.",
+        "latency": 16.25912046432495
+    },
+    "prompt_2569": {
+        "prompt": "people riding horses partially submerged in a body of water",
+        "latency": 15.838590145111084
+    },
+    "prompt_2570": {
+        "prompt": "A person on a horse with large snow capped mountains in the background.",
+        "latency": 17.65223503112793
+    },
+    "prompt_2571": {
+        "prompt": "A group of skateboarders watching a skateboarder doing a trick in a skate park.",
+        "latency": 18.96275305747986
+    },
+    "prompt_2572": {
+        "prompt": "Snow boarder sliding down the hill after falling in the snow",
+        "latency": 16.57078742980957
+    },
+    "prompt_2573": {
+        "prompt": "A woman in tight blue jeans standing next to a brown horse.",
+        "latency": 16.85811161994934
+    },
+    "prompt_2574": {
+        "prompt": "A large half a sandwich sitting on a plate next to a pepperocini",
+        "latency": 14.63432002067566
+    },
+    "prompt_2575": {
+        "prompt": "Two bowls of stir fried beef and broccoli with chopsticks next to the bowls.",
+        "latency": 17.120803594589233
+    },
+    "prompt_2576": {
+        "prompt": "A white plate with two slices of cheese and a whole banana unpealed.",
+        "latency": 19.24968147277832
+    },
+    "prompt_2577": {
+        "prompt": "A skier performing a backflip with the sky as background",
+        "latency": 14.795811414718628
+    },
+    "prompt_2578": {
+        "prompt": "An outdoor stall sells tomatoes, bell peppers, green beans, carrots, zucchini, eggplants, and turnips. ",
+        "latency": 16.19961643218994
+    },
+    "prompt_2579": {
+        "prompt": "Two people riding horses on the beach with waves coming in across the rocks on the shoreline.",
+        "latency": 15.45295262336731
+    },
+    "prompt_2580": {
+        "prompt": "A pair of skiers on the top of a ski slope with clouds and large mountain in the background.",
+        "latency": 16.074395179748535
+    },
+    "prompt_2581": {
+        "prompt": "A person wearing sneakers balancing on a skateboard on a wooden platform.",
+        "latency": 15.908473014831543
+    },
+    "prompt_2582": {
+        "prompt": "A group of people skiing down the side of a snow covered mountain.",
+        "latency": 15.199330568313599
+    },
+    "prompt_2583": {
+        "prompt": "  guy sitting down holding a peach between fingers",
+        "latency": 15.73138165473938
+    },
+    "prompt_2584": {
+        "prompt": "Two bears are perched on trees out in the fog. ",
+        "latency": 16.599416971206665
+    },
+    "prompt_2585": {
+        "prompt": "The pitcher  on the mound has just let go of a baseball directed to the batter. ",
+        "latency": 14.974906921386719
+    },
+    "prompt_2586": {
+        "prompt": "A family standing next to each other while holding frisbees.",
+        "latency": 16.760806798934937
+    },
+    "prompt_2587": {
+        "prompt": "Two people on horseback are posing while the horses gallop on a beach shore.",
+        "latency": 18.216001987457275
+    },
+    "prompt_2588": {
+        "prompt": "A cat sitting on a table next to plants and a dog outside of a sliding glass door, looking in.",
+        "latency": 16.936442852020264
+    },
+    "prompt_2589": {
+        "prompt": "an orange is on the white line on a street and some cars",
+        "latency": 16.692283153533936
+    },
+    "prompt_2590": {
+        "prompt": "A crowd of people standing on snow covered ground.",
+        "latency": 16.01609206199646
+    },
+    "prompt_2591": {
+        "prompt": "Reading materials are stowed above a zebra themed bed for relaxation.",
+        "latency": 16.77476692199707
+    },
+    "prompt_2592": {
+        "prompt": "A brown horse standing next to a woman in front of a house.",
+        "latency": 16.333542346954346
+    },
+    "prompt_2593": {
+        "prompt": "A young man with long hair, wearing all black, doing stunts on a skateboard.",
+        "latency": 17.063781023025513
+    },
+    "prompt_2594": {
+        "prompt": "A horse drawn buggy sits in front of pyramid shaped mosques.",
+        "latency": 17.05415630340576
+    },
+    "prompt_2595": {
+        "prompt": "A glass filled with alcohol sitting on a white table.",
+        "latency": 15.33571481704712
+    },
+    "prompt_2596": {
+        "prompt": "Two men with backpacks on, one of which is fastening skis to a sled.",
+        "latency": 18.44860315322876
+    },
+    "prompt_2597": {
+        "prompt": "Two draft horses pulling plow, color, under cloudy skies with trees and other horses in background.",
+        "latency": 16.385437965393066
+    },
+    "prompt_2598": {
+        "prompt": "Skate boarder doing stunts in front of graffiti covered building",
+        "latency": 15.047806739807129
+    },
+    "prompt_2599": {
+        "prompt": "A round plate of food with meat, onions, vegetables and other items.",
+        "latency": 17.29389262199402
+    },
+    "prompt_2600": {
+        "prompt": "A black and white small dog sitting next to a brown and white small dog.",
+        "latency": 23.16000986099243
+    },
+    "prompt_2601": {
+        "prompt": "Grilled chicken on a plate with spinach, broccoli, zucchini, and carrots. ",
+        "latency": 15.310295343399048
+    },
+    "prompt_2602": {
+        "prompt": "The fruit are arranges on the surface in a brown wicker basket.",
+        "latency": 14.570929765701294
+    },
+    "prompt_2603": {
+        "prompt": "A horse with blinder and a colorful harness in the woods",
+        "latency": 17.37390398979187
+    },
+    "prompt_2604": {
+        "prompt": "A bunch pf different vegetables is on a crate next to a CSA pamphlet.",
+        "latency": 16.18255352973938
+    },
+    "prompt_2605": {
+        "prompt": "A person with green skis skiing down a big hill.",
+        "latency": 14.975505590438843
+    },
+    "prompt_2606": {
+        "prompt": "A store display filled with ripe, unripe bananas and other fruit.",
+        "latency": 16.08455729484558
+    },
+    "prompt_2607": {
+        "prompt": "This skateboarder is riding the cityscape at night when traffic is minimal.",
+        "latency": 16.66886568069458
+    },
+    "prompt_2608": {
+        "prompt": "A dense cake with fruit in it sitting on a blue plate.",
+        "latency": 14.614526987075806
+    },
+    "prompt_2609": {
+        "prompt": "A coach comes out on to the field to talk to a young player.",
+        "latency": 17.75872039794922
+    },
+    "prompt_2610": {
+        "prompt": "Young girl dressed in pink with striped pants with one foot on skate board on typical suburban street.",
+        "latency": 17.628095865249634
+    },
+    "prompt_2611": {
+        "prompt": "Two skiers prepare to make their way past an embankment",
+        "latency": 15.326427221298218
+    },
+    "prompt_2612": {
+        "prompt": "A small black and brown dog with a frisbee in it's mouth.",
+        "latency": 16.914246797561646
+    },
+    "prompt_2613": {
+        "prompt": "Two zebras grazing on the green grass in an enclosure.",
+        "latency": 17.331845998764038
+    },
+    "prompt_2614": {
+        "prompt": "An outdoor market place with a person shopping for bananas.",
+        "latency": 16.148762941360474
+    },
+    "prompt_2615": {
+        "prompt": "bananas and apples sitting next to each other on a counter",
+        "latency": 16.524555444717407
+    },
+    "prompt_2616": {
+        "prompt": "A blue and white plate with a chocolate dessert on the plate and powdered sugar on top.",
+        "latency": 15.106142044067383
+    },
+    "prompt_2617": {
+        "prompt": "A person on skis going down a mountain slope.",
+        "latency": 14.557965993881226
+    },
+    "prompt_2618": {
+        "prompt": "A skateboarder rolling across a thin plank on two wheels",
+        "latency": 16.213335752487183
+    },
+    "prompt_2619": {
+        "prompt": "A decadent piece of cake that waits to be finished by its owner.",
+        "latency": 14.080055952072144
+    },
+    "prompt_2620": {
+        "prompt": "A couple of people walking through a market filled with food.",
+        "latency": 15.216814041137695
+    },
+    "prompt_2621": {
+        "prompt": "a man standing on one hand holding onto a skateboard ",
+        "latency": 16.170313835144043
+    },
+    "prompt_2622": {
+        "prompt": "A person in skis flies in the air from doing a trick.",
+        "latency": 15.341258525848389
+    },
+    "prompt_2623": {
+        "prompt": "A person riding the horse jumping over a wooden obstacle.",
+        "latency": 19.615182876586914
+    },
+    "prompt_2624": {
+        "prompt": " This is a picture of some friends playing frisbee in the park.",
+        "latency": 18.22777223587036
+    },
+    "prompt_2625": {
+        "prompt": "Woman holding a small birthday cake rides a coin-operated children's ride in a convenience store.",
+        "latency": 16.64122223854065
+    },
+    "prompt_2626": {
+        "prompt": "A delicious looking pizza with a variety of vegetable toppings stands out on a yellow plate.",
+        "latency": 14.7769193649292
+    },
+    "prompt_2627": {
+        "prompt": "A man holding horse reins connected to 2 horses on a dirt field.",
+        "latency": 18.22920536994934
+    },
+    "prompt_2628": {
+        "prompt": "A broccoli and pasta salad with oil and vinegar dressing.",
+        "latency": 15.222452163696289
+    },
+    "prompt_2629": {
+        "prompt": "a woman is wearing a pink and black jacket is sking",
+        "latency": 19.20506000518799
+    },
+    "prompt_2630": {
+        "prompt": "A bunch of bananas on a wooden bench with hammocks in the background.",
+        "latency": 17.37433433532715
+    },
+    "prompt_2631": {
+        "prompt": "People are riding horses down a beach next to the water.",
+        "latency": 15.41273546218872
+    },
+    "prompt_2632": {
+        "prompt": "a couple sitting on a horse statue posing for a picture in grassy setting",
+        "latency": 16.92764163017273
+    },
+    "prompt_2633": {
+        "prompt": "Three zebra in the middle of a field with a body of water in the distance.",
+        "latency": 19.60143804550171
+    },
+    "prompt_2634": {
+        "prompt": "An assortment of items including a miniature boom box, chair, banana and flashlight.",
+        "latency": 16.758164167404175
+    },
+    "prompt_2635": {
+        "prompt": "Horses and bikers racing on a track with  many houses in the background.",
+        "latency": 14.72472858428955
+    },
+    "prompt_2636": {
+        "prompt": "The setting sun silhouettes a skateboarder turning at the top of the ramp.",
+        "latency": 15.166664600372314
+    },
+    "prompt_2637": {
+        "prompt": "A man on a skateboard on a ramp in front of spectators.  ",
+        "latency": 15.47837519645691
+    },
+    "prompt_2638": {
+        "prompt": "Two halves of an onion and a carrot positioned to represent either a goofy face or male genetalia.",
+        "latency": 15.793135166168213
+    },
+    "prompt_2639": {
+        "prompt": "a painting of a row of white horses walking in a line along a stream.",
+        "latency": 16.92055630683899
+    },
+    "prompt_2640": {
+        "prompt": "Panoramic image of zebras grazing and lying in a field.",
+        "latency": 15.49849796295166
+    },
+    "prompt_2641": {
+        "prompt": "a person washing something under the running water of a faucet next to a bowl of greens.",
+        "latency": 15.938040971755981
+    },
+    "prompt_2642": {
+        "prompt": "Three bottles of beer sitting on a wooden table next to bananas.",
+        "latency": 16.35028338432312
+    },
+    "prompt_2643": {
+        "prompt": "A man in skis passing an orange flag on a snowy race course.",
+        "latency": 14.29783582687378
+    },
+    "prompt_2644": {
+        "prompt": "A zebra standing up next to a chain linked fence and eating grass that is on the ground.",
+        "latency": 15.183274269104004
+    },
+    "prompt_2645": {
+        "prompt": "A skier glides down a snowy mountain passing a red flag.",
+        "latency": 16.24439764022827
+    },
+    "prompt_2646": {
+        "prompt": "A peice of cake sit on a red plate with a fork beside it.",
+        "latency": 14.689229488372803
+    },
+    "prompt_2647": {
+        "prompt": "Two apples, a bowl of food with berries and a pitcher and spoon on a purple place mat.",
+        "latency": 17.260934829711914
+    },
+    "prompt_2648": {
+        "prompt": "A blue vase with an orange floral patters sits in front of a map.",
+        "latency": 15.480717182159424
+    },
+    "prompt_2649": {
+        "prompt": "Three zebra standing next to each other on a dirt ground.",
+        "latency": 16.921891450881958
+    },
+    "prompt_2650": {
+        "prompt": "A skateboarder is performing a tick in a skate park.",
+        "latency": 16.499722003936768
+    },
+    "prompt_2651": {
+        "prompt": "A young boy and an elderly man taking a pony out for a walk.",
+        "latency": 17.115530252456665
+    },
+    "prompt_2652": {
+        "prompt": "A herd of zebra standing next to each other on a green grass field.",
+        "latency": 17.946760177612305
+    },
+    "prompt_2653": {
+        "prompt": "A couple of snow skiers are casting a shadow on the snow.",
+        "latency": 16.188075065612793
+    },
+    "prompt_2654": {
+        "prompt": "A person riding a horse in a horse park while another horse wonders in nearby grass. ",
+        "latency": 17.19469666481018
+    },
+    "prompt_2655": {
+        "prompt": "A large crowd of people riding horses walks along a trail.",
+        "latency": 14.642935752868652
+    },
+    "prompt_2656": {
+        "prompt": "Banana on a paper towel behind a banana shaped paper towel.",
+        "latency": 14.810335159301758
+    },
+    "prompt_2657": {
+        "prompt": "Multiple skiers travelling across a vast expanse of snow covered land towards a mountain.",
+        "latency": 13.400530815124512
+    },
+    "prompt_2658": {
+        "prompt": "Vegetable pieces and knife are kept on cutting board.Cabbage is on the table.",
+        "latency": 14.81580114364624
+    },
+    "prompt_2659": {
+        "prompt": "Two containers containing quiche, a salad, apples and a banana on the side.",
+        "latency": 14.531395673751831
+    },
+    "prompt_2660": {
+        "prompt": "A table topped with a half eaten apple next to a smart phone.",
+        "latency": 17.750323057174683
+    },
+    "prompt_2661": {
+        "prompt": "Some zebras walk through a grassy field and flamingos stands in a lake in the background.",
+        "latency": 15.873694658279419
+    },
+    "prompt_2662": {
+        "prompt": "A white plate on top of a table topped with fruits and vegetables.",
+        "latency": 14.484736204147339
+    },
+    "prompt_2663": {
+        "prompt": "Two people riding on the back of horses near a tall building.",
+        "latency": 17.07244372367859
+    },
+    "prompt_2664": {
+        "prompt": "White dog sticking his nose out from under red and white striped bed ruffle.",
+        "latency": 15.43541932106018
+    },
+    "prompt_2665": {
+        "prompt": "Four zebras on a dirt path looking in different directions.",
+        "latency": 16.26610493659973
+    },
+    "prompt_2666": {
+        "prompt": "Three women standing in front of a sign about bananas and a bunch of bananas.",
+        "latency": 17.296650409698486
+    },
+    "prompt_2667": {
+        "prompt": "A man in a horse drawn carriage parked in front of a stone building.",
+        "latency": 15.458487749099731
+    },
+    "prompt_2668": {
+        "prompt": "The skiier easily and skillfully jumps the small mogul.",
+        "latency": 15.725080490112305
+    },
+    "prompt_2669": {
+        "prompt": "A woman standing behind a very small banana tree with green bananas on it.",
+        "latency": 15.403355360031128
+    },
+    "prompt_2670": {
+        "prompt": "View from inside of a car of cars on road and a man on the side of the road.",
+        "latency": 15.728284120559692
+    },
+    "prompt_2671": {
+        "prompt": "A skateboarder is separated from his board as he performs a jump in front of a crowd.",
+        "latency": 15.977885246276855
+    },
+    "prompt_2672": {
+        "prompt": "Two zebras roaming through the terrain in a countryside setting.",
+        "latency": 14.83195948600769
+    },
+    "prompt_2673": {
+        "prompt": "A roasting pan full with apples, carrots, potatoes, and meat",
+        "latency": 17.006123781204224
+    },
+    "prompt_2674": {
+        "prompt": "a young girl riding a white horse in front of other people ",
+        "latency": 17.722439289093018
+    },
+    "prompt_2675": {
+        "prompt": "three people standing in a green field with one person holding a frisbee.",
+        "latency": 15.769091606140137
+    },
+    "prompt_2676": {
+        "prompt": "A man wearing sunglasses and a coat catching a frisbee.",
+        "latency": 16.899125576019287
+    },
+    "prompt_2677": {
+        "prompt": "White suited snowboarder displaying aerial skills at ski slope.",
+        "latency": 16.428038835525513
+    },
+    "prompt_2678": {
+        "prompt": "A little boy sitting on a kitchen counter top next to a plate of sliced apples.",
+        "latency": 17.055469751358032
+    },
+    "prompt_2679": {
+        "prompt": "A dog or bear in a controlled area doing something with balls.",
+        "latency": 16.513566255569458
+    },
+    "prompt_2680": {
+        "prompt": "A person riding skis down a snow covered slope.",
+        "latency": 18.386802196502686
+    },
+    "prompt_2681": {
+        "prompt": "Four people on horses walking on beach next to water.",
+        "latency": 16.57606792449951
+    },
+    "prompt_2682": {
+        "prompt": "A little girl wearing a black hat can be seen on a saddle riding.",
+        "latency": 19.49766969680786
+    },
+    "prompt_2683": {
+        "prompt": "Zebras, wildebeests, and a giraffe stand in a zoo enclosure.",
+        "latency": 16.276437759399414
+    },
+    "prompt_2684": {
+        "prompt": "a banana and a chocolate frosted donut sitting in a baggie",
+        "latency": 18.965806007385254
+    },
+    "prompt_2685": {
+        "prompt": "A little poodle puppy laying near a newspaper with a look of guilt.",
+        "latency": 16.54496669769287
+    },
+    "prompt_2686": {
+        "prompt": "A catcher squatting at a base with his gloved hand extended.",
+        "latency": 15.759507179260254
+    },
+    "prompt_2687": {
+        "prompt": "A smiling pair of skiers with a huge snow covered mountain behind them.",
+        "latency": 17.305283069610596
+    },
+    "prompt_2688": {
+        "prompt": "Floor eye view of a supine dog hoping for some attention.",
+        "latency": 14.318994045257568
+    },
+    "prompt_2689": {
+        "prompt": "Young skateboarder showing off learned skills next to building.",
+        "latency": 16.6956684589386
+    },
+    "prompt_2690": {
+        "prompt": "A plate is left sitting half eaten with mostly broccoli remaining.",
+        "latency": 16.370360851287842
+    },
+    "prompt_2691": {
+        "prompt": "A young man standing in front of a fence holding a skateboard.",
+        "latency": 16.66898202896118
+    },
+    "prompt_2692": {
+        "prompt": "A zebra eating hay scattered on the ground while another zebra lays in the shade.",
+        "latency": 15.82174563407898
+    },
+    "prompt_2693": {
+        "prompt": "A table with a laptop a plate with a muffin and a banana, a can and a cellphone.",
+        "latency": 16.569503784179688
+    },
+    "prompt_2694": {
+        "prompt": "Three cross-country skiers posing for the camera on a snowy lane",
+        "latency": 17.305182933807373
+    },
+    "prompt_2695": {
+        "prompt": "Horses racing on a dirt track with flowers around the scoreboard.  ",
+        "latency": 17.806739807128906
+    },
+    "prompt_2696": {
+        "prompt": "Bananas in a bushel are displayed over some kind of tail.",
+        "latency": 14.749491214752197
+    },
+    "prompt_2697": {
+        "prompt": "A person doing tricks on a skateboard in the street near a house.",
+        "latency": 16.856157302856445
+    },
+    "prompt_2698": {
+        "prompt": "A man is enjoying his day of skiing, trying to stay up float. ",
+        "latency": 14.55189037322998
+    },
+    "prompt_2699": {
+        "prompt": "A boy prepares to throw a frisbee to someone out of the shot.",
+        "latency": 16.52627968788147
+    },
+    "prompt_2700": {
+        "prompt": "Helmeted young skateboarder displaying ability skills on cement surface.",
+        "latency": 17.54011821746826
+    },
+    "prompt_2701": {
+        "prompt": "there are many different types of food gathered on the table",
+        "latency": 15.645732164382935
+    },
+    "prompt_2702": {
+        "prompt": "A steel strainer with four ripe banana's on a table.",
+        "latency": 16.278712272644043
+    },
+    "prompt_2703": {
+        "prompt": "A woman smiles as she stands in skis on a snowy hill.",
+        "latency": 17.668577909469604
+    },
+    "prompt_2704": {
+        "prompt": "A group of four men standing on top of a lush green field.",
+        "latency": 14.162140846252441
+    },
+    "prompt_2705": {
+        "prompt": "Five oranges and two applies sitting on a white surface.",
+        "latency": 15.850486516952515
+    },
+    "prompt_2706": {
+        "prompt": "A woman has an apron and head scarf while touching carrots at a produce market.",
+        "latency": 17.153153896331787
+    },
+    "prompt_2707": {
+        "prompt": "Several skiers glide down a hilly landscape covered in snow. ",
+        "latency": 17.55173397064209
+    },
+    "prompt_2708": {
+        "prompt": "Two young people are skateboarding on the ramp, trying to pull off tricks.",
+        "latency": 19.008848190307617
+    },
+    "prompt_2709": {
+        "prompt": "A wet dog standing on a beach next to the ocean.",
+        "latency": 15.585015773773193
+    },
+    "prompt_2710": {
+        "prompt": "A skateboarder demonstrates on his skateboard that has a large wheel in the back.",
+        "latency": 17.42466688156128
+    },
+    "prompt_2711": {
+        "prompt": "A baby giraffe drinking milk from it's mother in a field.",
+        "latency": 18.34460163116455
+    },
+    "prompt_2712": {
+        "prompt": "Crisp, delicious apples hang on the dying branches of the tree.",
+        "latency": 16.21944522857666
+    },
+    "prompt_2713": {
+        "prompt": "A herd of zebra eating some hay from a wooden container.",
+        "latency": 17.78394079208374
+    },
+    "prompt_2714": {
+        "prompt": "A man in a baseball cap riding a skateboard grinding an edge.",
+        "latency": 16.148831129074097
+    },
+    "prompt_2715": {
+        "prompt": "A bear is walking on an unpaved path in a wilderness area.",
+        "latency": 15.460958242416382
+    },
+    "prompt_2716": {
+        "prompt": "A display of strawberries, peas, broccoli, carrots, radishes and potatoes. ",
+        "latency": 15.987489700317383
+    },
+    "prompt_2717": {
+        "prompt": "A skateboarder with one fut on a skateboard raising it up.",
+        "latency": 17.055887699127197
+    },
+    "prompt_2718": {
+        "prompt": "A little boy riding skis down the side of a snow covered slope.",
+        "latency": 15.864831686019897
+    },
+    "prompt_2719": {
+        "prompt": "Apples, grapes, an oranges and peanuts on the white surface in a picture.",
+        "latency": 20.237383604049683
+    },
+    "prompt_2720": {
+        "prompt": "Two zebras are stranding next to each other by a fence.",
+        "latency": 16.847050666809082
+    },
+    "prompt_2721": {
+        "prompt": "A plate topped with sliced up oranges full of juice.",
+        "latency": 14.684338569641113
+    },
+    "prompt_2722": {
+        "prompt": "A person doing a trick on water ski's while another passes underneath them.",
+        "latency": 16.734326601028442
+    },
+    "prompt_2723": {
+        "prompt": "A large display of fruit: applies, grapes, oranges, lemons, limes and grapefruit",
+        "latency": 16.770269870758057
+    },
+    "prompt_2724": {
+        "prompt": "A man wearing snow gear poses for a photo while standing on skis",
+        "latency": 17.869929790496826
+    },
+    "prompt_2725": {
+        "prompt": "A plastic horse standing on top of a chair.",
+        "latency": 15.784810781478882
+    },
+    "prompt_2726": {
+        "prompt": "Two brown bears in water open their mouths to each other",
+        "latency": 16.14756679534912
+    },
+    "prompt_2727": {
+        "prompt": "A man and child sitting on a street with fruits in baskets.",
+        "latency": 16.928274869918823
+    },
+    "prompt_2728": {
+        "prompt": "A herd of zebras standing on a sandy platform near a small body of water.",
+        "latency": 15.45326018333435
+    },
+    "prompt_2729": {
+        "prompt": "A baseball player swings his bat while a ball floats above his head towards the catcher and umpire.",
+        "latency": 16.78208065032959
+    },
+    "prompt_2730": {
+        "prompt": "Pitcher in a baseball game tries to out a player attempting to steal base.",
+        "latency": 16.75146174430847
+    },
+    "prompt_2731": {
+        "prompt": "A table topped with a cake covered in berries next to a plate of sandwiches.",
+        "latency": 16.527544021606445
+    },
+    "prompt_2732": {
+        "prompt": "The polar bear has his chin up as he lies on his chest",
+        "latency": 14.56899118423462
+    },
+    "prompt_2733": {
+        "prompt": "Young person on the street skateboarding wearing a helmet.",
+        "latency": 19.7714102268219
+    },
+    "prompt_2734": {
+        "prompt": "A smiling boy sitting on a couch holds a banana peel",
+        "latency": 17.735031604766846
+    },
+    "prompt_2735": {
+        "prompt": "A bowl full of food sitting on a table next to a fork that rests on top of a circular disk.",
+        "latency": 16.466174125671387
+    },
+    "prompt_2736": {
+        "prompt": "a person wearing a blue jacket is wearing skis and snowy trees",
+        "latency": 16.694114208221436
+    },
+    "prompt_2737": {
+        "prompt": "A large lone zebra poses for a picture inside a zoo",
+        "latency": 16.813429594039917
+    },
+    "prompt_2738": {
+        "prompt": "A man in a black hat, white shirt and black pants jumping a skateboard off a bench. ",
+        "latency": 16.37494421005249
+    },
+    "prompt_2739": {
+        "prompt": "A man leaping up to catch a frisbee with another man running behind him.",
+        "latency": 16.952856063842773
+    },
+    "prompt_2740": {
+        "prompt": "A square, white cake sits on a round plate and is decorated with strawberries.",
+        "latency": 17.0496187210083
+    },
+    "prompt_2741": {
+        "prompt": "Two zebra standing next to each other on a lush green field.",
+        "latency": 20.276076316833496
+    },
+    "prompt_2742": {
+        "prompt": "A man is skate boarding down a path and a dog is running by his side.",
+        "latency": 15.277379751205444
+    },
+    "prompt_2743": {
+        "prompt": "A herd of zebra crossing a river with trees in the background.",
+        "latency": 15.977205991744995
+    },
+    "prompt_2744": {
+        "prompt": "A pair of sandwiches with macaroni and cheese with broccoli and a fruit bowl.",
+        "latency": 16.22243356704712
+    },
+    "prompt_2745": {
+        "prompt": "A knight riding on the back of a brown horse through a lush green field.",
+        "latency": 16.949259042739868
+    },
+    "prompt_2746": {
+        "prompt": "A plate of bananas and sliced oranges covered in butterflies.",
+        "latency": 16.084360122680664
+    },
+    "prompt_2747": {
+        "prompt": "Oranges and two jars of an orange substance on a wooden table.",
+        "latency": 15.905760765075684
+    },
+    "prompt_2748": {
+        "prompt": "A large white polar bear swimming in a pool of blue water.",
+        "latency": 14.587907314300537
+    },
+    "prompt_2749": {
+        "prompt": "Batter takes a swing at the incoming ball during the baseball game",
+        "latency": 16.488304615020752
+    },
+    "prompt_2750": {
+        "prompt": "An assortment of crackers, dip and veggies sitting on a white counter.",
+        "latency": 16.197036266326904
+    },
+    "prompt_2751": {
+        "prompt": "A serving of rice, carrots, green pod beans and an egg each in their own small plastic containers.",
+        "latency": 16.433963537216187
+    },
+    "prompt_2752": {
+        "prompt": "This is a painting of a cross country skier traveling up a slope at sunrise.",
+        "latency": 15.098402976989746
+    },
+    "prompt_2753": {
+        "prompt": "A person cross country skiing across a snow filled plain.",
+        "latency": 14.288567543029785
+    },
+    "prompt_2754": {
+        "prompt": "Two zebras, on sitting down on the ground, the other standing up next to a tree.",
+        "latency": 17.252866983413696
+    },
+    "prompt_2755": {
+        "prompt": "Two horses stand outside in their corral, with mountains in the background.",
+        "latency": 17.55535578727722
+    },
+    "prompt_2756": {
+        "prompt": "A blue and black ray holding sandwich, coffee and liquor bottles.",
+        "latency": 16.814103841781616
+    },
+    "prompt_2757": {
+        "prompt": "A bunch of bananas hangs from a post in a covered area.",
+        "latency": 16.578723669052124
+    },
+    "prompt_2758": {
+        "prompt": "A bowl of noodles, meat, broccoli and carrots in a sauce with a fork.",
+        "latency": 15.106878757476807
+    },
+    "prompt_2759": {
+        "prompt": "two zebras grazing while a hippo looks at them and some oxen in the background",
+        "latency": 18.24089241027832
+    },
+    "prompt_2760": {
+        "prompt": "A kale and sweet pea home garden getting the last rays of sunlight. ",
+        "latency": 14.953088760375977
+    },
+    "prompt_2761": {
+        "prompt": "A zebra standing in a grassy field by a woods.",
+        "latency": 20.977336406707764
+    },
+    "prompt_2762": {
+        "prompt": "A black horse is standing in the sand, with people in the background. ",
+        "latency": 16.16615080833435
+    },
+    "prompt_2763": {
+        "prompt": "A man standing on top of a river next to the sun and a flying kite.",
+        "latency": 14.058056592941284
+    },
+    "prompt_2764": {
+        "prompt": "A young man riding down a hand rail on a skateboard.",
+        "latency": 18.88337731361389
+    },
+    "prompt_2765": {
+        "prompt": "A skier at the end of his run tucking under to go faster.",
+        "latency": 16.48265051841736
+    },
+    "prompt_2766": {
+        "prompt": "A man standing in snow gear on skis while on a snowy hill.",
+        "latency": 17.27163600921631
+    },
+    "prompt_2767": {
+        "prompt": "a zebra grazes in the grass as another zebra notices the photographer",
+        "latency": 16.67877459526062
+    },
+    "prompt_2768": {
+        "prompt": "Four picture collage of a snowboarder wearing a red jacket and brown pants going down a snowy mountain side.",
+        "latency": 18.86651635169983
+    },
+    "prompt_2769": {
+        "prompt": "A woman standing next to a young man near a pile of fruit.",
+        "latency": 17.061240196228027
+    },
+    "prompt_2770": {
+        "prompt": "A woman with a brown horse in a dirt area of building.",
+        "latency": 17.412849187850952
+    },
+    "prompt_2771": {
+        "prompt": "A man smiles maniacly while putting a dog into an oven.",
+        "latency": 17.612846851348877
+    },
+    "prompt_2772": {
+        "prompt": "a small horse and a larger horse standing behind a fence",
+        "latency": 19.59143328666687
+    },
+    "prompt_2773": {
+        "prompt": "Blueberry pancakes with slices bananas and glaze on top.",
+        "latency": 16.500258445739746
+    },
+    "prompt_2774": {
+        "prompt": "Broccoli and carrots together in a bowl on a table.",
+        "latency": 16.67528986930847
+    },
+    "prompt_2775": {
+        "prompt": "A group of men leading a pack of horses through a field.",
+        "latency": 16.430129051208496
+    },
+    "prompt_2776": {
+        "prompt": "A skier sitting on a picnic table and eating a doughnut. ",
+        "latency": 17.60180974006653
+    },
+    "prompt_2777": {
+        "prompt": "there is a man wearing a plad shirt riding a skateboard",
+        "latency": 16.207833290100098
+    },
+    "prompt_2778": {
+        "prompt": "The puppy is sitting on the books in ront of the cubbyholes",
+        "latency": 14.506907939910889
+    },
+    "prompt_2779": {
+        "prompt": "two people standing on the same skateboard and holding each other up.",
+        "latency": 17.191869974136353
+    },
+    "prompt_2780": {
+        "prompt": "A dog looks out of the window as the car driver goes past a historic town.",
+        "latency": 15.752525806427002
+    },
+    "prompt_2781": {
+        "prompt": "A dog sitting on the couch with it's paw over a tray that holds remotes for the tv and Wii.",
+        "latency": 18.182979345321655
+    },
+    "prompt_2782": {
+        "prompt": "A man and a woman holding stuffed teddy bears near the ocean.",
+        "latency": 18.036707878112793
+    },
+    "prompt_2783": {
+        "prompt": "Those zebras may have lost their parents and they could be nearby.",
+        "latency": 16.779870748519897
+    },
+    "prompt_2784": {
+        "prompt": "A man on a skateboard wearing a helmet and safety pads while riding in an empty swimming pool.",
+        "latency": 16.325148105621338
+    },
+    "prompt_2785": {
+        "prompt": "Small plate of food which includes small pieces of broccoli",
+        "latency": 14.896084547042847
+    },
+    "prompt_2786": {
+        "prompt": "A baseball player pitching a ball on top of a field.",
+        "latency": 15.594439268112183
+    },
+    "prompt_2787": {
+        "prompt": "A man is in his skiing gear, while posing for the camera. ",
+        "latency": 19.328125
+    },
+    "prompt_2788": {
+        "prompt": "Cooked broccoli in serving dish sitting on cloth hot pad.",
+        "latency": 15.13919734954834
+    },
+    "prompt_2789": {
+        "prompt": "A table with two black trays of food that include raspberries and broccoli.",
+        "latency": 16.173142433166504
+    },
+    "prompt_2790": {
+        "prompt": "A salad made with yellow pepper strips and green sprouts sits on a square white plate.",
+        "latency": 17.530109643936157
+    },
+    "prompt_2791": {
+        "prompt": "A three frame photo combination showcases two types of pie on the right and left side with a coffee in the middle.  ",
+        "latency": 17.703845500946045
+    },
+    "prompt_2792": {
+        "prompt": "A baseball player is about to throw his best pitch. ",
+        "latency": 19.828861474990845
+    },
+    "prompt_2793": {
+        "prompt": "a group of racing horses are racing around the track",
+        "latency": 16.981179237365723
+    },
+    "prompt_2794": {
+        "prompt": "Two men watch another throw a Frisbee in a field. ",
+        "latency": 15.667016506195068
+    },
+    "prompt_2795": {
+        "prompt": "A view from above looking into a shopping cart full of groceries",
+        "latency": 16.378162622451782
+    },
+    "prompt_2796": {
+        "prompt": "A black and white photograph of a person wearing DC shoes on a skateboard in the sun. ",
+        "latency": 18.325275421142578
+    },
+    "prompt_2797": {
+        "prompt": "A lemon hangs from a small tree limb near several leaves.",
+        "latency": 16.185967683792114
+    },
+    "prompt_2798": {
+        "prompt": "A skier makes his way up a snowy hill, eschewing the lift. ",
+        "latency": 14.938943147659302
+    },
+    "prompt_2799": {
+        "prompt": "Plate of crackers with something spread on them next to a keyboard",
+        "latency": 15.761160612106323
+    },
+    "prompt_2800": {
+        "prompt": "A batter swinging a bat at a baseball with the catcher and umpire behind him.",
+        "latency": 14.453376054763794
+    },
+    "prompt_2801": {
+        "prompt": "Several zebras run and play in a grassy, wooded area",
+        "latency": 16.945865392684937
+    },
+    "prompt_2802": {
+        "prompt": "A couple of horses are near the machine in the grass. ",
+        "latency": 16.60787081718445
+    },
+    "prompt_2803": {
+        "prompt": "Assorted vegetables are displayed at a fruit stand including bananas, oranges, apples, and cherries.",
+        "latency": 16.99963927268982
+    },
+    "prompt_2804": {
+        "prompt": "Horses with jockeys racing across the coast of some beach.",
+        "latency": 16.748677968978882
+    },
+    "prompt_2805": {
+        "prompt": "A bunch of bananas is displayed on a counter top.",
+        "latency": 17.297893047332764
+    },
+    "prompt_2806": {
+        "prompt": "Closeup of a plate of food that includes chicken, mushrooms and broccoli.",
+        "latency": 15.851974248886108
+    },
+    "prompt_2807": {
+        "prompt": "A group of people standing on a field playing disc golf.",
+        "latency": 15.991398811340332
+    },
+    "prompt_2808": {
+        "prompt": "A bunch of zebras grazing near a road where vehicles are driving by.",
+        "latency": 17.28120517730713
+    },
+    "prompt_2809": {
+        "prompt": "A dog sitting on a bed covered with clothing, blankets and other items.",
+        "latency": 14.527803897857666
+    },
+    "prompt_2810": {
+        "prompt": "A skier on skies and a snowboarder carrying a snowboard on a mountain slope.",
+        "latency": 15.786165714263916
+    },
+    "prompt_2811": {
+        "prompt": "A bowl full of marshmallows, chocolate, and other delicious treats.",
+        "latency": 21.042148113250732
+    },
+    "prompt_2812": {
+        "prompt": "A plate of meat, vegetable and fruit is has been cooked on a grill.",
+        "latency": 15.101874113082886
+    },
+    "prompt_2813": {
+        "prompt": "A man riding a skateboard up the side of a ramp.",
+        "latency": 15.211792230606079
+    },
+    "prompt_2814": {
+        "prompt": "A horse drawn carriage in a park during daylight hours. ",
+        "latency": 18.15023136138916
+    },
+    "prompt_2815": {
+        "prompt": "Two guys leap for the Frisbee as they play their game in some sort of a gym.",
+        "latency": 17.45320725440979
+    },
+    "prompt_2816": {
+        "prompt": "Skateboard rider doing a trick near a beach during sunset.",
+        "latency": 15.074391603469849
+    },
+    "prompt_2817": {
+        "prompt": "A plate of pork with chinese broccoli drizzled with sauce",
+        "latency": 15.215129852294922
+    },
+    "prompt_2818": {
+        "prompt": "A couple at a wedding cutting their wedding cake together.",
+        "latency": 17.200844049453735
+    },
+    "prompt_2819": {
+        "prompt": "A group of zebras in a grassy area next to trees.",
+        "latency": 15.395528793334961
+    },
+    "prompt_2820": {
+        "prompt": "A plate of prepared food has pasta, broccoli, and meat.",
+        "latency": 15.083503246307373
+    },
+    "prompt_2821": {
+        "prompt": "A computer laying upside down with two hands holding knives prying open a section of the back.",
+        "latency": 15.956776142120361
+    },
+    "prompt_2822": {
+        "prompt": "A young zebra with an adult zebra standing on a parched brown landscape.",
+        "latency": 16.042635917663574
+    },
+    "prompt_2823": {
+        "prompt": "a person skateboarding near a skateboarding park at sunset.",
+        "latency": 15.100226402282715
+    },
+    "prompt_2824": {
+        "prompt": "A kid in a camo shirt riding a skateboard down the street.",
+        "latency": 16.849084615707397
+    },
+    "prompt_2825": {
+        "prompt": "Overview of a pot of vegetable soup with wooden spoon on a stainless steel stove top.",
+        "latency": 16.501182079315186
+    },
+    "prompt_2826": {
+        "prompt": "A shirtless man is in mid air above some stairs on his skateboard.",
+        "latency": 17.209896326065063
+    },
+    "prompt_2827": {
+        "prompt": "Several cross country skiers traveling through the snow.",
+        "latency": 15.676349639892578
+    },
+    "prompt_2828": {
+        "prompt": "Baseball players in their uniforms on a baseball field.",
+        "latency": 15.65686821937561
+    },
+    "prompt_2829": {
+        "prompt": "A man in black shirt standing in field with baseball mitt.",
+        "latency": 17.1119327545166
+    },
+    "prompt_2830": {
+        "prompt": "A man holding onto a yellow frisbee while having long hair.",
+        "latency": 16.656731605529785
+    },
+    "prompt_2831": {
+        "prompt": "A plate with a banana that is cut up, cookies and a spoon on it. ",
+        "latency": 17.72957944869995
+    },
+    "prompt_2832": {
+        "prompt": "A baseball pitcher follows through after releasing the ball.",
+        "latency": 16.116353273391724
+    },
+    "prompt_2833": {
+        "prompt": "A plate with a meal of meat, potatoes, carrots, and broccoli. ",
+        "latency": 14.979258298873901
+    },
+    "prompt_2834": {
+        "prompt": "Two zebras fighting in a open area with green bushes.",
+        "latency": 16.95124912261963
+    },
+    "prompt_2835": {
+        "prompt": "A woman in grey and green bodysuit skiing on a slope.",
+        "latency": 17.775184154510498
+    },
+    "prompt_2836": {
+        "prompt": "Three zebras are standing in the grass by the trees.",
+        "latency": 16.637593269348145
+    },
+    "prompt_2837": {
+        "prompt": "Tube of orange and pears, surrounded by boxes of grass and one pineapple",
+        "latency": 16.49550223350525
+    },
+    "prompt_2838": {
+        "prompt": "A room with filtered light coming through vertical blinds on a doorwall,  with a sleeping dog lying on a dog bed next to a rocking chair",
+        "latency": 16.08598566055298
+    },
+    "prompt_2839": {
+        "prompt": "A man in holds a Frisbee in the parking lot by the river.",
+        "latency": 15.614067316055298
+    },
+    "prompt_2840": {
+        "prompt": "A Zebra standing on a dirt ground inside a fenced area.",
+        "latency": 17.972088098526
+    },
+    "prompt_2841": {
+        "prompt": "A man sitting at a table eating food from a plate.",
+        "latency": 16.784121990203857
+    },
+    "prompt_2842": {
+        "prompt": "two young men on horseback at a gas station near some gas pumps and trucks",
+        "latency": 17.6420681476593
+    },
+    "prompt_2843": {
+        "prompt": "Two very small yellow bananas on top of a wooden table next to a Malaysian coin. ",
+        "latency": 15.201543092727661
+    },
+    "prompt_2844": {
+        "prompt": "A group of zebras are bending down and eating a box full of grass. ",
+        "latency": 16.8681480884552
+    },
+    "prompt_2845": {
+        "prompt": "A middle aged black woman is standing behind a table full of bananas.",
+        "latency": 17.465532779693604
+    },
+    "prompt_2846": {
+        "prompt": "Number of skiers coming down the mountain on a glorious day  ",
+        "latency": 14.576120376586914
+    },
+    "prompt_2847": {
+        "prompt": "A person skiing down a slope next to snow covered trees.",
+        "latency": 15.277701139450073
+    },
+    "prompt_2848": {
+        "prompt": "A group of young children sitting around a chocolate cake.",
+        "latency": 16.897878646850586
+    },
+    "prompt_2849": {
+        "prompt": "horse grazing in a large pasture with a train in the background",
+        "latency": 16.268146991729736
+    },
+    "prompt_2850": {
+        "prompt": "A skier is jumping in the air and crossing his skis.",
+        "latency": 16.117764949798584
+    },
+    "prompt_2851": {
+        "prompt": "A baseball player has his hand on his hip and one hand is up in the air. ",
+        "latency": 15.522865533828735
+    },
+    "prompt_2852": {
+        "prompt": "A BOY WITH A BLUE SHIRT AND JEAN PANTS DOING A TRICK WITH HIS SKATEBOARD",
+        "latency": 17.902712106704712
+    },
+    "prompt_2853": {
+        "prompt": "A happy little boy holding a baseball with a baseball glove.",
+        "latency": 17.750101804733276
+    },
+    "prompt_2854": {
+        "prompt": "A man in a hat balancing his skateboard on a highway barrier.",
+        "latency": 17.775744676589966
+    },
+    "prompt_2855": {
+        "prompt": "A herd of zebra are grazing in a grassy meadow.",
+        "latency": 15.97437572479248
+    },
+    "prompt_2856": {
+        "prompt": "A person sitting on a horse in air over gate in grass with people and trees in background.",
+        "latency": 17.18332576751709
+    },
+    "prompt_2857": {
+        "prompt": "two zebras standing in line with the head of one resting on the back of the other ",
+        "latency": 17.865336179733276
+    },
+    "prompt_2858": {
+        "prompt": "Two zebras stand together on a dirt area near short grass.",
+        "latency": 19.515233755111694
+    },
+    "prompt_2859": {
+        "prompt": "A dish on a blue plate contains carrots, onions, broccoli and rice.",
+        "latency": 15.309695959091187
+    },
+    "prompt_2860": {
+        "prompt": "Two sausage patties, carrots and potatoes on a plate with a fork.",
+        "latency": 14.788818597793579
+    },
+    "prompt_2861": {
+        "prompt": "A woman seated across the table shows off her bagel with cream cheese.",
+        "latency": 17.00618886947632
+    },
+    "prompt_2862": {
+        "prompt": "A girl in an orange sweater is sitting on a skateboard.",
+        "latency": 16.448904752731323
+    },
+    "prompt_2863": {
+        "prompt": "A waffle with syrup, a scoop of ice cream, and sliced strawberries and bananas on a plate.",
+        "latency": 21.346346855163574
+    },
+    "prompt_2864": {
+        "prompt": "A group of zebras standing on a field next to a fallen tree.",
+        "latency": 14.989159107208252
+    },
+    "prompt_2865": {
+        "prompt": "Several bunches of green bananas are resting on bricks.",
+        "latency": 14.718419075012207
+    },
+    "prompt_2866": {
+        "prompt": "Herd of zebra grazing on dried grasses in open field.",
+        "latency": 15.266997337341309
+    },
+    "prompt_2867": {
+        "prompt": "A boy riding a skateboard on a sidewalk as another laughs in the background.",
+        "latency": 16.215402603149414
+    },
+    "prompt_2868": {
+        "prompt": "A baseball player holds his glove in the air, waiting to catch a ball.",
+        "latency": 16.47928762435913
+    },
+    "prompt_2869": {
+        "prompt": "A person skiing through a snowy forest with tall trees.",
+        "latency": 15.399672746658325
+    },
+    "prompt_2870": {
+        "prompt": "A couple of brown horses walking down a street next to buildings.",
+        "latency": 18.23221778869629
+    },
+    "prompt_2871": {
+        "prompt": "A skier bending down to help a toddler with his little skis.",
+        "latency": 17.061455726623535
+    },
+    "prompt_2872": {
+        "prompt": "A group of bunches of bananas are shown hanging together.",
+        "latency": 15.110975742340088
+    },
+    "prompt_2873": {
+        "prompt": "A skateboarder jumping over an obstacle on his board.",
+        "latency": 20.676323413848877
+    },
+    "prompt_2874": {
+        "prompt": "A small child is holding a frisbee while looking at the beach. ",
+        "latency": 15.412645101547241
+    },
+    "prompt_2875": {
+        "prompt": "A person holding a piece of broccoli with an insect on it. ",
+        "latency": 17.441513061523438
+    },
+    "prompt_2876": {
+        "prompt": "A young boy in a red top is playing with a red object tossed in the sky.",
+        "latency": 17.064549446105957
+    },
+    "prompt_2877": {
+        "prompt": "Two men stand in the woods as one of them throws a Frisbee.",
+        "latency": 16.112318754196167
+    },
+    "prompt_2878": {
+        "prompt": "A somewhat blurry image of a young man in the air on his skateboard. ",
+        "latency": 15.825711250305176
+    },
+    "prompt_2879": {
+        "prompt": "A man riding a skateboard down a street next to parked cars.",
+        "latency": 15.574230432510376
+    },
+    "prompt_2880": {
+        "prompt": "there is a beige horse with blonde and brown hair on a hill",
+        "latency": 16.71963381767273
+    },
+    "prompt_2881": {
+        "prompt": "Child throwing Frisbee on a field with cones and people in the background. ",
+        "latency": 15.326379776000977
+    },
+    "prompt_2882": {
+        "prompt": "Skate boarder hang time with young man appearing to streak though the air.",
+        "latency": 14.104062557220459
+    },
+    "prompt_2883": {
+        "prompt": "there is some type of flat bread with topping on the top of it",
+        "latency": 14.121742963790894
+    },
+    "prompt_2884": {
+        "prompt": "A group of zebras are standing on the side of a dirt road.",
+        "latency": 16.616790533065796
+    },
+    "prompt_2885": {
+        "prompt": "A hand is holding a carrot for a llama to chew. ",
+        "latency": 16.011043310165405
+    },
+    "prompt_2886": {
+        "prompt": "Alpine skier in red coat on snow covered ski slope.",
+        "latency": 19.03980040550232
+    },
+    "prompt_2887": {
+        "prompt": "A black and white photo of a man doing a trick on his skateboard.",
+        "latency": 17.635517358779907
+    },
+    "prompt_2888": {
+        "prompt": "This is a blurry image of a man looking at something yellow and roundish.",
+        "latency": 14.3922860622406
+    },
+    "prompt_2889": {
+        "prompt": "This is a man working behind the counter of a bar with a lot of oranges and lemons.",
+        "latency": 17.234259366989136
+    },
+    "prompt_2890": {
+        "prompt": "A table with five red cups, a pineapple and some oranges on a plate",
+        "latency": 16.63434147834778
+    },
+    "prompt_2891": {
+        "prompt": "there are two brown bears that are playing together in the water",
+        "latency": 15.365592956542969
+    },
+    "prompt_2892": {
+        "prompt": "there is a very beautiful zebra that is standing in the shade",
+        "latency": 17.610039472579956
+    },
+    "prompt_2893": {
+        "prompt": "A man with a cowboy hat on doing a trick on a skateboard.",
+        "latency": 15.709246397018433
+    },
+    "prompt_2894": {
+        "prompt": "A person engaging in a water sport with skis on. ",
+        "latency": 15.546218395233154
+    },
+    "prompt_2895": {
+        "prompt": "A Thanksgiving dinner of turkey, broccoli, sweet potatoes and cranberries.",
+        "latency": 15.961230754852295
+    },
+    "prompt_2896": {
+        "prompt": "A table holding a white gown with peas and broccoli in it.",
+        "latency": 17.098060369491577
+    },
+    "prompt_2897": {
+        "prompt": "Teenager returning with skateboard after skate run at the skate park.",
+        "latency": 14.269524574279785
+    },
+    "prompt_2898": {
+        "prompt": "A skateboarder jumping off a small ramp places on the street.",
+        "latency": 16.20685648918152
+    },
+    "prompt_2899": {
+        "prompt": "Snowboarder going down a slope with trees in the background",
+        "latency": 16.373423099517822
+    },
+    "prompt_2900": {
+        "prompt": "A group of baseball players cluster together while wearing blue and white uniforms.",
+        "latency": 19.51697826385498
+    },
+    "prompt_2901": {
+        "prompt": "Variety of fruits such as bananas, oranges, and apples on a platter.",
+        "latency": 17.24692678451538
+    },
+    "prompt_2902": {
+        "prompt": "Three men, one caring a skateboard, are wearing matching t-shirts. ",
+        "latency": 19.371776819229126
+    },
+    "prompt_2903": {
+        "prompt": "A boy jumping on a brick patterned ramp on his skateboard. ",
+        "latency": 16.1180202960968
+    },
+    "prompt_2904": {
+        "prompt": "The group of three friends are sitting on a fallen tree in the woods.",
+        "latency": 16.965444564819336
+    },
+    "prompt_2905": {
+        "prompt": "The zebra is standing in the field with another zebra laying down in the background. ",
+        "latency": 17.50213074684143
+    },
+    "prompt_2906": {
+        "prompt": "A red skateboard with blue wheels on the floor with someones foot on it. ",
+        "latency": 15.530389785766602
+    },
+    "prompt_2907": {
+        "prompt": "A pile of pineapples and bananas are sitting in a market. ",
+        "latency": 16.809104681015015
+    },
+    "prompt_2908": {
+        "prompt": "A green plate filled with rice and a mixture of sauce on top of it.",
+        "latency": 15.502561330795288
+    },
+    "prompt_2909": {
+        "prompt": "A man is lacing his boots while several others are ready to ski.",
+        "latency": 18.536382913589478
+    },
+    "prompt_2910": {
+        "prompt": "Baseball player in blue and white uniform swinging at a ball. ",
+        "latency": 15.538846969604492
+    },
+    "prompt_2911": {
+        "prompt": "Assorted meal sitting on a plate with a white glass of milk.",
+        "latency": 17.262839555740356
+    },
+    "prompt_2912": {
+        "prompt": "Baseball players in action, one person dressed in green running while the others in white are looking and reaching toward the ball.",
+        "latency": 15.768167734146118
+    },
+    "prompt_2913": {
+        "prompt": "a big brown bear standing in an open field next to some rocks",
+        "latency": 15.897006511688232
+    },
+    "prompt_2914": {
+        "prompt": "a man in a black hat standing next to and  holding the reigns of a horse",
+        "latency": 18.225373029708862
+    },
+    "prompt_2915": {
+        "prompt": "A horse is grazing in a grassy field with a view of mountains.",
+        "latency": 14.213439464569092
+    },
+    "prompt_2916": {
+        "prompt": "A plate full of noodles and broccoli, next to a knife and fork.",
+        "latency": 15.403949499130249
+    },
+    "prompt_2917": {
+        "prompt": "A purple shelf withs bunches of ripe yellow bananas placed together.",
+        "latency": 15.541635990142822
+    },
+    "prompt_2918": {
+        "prompt": "A sandwich has cilantro, carrots, and other vegetables.",
+        "latency": 16.145743131637573
+    },
+    "prompt_2919": {
+        "prompt": "A polar bear in a polar bear enclosure at a zoo looking up. ",
+        "latency": 15.66835069656372
+    },
+    "prompt_2920": {
+        "prompt": "A plate with salad and a cut of meat and silverware laid on top.",
+        "latency": 15.181954860687256
+    },
+    "prompt_2921": {
+        "prompt": "A plate of flambeed bananas are sitting atop brown sugar and other garnish.",
+        "latency": 15.365992784500122
+    },
+    "prompt_2922": {
+        "prompt": "A group of women are sitting at a table with plates of food and chopsticks.",
+        "latency": 17.488349676132202
+    },
+    "prompt_2923": {
+        "prompt": "A big bowl filled with some pasta and meat and veggies.",
+        "latency": 15.775859355926514
+    },
+    "prompt_2924": {
+        "prompt": "A man holding a red frisbee while standing on lush green field.",
+        "latency": 15.680145740509033
+    },
+    "prompt_2925": {
+        "prompt": "A man holding a frisbee with one hand in the grass.",
+        "latency": 16.953063249588013
+    },
+    "prompt_2926": {
+        "prompt": "A group of people standing next to each other on top of a snow covered ground.",
+        "latency": 23.15133237838745
+    },
+    "prompt_2927": {
+        "prompt": "Two people standing in a yard with tree's and flowers.",
+        "latency": 16.39975070953369
+    },
+    "prompt_2928": {
+        "prompt": "a baseball game with a batter swinging the bat and fielder awaiting the ball",
+        "latency": 16.170050859451294
+    },
+    "prompt_2929": {
+        "prompt": "A cruise ship sits out in the water while a large grey building sits in background.",
+        "latency": 15.33774209022522
+    },
+    "prompt_2930": {
+        "prompt": "A number of action figures on the ground and two of them on skateboards. ",
+        "latency": 18.29983353614807
+    },
+    "prompt_2931": {
+        "prompt": "A white horse pulling a wagon while stopped on the side of the road. ",
+        "latency": 18.63772463798523
+    },
+    "prompt_2932": {
+        "prompt": "a woman standing on skiis while posing for the camera",
+        "latency": 16.352027654647827
+    },
+    "prompt_2933": {
+        "prompt": "two people standing on a paved sidewalk with skateboards",
+        "latency": 19.76774549484253
+    },
+    "prompt_2934": {
+        "prompt": "A large white horse pulling a trolley car down the street. ",
+        "latency": 17.77441143989563
+    },
+    "prompt_2935": {
+        "prompt": "a zebra standing in the foreground  and another zebra standing behind",
+        "latency": 17.624898195266724
+    },
+    "prompt_2936": {
+        "prompt": "A young man doing an axle grind on a piece of pipe in a park.",
+        "latency": 16.80655264854431
+    },
+    "prompt_2937": {
+        "prompt": "a young male in mid air flipping a skateboard off of a ramp",
+        "latency": 17.707984924316406
+    },
+    "prompt_2938": {
+        "prompt": "A guy is playing baseball while wearing a white uniform.",
+        "latency": 18.007263898849487
+    },
+    "prompt_2939": {
+        "prompt": "A group of baseball players standing on top of a field.",
+        "latency": 17.361804246902466
+    },
+    "prompt_2940": {
+        "prompt": "A male child swinging his bat at a ball, another child behind him as the catcher. ",
+        "latency": 15.873547554016113
+    },
+    "prompt_2941": {
+        "prompt": "A group of children sitting in the grass with two of them holding a Frisbee .",
+        "latency": 17.611720085144043
+    },
+    "prompt_2942": {
+        "prompt": "Two dogs, on wearing something heavy around its neck, run over the ground.",
+        "latency": 15.973576784133911
+    },
+    "prompt_2943": {
+        "prompt": "A smart phone sitting on top sitting on top of a wooden table.",
+        "latency": 15.96051836013794
+    },
+    "prompt_2944": {
+        "prompt": "a batter after he has hit a pitched ball before he is going to run",
+        "latency": 15.877110004425049
+    },
+    "prompt_2945": {
+        "prompt": "A brown horse laying in a field of lush vegetation.",
+        "latency": 15.646900177001953
+    },
+    "prompt_2946": {
+        "prompt": "A man riding a skateboard down a street in front of a red car.",
+        "latency": 18.174002647399902
+    },
+    "prompt_2947": {
+        "prompt": "A large open area of land that has several zebra of different sizes and warthogs near them.",
+        "latency": 14.721562385559082
+    },
+    "prompt_2948": {
+        "prompt": "the boy has on black sneakers and his trying to grab the frisbee",
+        "latency": 16.77983045578003
+    },
+    "prompt_2949": {
+        "prompt": "A zebra looking down at a grass and dirt filled ground.",
+        "latency": 16.416150331497192
+    },
+    "prompt_2950": {
+        "prompt": "A catcher with a catcher's mitt on squatting behind a baseball player.",
+        "latency": 16.09142565727234
+    },
+    "prompt_2951": {
+        "prompt": "A horse pulling a wagon behind itself near a fire hydrant.",
+        "latency": 17.83612608909607
+    },
+    "prompt_2952": {
+        "prompt": "Two people climbing up a mountain, getting ready to ski.",
+        "latency": 15.260850191116333
+    },
+    "prompt_2953": {
+        "prompt": "two men on different baseball teams getting ready for the next move. ",
+        "latency": 19.051978588104248
+    },
+    "prompt_2954": {
+        "prompt": "A man standing on top of a grass covered field with a frisbee.",
+        "latency": 14.84113597869873
+    },
+    "prompt_2955": {
+        "prompt": "One person is eating chilli and a grilled cheese and the other is having a sandwich and fries.",
+        "latency": 15.829832315444946
+    },
+    "prompt_2956": {
+        "prompt": "There is some salmon and broccoli with garlic on this plate.",
+        "latency": 15.212546110153198
+    },
+    "prompt_2957": {
+        "prompt": "A black and white photo of a man working a field with a team of horses.",
+        "latency": 14.426774024963379
+    },
+    "prompt_2958": {
+        "prompt": "A young girl rides her horse in the middle of a course.",
+        "latency": 15.717923164367676
+    },
+    "prompt_2959": {
+        "prompt": "A grassy field with various zebras standing next to each other.",
+        "latency": 15.316821098327637
+    },
+    "prompt_2960": {
+        "prompt": "A man walking on his skis in the snow with snow covered trees in the background.",
+        "latency": 15.164867877960205
+    },
+    "prompt_2961": {
+        "prompt": "A black and white cat laying next to a  black cat on a computer keyboard.",
+        "latency": 17.215306997299194
+    },
+    "prompt_2962": {
+        "prompt": "A flat bed cart with three large bunches of bananas and a tied lidded basket.",
+        "latency": 15.344756841659546
+    },
+    "prompt_2963": {
+        "prompt": "A skier is para-sailing in the snow with other skiers.",
+        "latency": 17.189920902252197
+    },
+    "prompt_2964": {
+        "prompt": "A boy in a blue baseball uniform running to tag out a boy in a red uniform.",
+        "latency": 16.637803554534912
+    },
+    "prompt_2965": {
+        "prompt": "A woman posing on skis with a ski lift in the background.",
+        "latency": 16.829713582992554
+    },
+    "prompt_2966": {
+        "prompt": "This is a picture of skiers enjoying their day on a mountain.",
+        "latency": 14.620041370391846
+    },
+    "prompt_2967": {
+        "prompt": "A guy wear a short khaki pants and brown tee is on a skate board.",
+        "latency": 16.479952573776245
+    },
+    "prompt_2968": {
+        "prompt": "A woman touching a plastic container sitting on a table.",
+        "latency": 17.450457334518433
+    },
+    "prompt_2969": {
+        "prompt": "A man wearing a white shirt and standing between two baseball players.",
+        "latency": 17.014543533325195
+    },
+    "prompt_2970": {
+        "prompt": "a female standing beside a wooden post with a fake background",
+        "latency": 16.74581813812256
+    },
+    "prompt_2971": {
+        "prompt": "Two ladies are riding in a wagon being pulled by a horse. ",
+        "latency": 17.597851991653442
+    },
+    "prompt_2972": {
+        "prompt": "A couple of people riding a pair of skis down a snow covered slope.",
+        "latency": 14.75376009941101
+    },
+    "prompt_2973": {
+        "prompt": "Boys in a school uniform skateboarding on a concrete ramp.",
+        "latency": 17.640465259552002
+    },
+    "prompt_2974": {
+        "prompt": "Two skiers taking in the view of the mountain range on a cloudy day. ",
+        "latency": 17.38103175163269
+    },
+    "prompt_2975": {
+        "prompt": "a yellow and white plate with a piece of chocolate cake",
+        "latency": 16.077706336975098
+    },
+    "prompt_2976": {
+        "prompt": "A bear standing on rocks and his ears are up. ",
+        "latency": 17.789973735809326
+    },
+    "prompt_2977": {
+        "prompt": "A brown bear walking across a forest surrounded by trees..",
+        "latency": 16.163697957992554
+    },
+    "prompt_2978": {
+        "prompt": "Pitcher in the baseball game getting ready to throw the ball",
+        "latency": 16.31982660293579
+    },
+    "prompt_2979": {
+        "prompt": "A dog is next to a tree and a bunch of people are walking up to colored umbrellas and some have rested under a tree.",
+        "latency": 16.671863555908203
+    },
+    "prompt_2980": {
+        "prompt": "The young skateboarder is riding on a cement driveway.",
+        "latency": 14.449175596237183
+    },
+    "prompt_2981": {
+        "prompt": "A trio of zebra's leaned over eating hay on the ground.",
+        "latency": 17.425824880599976
+    },
+    "prompt_2982": {
+        "prompt": "Couple of people walking up the snowy mountain with skis",
+        "latency": 17.52487874031067
+    },
+    "prompt_2983": {
+        "prompt": "There are diced vegetables inside a saucepan on top of the stove.",
+        "latency": 14.90536618232727
+    },
+    "prompt_2984": {
+        "prompt": "a man standing on rocks near a man riding horses on a trail in the woods",
+        "latency": 15.015671968460083
+    },
+    "prompt_2985": {
+        "prompt": "A group of young men standing on top of a soccer field.",
+        "latency": 14.91257119178772
+    },
+    "prompt_2986": {
+        "prompt": "A brown bear enjoying the sun and a little water at the zoo",
+        "latency": 14.86744213104248
+    },
+    "prompt_2987": {
+        "prompt": "A plate of cooked noodles, a fork, and a knife is displayed. ",
+        "latency": 15.818385362625122
+    },
+    "prompt_2988": {
+        "prompt": "Belgium waffle loaded with bananas topped with powdered sugar with syrup and more fruit as a garnish.",
+        "latency": 15.653221368789673
+    },
+    "prompt_2989": {
+        "prompt": "A portion of a pizza is sitting on a tray and someone is holding a fork and a knife.",
+        "latency": 15.91334319114685
+    },
+    "prompt_2990": {
+        "prompt": "three people are standing under the arch for a ski race",
+        "latency": 15.66076374053955
+    },
+    "prompt_2991": {
+        "prompt": "A person with skis in the air on snow covered mountains. ",
+        "latency": 15.53474497795105
+    },
+    "prompt_2992": {
+        "prompt": "Skier in green coat plowing through powdered snow on slope.",
+        "latency": 16.141684770584106
+    },
+    "prompt_2993": {
+        "prompt": "A pan is filled with broccoli, peppers, and diced sausage.",
+        "latency": 16.785846948623657
+    },
+    "prompt_2994": {
+        "prompt": "A plate topped with baby carrots and beans next to a  peeler.",
+        "latency": 15.15546464920044
+    },
+    "prompt_2995": {
+        "prompt": "Baseball player runs toward base while others stand around",
+        "latency": 18.366828680038452
+    },
+    "prompt_2996": {
+        "prompt": "A group of zebra standing on top of a grass covered hillside.",
+        "latency": 14.976367235183716
+    },
+    "prompt_2997": {
+        "prompt": "A man on skis with ski poles has just descended the mountain. ",
+        "latency": 16.3585946559906
+    },
+    "prompt_2998": {
+        "prompt": "Bananas and apples are being sold at the market.",
+        "latency": 16.164677619934082
+    },
+    "prompt_2999": {
+        "prompt": "Three people are talking and laughing while in the stable with a horse.",
+        "latency": 16.86824321746826
+    },
+    "prompt_3000": {
+        "prompt": "A display in a grocery store filled with lots of fresh fruits.",
+        "latency": 16.172894716262817
+    },
+    "prompt_3001": {
+        "prompt": "a clock that looks like an apple a penguin and a potted plant",
+        "latency": 16.795272827148438
+    },
+    "prompt_3002": {
+        "prompt": "The skier is coming down the slope on a very snowy day.",
+        "latency": 15.16499376296997
+    },
+    "prompt_3003": {
+        "prompt": "A zebra standing next to a  zebra laying on the ground.",
+        "latency": 16.887887239456177
+    },
+    "prompt_3004": {
+        "prompt": "A child reaching their hand up to a box filled with apples.",
+        "latency": 15.099341630935669
+    },
+    "prompt_3005": {
+        "prompt": "Planters with growing broccoli in them on the ground ",
+        "latency": 16.02900218963623
+    },
+    "prompt_3006": {
+        "prompt": "two men in the middle of the woods playing frisbee golf.",
+        "latency": 17.498553037643433
+    },
+    "prompt_3007": {
+        "prompt": "Young skateboarder displaying skills on sidewalk near field.",
+        "latency": 16.506881952285767
+    },
+    "prompt_3008": {
+        "prompt": "Pork and vegetables prepared on a cutting board and counter.",
+        "latency": 15.398707151412964
+    },
+    "prompt_3009": {
+        "prompt": "Zebras standing near each other with their heads near the ground.",
+        "latency": 23.02713704109192
+    },
+    "prompt_3010": {
+        "prompt": "A herd of three horses standing on top of a green field.",
+        "latency": 18.356648206710815
+    },
+    "prompt_3011": {
+        "prompt": "Two yellow fruits hanging on branches full of leaves. ",
+        "latency": 15.994404315948486
+    },
+    "prompt_3012": {
+        "prompt": "A man sitting in a restaurant photographs a sandwich.",
+        "latency": 18.76182222366333
+    },
+    "prompt_3013": {
+        "prompt": "A skateboarder tips his board up against the base of a sculpture.",
+        "latency": 16.928004264831543
+    },
+    "prompt_3014": {
+        "prompt": "zebras race along in a grassy field in front of some trees",
+        "latency": 17.02862524986267
+    },
+    "prompt_3015": {
+        "prompt": "A plate of food sitting on a table, it appears to be a salad.",
+        "latency": 14.753633499145508
+    },
+    "prompt_3016": {
+        "prompt": "Three men jumping for a frisbee while others play around them.",
+        "latency": 19.265461683273315
+    },
+    "prompt_3017": {
+        "prompt": "A female equestrian on a brown horse, jumping over a double hurdle.",
+        "latency": 16.97833752632141
+    },
+    "prompt_3018": {
+        "prompt": "A zebra standing on land and eating grass near a body of water that is behind it.",
+        "latency": 16.526922941207886
+    },
+    "prompt_3019": {
+        "prompt": "A baseball player pitching a ball on top of a field.",
+        "latency": 16.29384994506836
+    },
+    "prompt_3020": {
+        "prompt": "A person riding on the back of a horse walking across a field.",
+        "latency": 15.062371015548706
+    },
+    "prompt_3021": {
+        "prompt": "A brown fuzzy bear standing in front of a leaf filled tree.",
+        "latency": 15.367300510406494
+    },
+    "prompt_3022": {
+        "prompt": "A bunch of men are running to catch the frisbee that is thrown.",
+        "latency": 17.188323736190796
+    },
+    "prompt_3023": {
+        "prompt": "An athlete is that in the air during a snow ski long jump.",
+        "latency": 16.25470495223999
+    },
+    "prompt_3024": {
+        "prompt": "A black bear that is standing in the middle of a grassy area.",
+        "latency": 19.403416395187378
+    },
+    "prompt_3025": {
+        "prompt": "Performers holding sticks in front of horses at a circus with audience. ",
+        "latency": 17.9193274974823
+    },
+    "prompt_3026": {
+        "prompt": "a male skateboarder in a white shirt is doing a trick",
+        "latency": 15.80718207359314
+    },
+    "prompt_3027": {
+        "prompt": "A man sliding into home plate as another catches a baseball.",
+        "latency": 15.798245191574097
+    },
+    "prompt_3028": {
+        "prompt": "A young man in a pinstriped baseball uniform wearing catchers gear standing at home plate.",
+        "latency": 16.171908140182495
+    },
+    "prompt_3029": {
+        "prompt": "A group of young people standing on top of a snow covered slope.",
+        "latency": 18.466089725494385
+    },
+    "prompt_3030": {
+        "prompt": "A woman talking on the phone in front of a person selling apples.",
+        "latency": 18.08376383781433
+    },
+    "prompt_3031": {
+        "prompt": "A lone Zebra near a rock with large rock face in background.",
+        "latency": 14.948362588882446
+    },
+    "prompt_3032": {
+        "prompt": "A large open field of dirt and yellow grass with a person riding a horse.",
+        "latency": 13.97955060005188
+    },
+    "prompt_3033": {
+        "prompt": "Three small dishes have different kinds of vegetables. ",
+        "latency": 16.827014923095703
+    },
+    "prompt_3034": {
+        "prompt": "A woman and kids on a beach with a large rocky area in background.",
+        "latency": 15.917893648147583
+    },
+    "prompt_3035": {
+        "prompt": "A person with a skate board going getting ready to go down a ramp.",
+        "latency": 13.937509775161743
+    },
+    "prompt_3036": {
+        "prompt": "A young man is standing behind a counter, carefully looking over an array of food preparation equipment and related items. ",
+        "latency": 17.517493724822998
+    },
+    "prompt_3037": {
+        "prompt": "A white horse is standing near a riding field.",
+        "latency": 16.89176106452942
+    },
+    "prompt_3038": {
+        "prompt": "The people are waiting to ski on the snowy mountain.",
+        "latency": 16.98396134376526
+    },
+    "prompt_3039": {
+        "prompt": "A baseball player swings the bat while the catcher & umpire look on",
+        "latency": 17.855059146881104
+    },
+    "prompt_3040": {
+        "prompt": "A banana sitting next to a dollop of butterscotch.",
+        "latency": 17.06505060195923
+    },
+    "prompt_3041": {
+        "prompt": "A rear view of two zebras with their heads up against a fence.",
+        "latency": 18.326008796691895
+    },
+    "prompt_3042": {
+        "prompt": "A cross country skier listens to music as she glides across the snow.",
+        "latency": 16.166841506958008
+    },
+    "prompt_3043": {
+        "prompt": "A guy is having fun skiing down the slope of the hill.",
+        "latency": 16.593000888824463
+    },
+    "prompt_3044": {
+        "prompt": "An incredible picture of an individual in the stillness movement. \n",
+        "latency": 17.144196271896362
+    },
+    "prompt_3045": {
+        "prompt": "A man standing on his skiesat night with a light  on his head. a city is close behind him.",
+        "latency": 14.203254461288452
+    },
+    "prompt_3046": {
+        "prompt": "A young man that is having some wine and something to eat. ",
+        "latency": 16.408737897872925
+    },
+    "prompt_3047": {
+        "prompt": "A little league baseball player is getting ready hit the ball with his bat. ",
+        "latency": 16.429465293884277
+    },
+    "prompt_3048": {
+        "prompt": "A child skateboards down the middle of a street",
+        "latency": 15.810721397399902
+    },
+    "prompt_3049": {
+        "prompt": "a zebra bending down eating something off the ground",
+        "latency": 16.148240089416504
+    },
+    "prompt_3050": {
+        "prompt": "A close up shot of some apples pears and bananas on a table.",
+        "latency": 15.368069171905518
+    },
+    "prompt_3051": {
+        "prompt": "a man standing on a pair of skis and coming down a snow covered hill",
+        "latency": 15.19467806816101
+    },
+    "prompt_3052": {
+        "prompt": "A person trying to throw a frisbee and another trying to block the throw.",
+        "latency": 15.19888162612915
+    },
+    "prompt_3053": {
+        "prompt": "Looking down at a bowl of white rice, broccoli and a vegetable dish",
+        "latency": 14.623982429504395
+    },
+    "prompt_3054": {
+        "prompt": "Blurry photograph of a woman skiing down a slope",
+        "latency": 16.38645839691162
+    },
+    "prompt_3055": {
+        "prompt": "Image at a zoo of a giraffe near a zebra pen with both animals eating.",
+        "latency": 17.043455362319946
+    },
+    "prompt_3056": {
+        "prompt": "A BIG HAMBURGER SITTING ON TOP OF A COUNTER AND A GLASS OF WINE ",
+        "latency": 16.65003776550293
+    },
+    "prompt_3057": {
+        "prompt": "A group of 20 small photos in a collage together, with each photo containing a carrot in it.",
+        "latency": 16.59292697906494
+    },
+    "prompt_3058": {
+        "prompt": "A group of people are skiing and snowboarding down a mountain.",
+        "latency": 14.323568344116211
+    },
+    "prompt_3059": {
+        "prompt": "A man seems to be disguised as Marty McFly here, from Back to the Future. ",
+        "latency": 16.99553608894348
+    },
+    "prompt_3060": {
+        "prompt": "Someone is holding a veggie with a bite already taken from it. ",
+        "latency": 14.19661259651184
+    },
+    "prompt_3061": {
+        "prompt": "A broccoli plant growing in a garden is dwarfed by it's leaves.",
+        "latency": 15.955855369567871
+    },
+    "prompt_3062": {
+        "prompt": "a man leaning over as he reaches for a white frisbee",
+        "latency": 16.50452494621277
+    },
+    "prompt_3063": {
+        "prompt": "Horse in fenced pasture with others grazing on grasses.",
+        "latency": 15.528225660324097
+    },
+    "prompt_3064": {
+        "prompt": "Two baseball players are having fun practicing in the outfield.",
+        "latency": 17.993544101715088
+    },
+    "prompt_3065": {
+        "prompt": "An Indian woman stands in front of a man selling his fruit",
+        "latency": 16.81049942970276
+    },
+    "prompt_3066": {
+        "prompt": "Someone about to cut and birthday cake with blue and yellow frosting. ",
+        "latency": 17.568941116333008
+    },
+    "prompt_3067": {
+        "prompt": "Six bananas and a red fruit make an artistic sight paired with a blue background.",
+        "latency": 16.91610288619995
+    },
+    "prompt_3068": {
+        "prompt": "The woman has her arms outstretched with the frisbee in front of her. ",
+        "latency": 14.136784791946411
+    },
+    "prompt_3069": {
+        "prompt": "A mixed breed dog in a red collar pants in the heat outdoors.",
+        "latency": 16.975240468978882
+    },
+    "prompt_3070": {
+        "prompt": "Two irking horses pulling a piece of equipment guided by a man.",
+        "latency": 18.579631328582764
+    },
+    "prompt_3071": {
+        "prompt": "A painting of a bowl of fruit sitting in front of another painting,",
+        "latency": 15.38181209564209
+    },
+    "prompt_3072": {
+        "prompt": "a dog laying next to some colorful blankets on a white bed ",
+        "latency": 15.618021965026855
+    },
+    "prompt_3073": {
+        "prompt": "a group of ball players playing on a field in front of an audience",
+        "latency": 16.793102741241455
+    },
+    "prompt_3074": {
+        "prompt": "A slice of brown cake possibly a carrot cake next to a slice of grapefruit.",
+        "latency": 15.4803946018219
+    },
+    "prompt_3075": {
+        "prompt": "Three teddy bears, each a different color, snuggling together.",
+        "latency": 16.395044803619385
+    },
+    "prompt_3076": {
+        "prompt": "A cross country skier on the slopes on a sunny day",
+        "latency": 14.456376552581787
+    },
+    "prompt_3077": {
+        "prompt": "The person was standing on the snow skiing course in his skis.",
+        "latency": 16.683478355407715
+    },
+    "prompt_3078": {
+        "prompt": "Young adults riding on city sidewalk with skateboards.",
+        "latency": 17.196616172790527
+    },
+    "prompt_3079": {
+        "prompt": "A woman in a short red dress is holding her skateboard while getting food from a take out window.",
+        "latency": 15.797520875930786
+    },
+    "prompt_3080": {
+        "prompt": "A person walking in the snow with skis on their back.",
+        "latency": 17.114930391311646
+    },
+    "prompt_3081": {
+        "prompt": "A picture of a group of people surrounded by bananas.",
+        "latency": 13.967156887054443
+    },
+    "prompt_3082": {
+        "prompt": "A large tray is filled with broccoli and chunks of cheese.",
+        "latency": 16.568681716918945
+    },
+    "prompt_3083": {
+        "prompt": "A tall banana plant with bunches of green bananas.",
+        "latency": 16.446054935455322
+    },
+    "prompt_3084": {
+        "prompt": "Two dogs in a grassy field with one dog holding an orange disc.",
+        "latency": 16.884689807891846
+    },
+    "prompt_3085": {
+        "prompt": "A man in white shorts jumping in the air to catch a green Frisbee. ",
+        "latency": 15.327697992324829
+    },
+    "prompt_3086": {
+        "prompt": "A plastic bento box filled with rice, vegetables and fresh fruit",
+        "latency": 16.641911029815674
+    },
+    "prompt_3087": {
+        "prompt": "The shirtless men are riding horses through the lake. ",
+        "latency": 14.84369969367981
+    },
+    "prompt_3088": {
+        "prompt": "A green fruit tree yields fruit not yet ready for harvest.",
+        "latency": 16.39321279525757
+    },
+    "prompt_3089": {
+        "prompt": "A plate holds a good size portion of a cooked, mixed dish that includes broccoli and pasta. ",
+        "latency": 13.911530256271362
+    },
+    "prompt_3090": {
+        "prompt": "There is a green Frisbee in the air with red chairs in the background.",
+        "latency": 16.848289728164673
+    },
+    "prompt_3091": {
+        "prompt": "A skateboarded is going up a jump with their skateboard.",
+        "latency": 13.806290864944458
+    },
+    "prompt_3092": {
+        "prompt": "two zebras standing by each other and some plants ",
+        "latency": 15.743120431900024
+    },
+    "prompt_3093": {
+        "prompt": "This tray includes several different items for a full breakfast.",
+        "latency": 16.232323169708252
+    },
+    "prompt_3094": {
+        "prompt": "One naval orange is whole, another cut in half and three orange pieces on the right.",
+        "latency": 15.171067714691162
+    },
+    "prompt_3095": {
+        "prompt": "A horse walking in a field with trees in the background.",
+        "latency": 15.798017263412476
+    },
+    "prompt_3096": {
+        "prompt": "Many people are skiing down a hill that is full of snow.",
+        "latency": 20.284602403640747
+    },
+    "prompt_3097": {
+        "prompt": "Several people in skis standing on a snow covered incline.",
+        "latency": 14.74940800666809
+    },
+    "prompt_3098": {
+        "prompt": "A man in a racing bib in his skis and a beanie. ",
+        "latency": 17.087268352508545
+    },
+    "prompt_3099": {
+        "prompt": "Three zebras munching on grass in their natural habitat.",
+        "latency": 16.16332769393921
+    },
+    "prompt_3100": {
+        "prompt": "Young boy on skateboard riding near circular drive.",
+        "latency": 15.995320558547974
+    },
+    "prompt_3101": {
+        "prompt": "A sandwich on a plate with a side of fruit in a bowl and a fork lying next to it.",
+        "latency": 16.210634231567383
+    },
+    "prompt_3102": {
+        "prompt": "A group of carrots with an organically grown strip tag around them.",
+        "latency": 15.830795288085938
+    },
+    "prompt_3103": {
+        "prompt": "Two horses standing behind a wire fence on the grass.",
+        "latency": 17.06907629966736
+    },
+    "prompt_3104": {
+        "prompt": "A plate of chicken and vegetables sits next to a bowl of rice. ",
+        "latency": 15.349497556686401
+    },
+    "prompt_3105": {
+        "prompt": "Two bears are interrupted on their walk by a surprise picture.",
+        "latency": 17.958954334259033
+    },
+    "prompt_3106": {
+        "prompt": "a pan full of vegetables slice up small with a some seasoning on top",
+        "latency": 14.617736101150513
+    },
+    "prompt_3107": {
+        "prompt": "a man on a skateboard in mid air going over a cone in some dirt",
+        "latency": 15.92558217048645
+    },
+    "prompt_3108": {
+        "prompt": "The skateboarder is jumping over the railing in a park.",
+        "latency": 14.413374900817871
+    },
+    "prompt_3109": {
+        "prompt": "A drink with ice and straws in it with a orange slice on the edge of the glass. ",
+        "latency": 15.062700033187866
+    },
+    "prompt_3110": {
+        "prompt": "The two bears are wondering about the point of the camera.",
+        "latency": 18.361517667770386
+    },
+    "prompt_3111": {
+        "prompt": "A black bear is walking on a open field next to some trees.",
+        "latency": 14.98957633972168
+    },
+    "prompt_3112": {
+        "prompt": "A young person ridding a horse jumps a gate in a competition.",
+        "latency": 15.224926710128784
+    },
+    "prompt_3113": {
+        "prompt": "A partial sliced open piece of bread with some hotdogs in the middle",
+        "latency": 17.154963970184326
+    },
+    "prompt_3114": {
+        "prompt": "some colorful carrots sitting on a table next to some other veggies",
+        "latency": 14.862967014312744
+    },
+    "prompt_3115": {
+        "prompt": "A dog walking on the beach with a frizzbe in his month.",
+        "latency": 14.839572191238403
+    },
+    "prompt_3116": {
+        "prompt": "here is a large tray of vegetables sitting on a counter top.",
+        "latency": 14.976307392120361
+    },
+    "prompt_3117": {
+        "prompt": "A man skiing down a mountain side following a trail way. ",
+        "latency": 15.277725458145142
+    },
+    "prompt_3118": {
+        "prompt": "A man is standing on top of two horses and holding the reigns.",
+        "latency": 17.710500240325928
+    },
+    "prompt_3119": {
+        "prompt": "A close-up photograph of red apples with other fruit in the background.",
+        "latency": 15.409231901168823
+    },
+    "prompt_3120": {
+        "prompt": "A baseball player throws a pitch while others watch from the dugout.",
+        "latency": 18.38800859451294
+    },
+    "prompt_3121": {
+        "prompt": "Skier with a red jacket on going down the side of a mountain. ",
+        "latency": 16.565007209777832
+    },
+    "prompt_3122": {
+        "prompt": "A boy riding on a horse that is crossing over a board.",
+        "latency": 17.81531810760498
+    },
+    "prompt_3123": {
+        "prompt": "A smiling skier stands at the top of hill adjacent to trees. ",
+        "latency": 15.988082647323608
+    },
+    "prompt_3124": {
+        "prompt": "a computer desk with a laptop another monitor with a keyboard and mouse",
+        "latency": 17.421878576278687
+    }
+}

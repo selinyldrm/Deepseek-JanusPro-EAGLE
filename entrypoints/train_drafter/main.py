@@ -13,6 +13,7 @@ from safetensors import safe_open
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from transformers import get_linear_schedule_with_warmup
+import torch.nn.functional as F
 
 from models.configs.configs import EConfig
 
@@ -127,6 +128,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             if train_mode:
                 optimizer.zero_grad()
             predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
+            # print("predict shape: ", predict.shape)
             
             with torch.no_grad():
                 target_head = head(data["target"])
@@ -144,7 +146,21 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                     
                 target_p = nn.Softmax(dim=2)(target_head).detach()
                 
-            
+           
+            n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
+            cosine_sim_matrix = torch.bmm(n_target_logits, n_target_logits.transpose(1, 2))
+            B, L, _ = cosine_sim_matrix.shape
+
+            thresh = 0.625
+            # build upper-triangular mask (i < j)
+            upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
+            upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
+
+            # combine with threshold condition
+            logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
+            token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
+
+
             out_head = head(predict)
             if args.cfg_loss:
                 out_head = out_head[::2] + args.cfg_scale * (out_head[::2] - out_head[1::2])
@@ -156,8 +172,12 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             else:
                 p_loss_mask = loss_mask
 
+            weight = 4.0
+            weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
+
             plogp = target_p * out_logp
-            ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
+            ploss = -torch.sum(torch.sum(weighted_mask * plogp, 2)) / (weighted_mask.sum() + 1e-5)
+
             vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
             loss = vloss + args.p_w * ploss
 
@@ -312,7 +332,11 @@ def run_train_drafter(args):
             os.makedirs(args.save_dir)
 
     config = EConfig.from_pretrained(args.config_path)
+    # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
     model = Model(config, load_emb=True, path=args.base_path)
+    # from safetensors.torch import load_file
+    # state_dict = load_file(ckpt_path)
+    # model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))
@@ -330,7 +354,7 @@ def run_train_drafter(args):
             model, head, optimizer, train_loader, test_loader
         )
  
-    for epoch in range(args.num_epochs):
+    for epoch in range(0, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3\
             = run_epoch(args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, train_mode=True)
         

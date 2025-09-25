@@ -210,7 +210,7 @@ def run_eval_fid_clip(opt):
                                   shuffle=False,
                                   pin_memory=True,
                                   drop_last=False,
-                                  num_workers=1)
+                                  num_workers=8)
 
     clip_score = compute_clip_score(dset2_dataloader, clip_model=opt.clip_model4eval, how_many=opt.how_many)
     print(f"CLIP score: {clip_score}")

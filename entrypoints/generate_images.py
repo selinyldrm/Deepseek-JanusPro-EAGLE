@@ -188,16 +188,15 @@ def load_prompts(args):
     #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
     #     pass
 
-    # #benchmark 5 prompts only
-    # if args.multigpu :
-    #     with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
-    #         data = json.load(f)
-    # else:
-        # with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
-        #     data = json.load(f)
+    if args.multigpu:
+        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+            data = json.load(f)
+    else:
+        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+            data = json.load(f)
         
-        #     # Extract prompt fields
-#       prompts = [entry["prompt"] for entry in data.values()]
+    # Extract prompt fields 
+    prompts = [entry["prompt"] for entry in data.values()]
     
     # if args.multigpu :
     #     return prompts[:100]
@@ -299,7 +298,7 @@ def run_generate_image(args):
         if batch_end[-1] > len(prompts):
             batch_end[-1] = len(prompts)
         import torch.multiprocessing as mp
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 
         mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=8, join=True)
     else:

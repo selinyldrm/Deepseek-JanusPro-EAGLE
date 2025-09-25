@@ -245,6 +245,7 @@ class FlexARInferenceSolver:
 
         self.dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[precision]
        
+        print("base_model_path: ", model_path, "ea_model_path: ", drafter_path)
         self.model = EaLumina_mGPT.from_pretrained(
             base_model_path=model_path,
             ea_model_path=drafter_path,

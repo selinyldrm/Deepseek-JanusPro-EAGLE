@@ -46,7 +46,6 @@ class SupervisedDataset(Dataset):
             self.text_base_path = os.path.join(data_path, "text_features")
             self.uncond_embedding = uncond_embedding
             self.cond_length = uncond_embedding.shape[0]
-            print("joined path: ", os.path.join(self.code_base_path, self.code_data[0]))
             input_ids = np.load(os.path.join(self.code_base_path, self.code_data[0]))
             input_ids = torch.from_numpy(input_ids).long()
             self.input_length = input_ids.shape[1]
@@ -128,8 +127,8 @@ def generate_data(model, data, model_type):
         return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_outputs.hidden_states[-1].cpu()[0],
                 "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_outputs.hidden_states[-1].cpu()[0]}
     elif model_type == "anole":
-        prompt_token_ids = data["prompt_token_ids"]
-        out_token_ids = data["out_token_ids"]
+        prompt_token_ids = data["prompt_token_ids"] # input ids (tokenized caption)
+        out_token_ids = data["out_token_ids"] # tokenized images (codebook tokens for images)
 
         cond_input_ids = torch.cat([prompt_token_ids, torch.tensor([[8710, 8197]]), out_token_ids], dim=-1)
         cond_outputs = model(input_ids=cond_input_ids.cuda(), output_hidden_states=True)

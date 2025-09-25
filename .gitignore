@@ -7,5 +7,5 @@ __pycache__/**
 *.pyc
 *.npy
 *.bin
-/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/llamagen2_drafter
+/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/**
 wandb/

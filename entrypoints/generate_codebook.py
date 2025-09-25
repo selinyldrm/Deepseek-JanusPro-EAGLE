@@ -16,8 +16,8 @@ def run_generate_codebook(args):
     if args.model == "lumina_mgpt":
         from models.base_models.lumina_mgpt.chameleon_vae_ori.vqgan import VQModel
         
-        cfg_path = "ckpts/lumina_mgpt/chameleon/tokenizer/vqgan.yaml"
-        ckpt_path = "ckpts/lumina_mgpt/chameleon/tokenizer/vqgan.ckpt"
+        cfg_path = "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.yaml"
+        ckpt_path = "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt"
         with open(cfg_path) as f:
             config = yaml.safe_load(f)
         
@@ -30,8 +30,8 @@ def run_generate_codebook(args):
     elif args.model == "anole":
         from models.base_models.anole.chameleon_vae_ori.vqgan import VQModel
         
-        cfg_path = "ckpts/anole/chameleon/tokenizer/vqgan.yaml"
-        ckpt_path = "ckpts/anole/chameleon/tokenizer/vqgan.ckpt"
+        cfg_path = "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.yaml"
+        ckpt_path = "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt"
         with open(cfg_path) as f:
             config = yaml.safe_load(f)
             
