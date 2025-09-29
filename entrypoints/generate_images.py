@@ -160,16 +160,16 @@ def load_model(args):
 
 def load_prompts(args):
     prompts = []
-    # if args.prompt == "PartiPrompts":
-    #     with open('data/prompts/PartiPrompts.tsv', 'r') as f:
-    #         tsv_reader = csv.DictReader(f, delimiter='\t')
-    #         for row in tsv_reader:
-    #             prompts.append(row['Prompt'])
-    # elif args.prompt == "MSCOCO2017Val":
-    #     with open('data/prompts/captions_val2017_longest.json', 'r') as f:
-    #         captions = json.load(f)
-    #         for caption in captions:
-    #             prompts.append(caption)
+    if args.prompt == "PartiPrompts":
+        with open('data/prompts/PartiPrompts.tsv', 'r') as f:
+            tsv_reader = csv.DictReader(f, delimiter='\t')
+            for row in tsv_reader:
+                prompts.append(row['Prompt'])
+    elif args.prompt == "MSCOCO2017Val":
+        with open('data/prompts/captions_val2017_longest.json', 'r') as f:
+            captions = json.load(f)
+            for caption in captions:
+                prompts.append(caption)
     
 
     # if args.slice is not None:
@@ -188,15 +188,15 @@ def load_prompts(args):
     #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
     #     pass
 
-    if args.multigpu:
-        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
-            data = json.load(f)
-    else:
-        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
-            data = json.load(f)
+    # if args.multigpu:
+    #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+    #         data = json.load(f)
+    # else:
+    #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+    #         data = json.load(f)
         
-    # Extract prompt fields 
-    prompts = [entry["prompt"] for entry in data.values()]
+    # # # Extract prompt fields 
+    # prompts = [entry["prompt"] for entry in data.values()]
     
     # if args.multigpu :
     #     return prompts[:100]

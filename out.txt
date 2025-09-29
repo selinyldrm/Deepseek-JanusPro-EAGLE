@@ -1,0 +1,29 @@
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+Starting worker for prompts 52 to 65 on Rank 4
+Starting worker for prompts 78 to 91 on Rank 6
+Starting worker for prompts 0 to 13 on Rank 0
+Starting worker for prompts 39 to 52 on Rank 3
+Starting worker for prompts 91 to 100 on Rank 7
+Starting worker for prompts 26 to 39 on Rank 2
+Starting worker for prompts 13 to 26 on Rank 1
+Starting worker for prompts 65 to 78 on Rank 5
+generate time=29.59011220932007 seconds
+generate time=28.598840713500977 seconds
+generate time=27.229506731033325 seconds
+generate time=28.36808490753174 seconds
+generate time=22.29025888442993 seconds
+generate time=23.55112624168396 seconds
+generate time=24.057666778564453 seconds
+generate time=24.205492734909058 seconds
+generate time=26.025942087173462 seconds
+generate time=23.564680576324463 seconds
+generate time=25.742337465286255 seconds
+generate time=22.973585605621338 seconds
+generate time=27.120741844177246 seconds

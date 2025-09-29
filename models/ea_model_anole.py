@@ -704,8 +704,8 @@ class EaModel(nn.Module):
                                 id1,id2, sim_score = trpl
                                 if id1 == curr_tree_node_idx:
                                     similar_xi = tree_candidates[0][id2]
-                                    if sim_score > 0.5:
-                                        print("id2: ", id2, " r: ", r , " sim_score: ", sim_score, " px: ", px, " new +px: ", r * sim_score)
+                                    if sim_score > 0.9:
+                                        # print("id2: ", id2, " r: ", r , " sim_score: ", sim_score, " px: ", px, " new +px: ", r * sim_score)
                                         # px += r * gtp[similar_xi]
                                         px += r * sim_score                                    
                                     # print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
