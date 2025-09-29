@@ -1,8 +1,15 @@
 import argparse
 import os
+import sys
 import json
 import torch
 import wandb
+
+# Add parent directory to Python path to find models module
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from tqdm import tqdm
 from accelerate import Accelerator
@@ -122,7 +129,7 @@ def log_metrics(optimizer, plosses, vloss, acces, loss_weights, correct, total, 
 
     # Log top-k accuracies
     for id, i in enumerate(top_3acc):
-        logdict[f'{phase}/top_{id + 1}_acc'] = i.item() / total if total > 0 else 0
+        logdict[f'{phase}/top_{id + 1}_acc'] = i / total if total > 0 else 0
         
     if wandb_instance:
         wandb_instance.log(logdict)
@@ -146,7 +153,6 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 
             # Eagle 3 forward pass returns multiple losses and accuracies
             plosses, vlosses, acces = model(
-                data['hidden_states'],
                 input_ids=data["input_ids"], 
                 attention_mask=data["attention_mask"],
                 loss_mask=data["loss_mask"]
@@ -206,6 +212,9 @@ def run_train_drafter(args):
     if args.cfg_loss and not args.coupled:
         raise ValueError("--cfg_loss can not be activated without --coupled.")
 
+    # Enable anomaly detection to catch gradient computation issues early
+    torch.autograd.set_detect_anomaly(True)
+
     set_seed(0)
     accelerator = Accelerator(
                     mixed_precision='bf16',
@@ -213,7 +222,7 @@ def run_train_drafter(args):
     
     if accelerator.is_main_process:
         if args.wandb:
-            wandb.login(key="726be770e2a351a53a5aab7e7f7772dfc603a233")
+            wandb.login(key="4963e169aaf4e53eb530372b2b28384bb525d1e7")
 
         run_name = f"{args.model}_lr{args.lr}_p_w{args.p_w}_bsz{args.bs}_gradacc_{args.gradient_accumulation_steps}"
         run_name += f"_epochs{args.num_epochs}_length{args.length}"

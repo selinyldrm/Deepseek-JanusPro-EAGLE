@@ -186,35 +186,65 @@ def precompute_freqs_cis_2d(grid_size, n_elem, rope_base=10000, cls_token_num=12
     """
     Precompute frequencies for 2D RoPE as used in LlamaGen
     """
-    # 1D RoPE
+    # 1D RoPE - generates n_elem//2 complex frequencies for n_elem real dimensions
     def precompute_freqs_cis_1d(seq_len, n_elem, base=10000):
-        freqs = 1.0 / (base ** (torch.arange(0, n_elem, 2)[: (n_elem // 2)].float() / n_elem))
+        freqs = 1.0 / (base ** (torch.arange(0, n_elem, 2).float() / n_elem))
         t = torch.arange(seq_len, device=freqs.device)
         freqs = torch.outer(t, freqs).float()
         freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
         return freqs_cis
 
-    # 2D RoPE
-    freqs_cis_h = precompute_freqs_cis_1d(grid_size, n_elem // 2, rope_base)
-    freqs_cis_w = precompute_freqs_cis_1d(grid_size, n_elem // 2, rope_base)
-
+    # 2D RoPE: For n_elem complex dimensions, we need n_elem/2 frequencies for each spatial direction
+    # Each spatial direction gets n_elem/4 complex frequencies
+    quarter_dim = n_elem // 4
+    
+    freqs_cis_h = precompute_freqs_cis_1d(grid_size, quarter_dim * 2, rope_base)  # generates quarter_dim complex numbers
+    freqs_cis_w = precompute_freqs_cis_1d(grid_size, quarter_dim * 2, rope_base)  # generates quarter_dim complex numbers
+    
     freqs_cis = torch.cat([
-        freqs_cis_h[:, None, :].expand(grid_size, grid_size, n_elem // 2).flatten(0, 1),
-        freqs_cis_w[None, :, :].expand(grid_size, grid_size, n_elem // 2).flatten(0, 1),
+        freqs_cis_h[:, None, :].expand(grid_size, grid_size, quarter_dim).flatten(0, 1),
+        freqs_cis_w[None, :, :].expand(grid_size, grid_size, quarter_dim).flatten(0, 1),
     ], dim=-1)
 
+    # Cache should match the frequency tensor dimensions (n_elem/2 complex numbers)
     cache = torch.cat([
-        torch.zeros(cls_token_num, n_elem, dtype=torch.complex64),
+        torch.zeros(cls_token_num, n_elem // 2, dtype=torch.complex64),
         freqs_cis
     ], dim=0)
 
     return cache
 
 def apply_rotary_emb(xq, xk, freqs_cis):
-    """Apply rotary embeddings to query and key tensors."""
+    """Apply rotary embeddings to query and key tensors.
+    
+    Args:
+        xq: query states with shape [batch, num_heads, seq_len, head_dim] (after transpose)
+        xk: key states with shape [batch, num_key_value_heads, seq_len, head_dim] (after transpose)  
+        freqs_cis: frequency tensor with shape [seq_len, head_dim//2]
+    """
+    # Get sequence length from xq (dimension 2 after transpose)
+    seq_len = xq.shape[2]
+    
+    # Handle case where sequence length exceeds freqs_cis length
+    if seq_len > freqs_cis.shape[0]:
+        # Extend freqs_cis by repeating the last few entries
+        num_missing = seq_len - freqs_cis.shape[0]
+        # Repeat the last 10 entries cyclically to fill the gap
+        last_entries = freqs_cis[-10:]
+        repeats = (num_missing + 9) // 10  # Ceiling division
+        extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
+        freqs_cis = torch.cat([freqs_cis, extended_freqs], dim=0)
+    
+    # Slice freqs_cis to match the sequence length
+    freqs_cis = freqs_cis[:seq_len]  # [seq_len, head_dim//2]
+    
+    # Reshape for broadcasting: [1, 1, seq_len, head_dim//2]
+    freqs_cis = freqs_cis[None, None, :, :]
+    
+    # Convert to complex and apply rotary embeddings
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
-    freqs_cis = freqs_cis[:, None, :]
+    
     xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
     xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
     return xq_out.type_as(xq), xk_out.type_as(xk)
@@ -483,13 +513,20 @@ class Eagle3LlamaGenModel(nn.Module):
             self.target_model.eval()
             for param in self.target_model.parameters():
                 param.requires_grad = False
+            # Use target model's hidden size and vocab size for feature dimensions
+            self.target_hidden_size = self.target_model.config.hidden_size
+            self.target_vocab_size = self.target_model.config.vocab_size
         else:
             self.target_model = None
+            self.target_hidden_size = config.hidden_size
+            self.target_vocab_size = config.vocab_size
 
-        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
-        if load_emb:
+        # Initialize embedding layer with correct dimensions
+        if load_emb and path is not None:
+            # First, get the actual embedding dimensions from the target model
             from safetensors import safe_open
             import json
+            embedding_dim = config.hidden_size  # Default fallback
             try:
                 try:
                     head_path = "model.safetensors"
@@ -497,18 +534,37 @@ class Eagle3LlamaGenModel(nn.Module):
                                 framework="pt",
                                 device="cpu") as f:
                         tensor_slice = f.get_slice("lm_head.weight")
-                        vocab_size, hidden_dim = tensor_slice.get_shape()
-                        tensor = tensor_slice[:, :hidden_dim].float()
+                        vocab_size, embedding_dim = tensor_slice.get_shape()
+                        tensor = tensor_slice[:, :embedding_dim].float()
                 except:
                     head_path = "pytorch_model.bin"
                     weights = torch.load(os.path.join(path, head_path), weights_only=True)
                     tensor = weights["lm_head.weight"]
+                    embedding_dim = tensor.shape[1]
             except Exception as e:
                 print(f"Warning: Could not load embeddings: {e}")
                 tensor = None
+                embedding_dim = config.hidden_size
             
+            # Create embedding layer with correct dimensions (use target vocab size)
+            self.embed_tokens = nn.Embedding(self.target_vocab_size, embedding_dim, self.padding_idx)
             if tensor is not None:
                 self.embed_tokens.weight.data = tensor
+            # Add projection layer if dimensions don't match
+            if embedding_dim != config.hidden_size:
+                self.embed_proj = nn.Linear(embedding_dim, config.hidden_size, bias=False)
+            else:
+                self.embed_proj = None
+        else:
+            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
+            self.embed_proj = None
+        
+        # Add output head for proper logits computation (use target vocab size)
+        if self.embed_proj is not None:
+            # If we have embedding projection, we need output projection too
+            self.output_head = nn.Linear(config.hidden_size, self.target_vocab_size, bias=False)
+        else:
+            self.output_head = None
 
         self.top_k = top_k
         self.total_tokens = total_tokens - 1
@@ -520,7 +576,8 @@ class Eagle3LlamaGenModel(nn.Module):
         self.midlayer = LlamaDecoderLayer(config, 0)
         
         # Eagle 3: 3-feature input fusion (hidden_states from 3 layers)
-        self.fc = nn.Linear(3 * config.hidden_size, config.hidden_size, bias=False)
+        # Use target model's hidden size instead of config hidden size
+        self.fc = nn.Linear(3 * self.target_hidden_size, config.hidden_size, bias=False)
         
         self.norm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.logsoftmax = nn.LogSoftmax(dim=-1)
@@ -547,7 +604,10 @@ class Eagle3LlamaGenModel(nn.Module):
             
         grid_size = int(config.block_size ** 0.5)
         assert grid_size ** 2 == config.block_size, "block_size must be a perfect square"
-        self.freqs_cis = precompute_freqs_cis_2d(grid_size, config.hidden_size//config.num_attention_heads, config.rope_base, config.cls_token_num)
+        # Use target model config for correct head dimensions
+        # For Eagle3, the head_dim should match the actual attention head dimension
+        head_dim = config.hidden_size // config.num_attention_heads
+        self.freqs_cis = precompute_freqs_cis_2d(grid_size, head_dim, config.rope_base, config.cls_token_num)
         # expand the freqs_cis for few steps to avoid out of bound error
         padding_freqs = torch.zeros_like(self.freqs_cis[:10])
         self.freqs_cis = torch.cat([self.freqs_cis, padding_freqs], dim=0)
@@ -672,12 +732,26 @@ class Eagle3LlamaGenModel(nn.Module):
         for idx in range(self.length):
             last = idx == self.length - 1
             inputs_embeds = self.embed_tokens(input_ids)
+            # Apply projection if needed
+            if self.embed_proj is not None:
+                inputs_embeds = self.embed_proj(inputs_embeds)
             if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
                 inputs_embeds.requires_grad = True
             inputs_embeds = inputs_embeds.to(hidden_states.dtype)
 
             # Get appropriate freqs_cis for current sequence length
-            freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
+            # Handle case where sequence length exceeds freqs_cis length
+            if seq_length > self.freqs_cis.shape[0]:
+                # Extend freqs_cis by repeating the last few entries
+                num_missing = seq_length - self.freqs_cis.shape[0]
+                # Repeat the last 10 entries cyclically to fill the gap
+                last_entries = self.freqs_cis[-10:]
+                repeats = (num_missing + 9) // 10  # Ceiling division
+                extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
+                extended_freqs_cis = torch.cat([self.freqs_cis, extended_freqs], dim=0)
+                freqs_cis = extended_freqs_cis[:seq_length].to(hidden_states.device)
+            else:
+                freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
 
             if self.gradient_checkpointing and self.training:
                 def create_custom_forward(module):
@@ -718,7 +792,10 @@ class Eagle3LlamaGenModel(nn.Module):
             hidden_states_out = self.norm(hidden_states_out)
 
             # For LlamaGen, use the full vocabulary size directly
-            logits = torch.matmul(hidden_states_out, self.embed_tokens.weight.t())
+            if self.output_head is not None:
+                logits = self.output_head(hidden_states_out)
+            else:
+                logits = torch.matmul(hidden_states_out, self.embed_tokens.weight.t())
             logits = logits.float()
             out_logp = nn.LogSoftmax(dim=2)(logits)
             plogp = target_p * out_logp
@@ -737,6 +814,8 @@ class Eagle3LlamaGenModel(nn.Module):
                 ind = torch.arange(seq_length, device=attention_mask.device)
                 ind0 = ind[idx:]
                 ind1 = ind[:seq_length-idx]
+                # Fix: Create a copy of attention_mask before modification to avoid inplace operation
+                attention_mask = attention_mask.clone()
                 attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
 
         return plosses, vlosses, acces

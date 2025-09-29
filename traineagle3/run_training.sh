@@ -8,10 +8,10 @@ set -e
 echo "🚀 Starting Eagle 3 Training for Image Generation Models"
 
 # Default configuration
-MODEL="lumina_mgpt"
-BASE_PATH="ckpts/lumina_mgpt/Lumina-mGPT-7B-768"
-DATA_DIR="/home/server44/sihwan_workspace/ssd/lumina_mgpt_eagle_mscoco2017train"
-SAVE_DIR="ckpts/lumina_mgpt/trained_drafters_eagle3"
+MODEL="llamagen2"
+BASE_PATH="/groups/aig_models_lu_tian/makamani/Lantern/ckpts/llamagen/LlamaGen-T2I-2"
+DATA_DIR="/groups/aig_models_lu_tian/makamani/Lantern/data/drafter_train_data/llamagen2_eagle3"
+SAVE_DIR="ckpts/llamagen2/trained_drafters_eagle3"
 
 # Training parameters
 NUM_EPOCHS=20

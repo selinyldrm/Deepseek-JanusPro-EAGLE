@@ -34,7 +34,7 @@
         "length": 7,
         "multi_layer_features": true,
         "num_feature_layers": 3,
-        "feature_layer_indices": [0, 1, 2],
+        "feature_layer_indices": [1, 17, 35],
         "weight_decay_factor": 0.8,
         "gradient_checkpointing": true,
         "progressive_attention_masking": true
