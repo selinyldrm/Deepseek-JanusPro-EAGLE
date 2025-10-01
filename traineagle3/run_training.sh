@@ -9,13 +9,13 @@ echo "🚀 Starting Eagle 3 Training for Image Generation Models"
 
 # Default configuration
 MODEL="llamagen2"
-BASE_PATH="/groups/aig_models_lu_tian/makamani/Lantern/ckpts/llamagen/LlamaGen-T2I-2"
-DATA_DIR="/groups/aig_models_lu_tian/makamani/Lantern/data/drafter_train_data/llamagen2_eagle3"
-SAVE_DIR="ckpts/llamagen2/trained_drafters_eagle3"
+BASE_PATH="/work1/deming/shared/llamagen/LlamaGen-T2I-2"
+DATA_DIR="/work1/deming/shared/llamagen/training-data-eagle3_eagle3"
+SAVE_DIR="/work1/deming/shared/llamagen/llamagen2-eagle3"
 
 # Training parameters
 NUM_EPOCHS=20
-BATCH_SIZE=4
+BATCH_SIZE=8 # for MI300s !!!!!
 LEARNING_RATE=1e-4
 LENGTH=7  # Eagle 3 multi-step length
 
@@ -49,7 +49,9 @@ fi
 
 echo "🔥 Starting Eagle 3 Training..."
 
-python main.py \
+export HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+
+accelerate launch -m main \
     --model $MODEL \
     --base_path $BASE_PATH \
     --config_path config.json \
@@ -71,7 +73,8 @@ python main.py \
     --save_freq 5 \
     --data_noise uniform \
     --std 0.2 \
-    --train_data_ratio 0.95
+    --train_data_ratio 0.95 \
+    --wandb
 
 echo "✅ Eagle 3 Training Completed!"
 echo "📁 Model saved in: $SAVE_DIR"

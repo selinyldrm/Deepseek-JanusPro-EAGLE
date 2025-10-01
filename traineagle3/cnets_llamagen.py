@@ -11,6 +11,8 @@ from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache
 from models.configs.configs import EConfig    
 from models.drafters.choices import *
+from torch.utils.checkpoint import checkpoint
+
 
 TOPK=10
 
@@ -673,6 +675,7 @@ class Eagle3LlamaGenModel(nn.Module):
 
         return combined_attention_mask
 
+
     def forward(
             self,
             input_ids,
@@ -685,7 +688,12 @@ class Eagle3LlamaGenModel(nn.Module):
             loss_mask: Optional[torch.Tensor] = None,
     ):
         """
-        Eagle 3 Multi-Step Training Forward Pass for LlamaGen
+        Eagle 3 Multi-Step Training Forward Pass for LlamaGen (fixed for checkpointing + DDP)
+
+        Returns:
+            plosses: list of torch.Tensor (per-step losses, requires_grad=True)
+            vlosses: list (left empty here, preserved for compatibility)
+            acces: list of floats (per-step accuracies, detached)
         """
         # Eagle 3: Extract multi-layer features
         hidden_states, target, loss_mask, input_ids = self.dataprepare(input_ids, attention_mask, loss_mask)
@@ -695,7 +703,7 @@ class Eagle3LlamaGenModel(nn.Module):
         past_key_values_length = 0
 
         if self.training and self.gradient_checkpointing and not hidden_states.requires_grad:
-            hidden_states.requires_grad = True
+            hidden_states.requires_grad_(True)
 
         # Eagle 3: Process concatenated 3-layer features
         hidden_states = self.fc(hidden_states)
@@ -729,44 +737,168 @@ class Eagle3LlamaGenModel(nn.Module):
         vlosses = []
         acces = []
 
-        for idx in range(self.length):
-            last = idx == self.length - 1
-            inputs_embeds = self.embed_tokens(input_ids)
-            # Apply projection if needed
-            if self.embed_proj is not None:
-                inputs_embeds = self.embed_proj(inputs_embeds)
-            if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
-                inputs_embeds.requires_grad = True
-            inputs_embeds = inputs_embeds.to(hidden_states.dtype)
+        # precompute device and freqs
+        device = hidden_states.device
+        freqs_cis_full = self.freqs_cis.to(device)
 
-            # Get appropriate freqs_cis for current sequence length
-            # Handle case where sequence length exceeds freqs_cis length
-            if seq_length > self.freqs_cis.shape[0]:
-                # Extend freqs_cis by repeating the last few entries
-                num_missing = seq_length - self.freqs_cis.shape[0]
-                # Repeat the last 10 entries cyclically to fill the gap
-                last_entries = self.freqs_cis[-10:]
-                repeats = (num_missing + 9) // 10  # Ceiling division
-                extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
-                extended_freqs_cis = torch.cat([self.freqs_cis, extended_freqs], dim=0)
-                freqs_cis = extended_freqs_cis[:seq_length].to(hidden_states.device)
-            else:
-                freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
+        # prepare inputs_embeds once (we will mutate x inside the wrapper)
+        inputs_embeds = self.embed_tokens(input_ids)
+        if self.embed_proj is not None:
+            inputs_embeds = self.embed_proj(inputs_embeds)
+        if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
+            inputs_embeds.requires_grad_(True)
+        inputs_embeds = inputs_embeds.to(hidden_states.dtype)
 
-            if self.gradient_checkpointing and self.training:
-                def create_custom_forward(module):
-                    def custom_forward(*inputs):
-                        return module(*inputs, None, output_attentions, None, freqs_cis)
-                    return custom_forward
+        # Define the multistep function that will run the full iterative loop.
+        # Keep losses as tensors so they can be backpropagated.
+        def multistep_forward(
+            midlayer,
+            inputs_embeds,
+            hidden_states,
+            attention_mask,
+            position_ids,
+            target,
+            loss_mask,
+            freqs_cis_full,
+            seq_length_int,
+            length_int,
+            embed_weight,
+            output_head,
+            output_attentions,
+        ):
+            ploss_list = []
+            acc_list = []
 
-                layer_outputs = torch.utils.checkpoint.checkpoint(
-                    create_custom_forward(self.midlayer),
-                    inputs_embeds,
-                    hidden_states,
-                    attention_mask,
-                    position_ids,
+            x = inputs_embeds
+            hs = hidden_states
+            attn = attention_mask
+            pos_ids = position_ids
+
+            # seq_length_int and length_int are Python ints
+            for idx in range(length_int):
+                last = (idx == (length_int - 1))
+
+                # compute freqs_cis for this step (same logic as your original code)
+                if seq_length_int > freqs_cis_full.shape[0]:
+                    num_missing = seq_length_int - freqs_cis_full.shape[0]
+                    last_entries = freqs_cis_full[-10:]
+                    repeats = (num_missing + 9) // 10
+                    extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
+                    extended_freqs_cis = torch.cat([freqs_cis_full, extended_freqs], dim=0)
+                    freqs_cis = extended_freqs_cis[:seq_length_int].to(device)
+                else:
+                    freqs_cis = freqs_cis_full[:seq_length_int].to(device)
+
+                # call the midlayer once per step
+                layer_out = midlayer(
+                    input_emb=x,
+                    hidden_states=hs,
+                    attention_mask=attn,
+                    position_ids=pos_ids,
+                    past_key_value=None,
+                    output_attentions=output_attentions,
+                    use_cache=True,
+                    freqs_cis=freqs_cis,
                 )
-            else:
+                hidden_states_out = layer_out[0] if isinstance(layer_out, tuple) else layer_out
+
+                # update hidden states and compute logits
+                hs = hidden_states_out
+                hidden_norm = self.norm(hs)
+
+                if output_head is not None:
+                    logits = output_head(hidden_norm)
+                else:
+                    logits = torch.matmul(hidden_norm, embed_weight.t())
+                logits = logits.float()
+                out_logp = torch.nn.functional.log_softmax(logits, dim=2)
+
+                # compute target distribution (no grad) and loss (requires grad)
+                with torch.no_grad():
+                    target_p = torch.nn.functional.softmax(target.float(), dim=2)
+
+                plogp = target_p * out_logp
+                # loss_mask shape assumed same as your original code
+                loss_tensor = -torch.sum(loss_mask * plogp, 2).mean()
+                ploss_list.append(loss_tensor)  # KEEP as tensor (requires_grad True)
+
+                # compute accuracy metric (detached)
+                with torch.no_grad():
+                    preds = logits.argmax(-1)
+                    target_tokens = target_p.argmax(-1)
+                    position_mask = loss_mask
+                    correct = ((preds == target_tokens) * position_mask.squeeze(-1)).sum().float()
+                    denom = (loss_mask.sum().float() + 1e-6)
+                    acc = (correct / denom).cpu().item()
+                    acc_list.append(acc)
+
+                # prepare for next iteration
+                if not last:
+                    # shift embeddings: drop first token, pad with zeros at the end
+                    x = torch.cat([x[:, 1:, :], torch.zeros_like(x[:, :1, :])], dim=1)
+                    # shift target and loss_mask similarly
+                    target = torch.cat([target[:, 1:, :], torch.zeros_like(target[:, :1, :])], dim=1)
+                    loss_mask = torch.cat([loss_mask[:, 1:, :], torch.zeros_like(loss_mask[:, :1, :])], dim=1)
+
+                    # update attention mask (copy then modify)
+                    ind = torch.arange(seq_length_int, device=attn.device)
+                    ind0 = ind[idx + 1:]
+                    ind1 = ind[: seq_length_int - (idx + 1)]
+                    attn = attn.clone()
+                    attn[:, :, ind0, ind1] = torch.finfo(attn.dtype).min
+
+            # stack losses and accuracies
+            plosses_tensor = torch.stack(ploss_list)  # shape (length_int,)
+            acces_tensor = torch.tensor(acc_list, device=plosses_tensor.device)  # shape (length_int,)
+
+            return plosses_tensor, acces_tensor
+
+        # Run checkpointed whole-multistep (so midlayer params participate in a single reentrant backward)
+        if self.gradient_checkpointing and self.training:
+            # Pass Python ints for seq_length and length
+            plosses_tensor, acces_tensor = checkpoint(
+                multistep_forward,
+                self.midlayer,
+                inputs_embeds,
+                hidden_states,
+                attention_mask,
+                position_ids,
+                target,
+                loss_mask,
+                freqs_cis_full,
+                int(seq_length),
+                int(self.length),
+                self.embed_tokens.weight,
+                self.output_head if hasattr(self, "output_head") else None,
+                output_attentions,
+            )
+            # Keep plosses as tensors (do not convert to .item())
+            plosses = [pl for pl in plosses_tensor.unbind(0)]
+            # acces for logging only: convert to python floats
+            acces = [float(ac.detach().cpu()) for ac in acces_tensor.unbind(0)]
+
+        else:
+            # fallback: non-checkpointed loop (keeps original semantics)
+            for idx in range(self.length):
+                last = idx == self.length - 1
+                inputs_embeds = self.embed_tokens(input_ids)
+                if self.embed_proj is not None:
+                    inputs_embeds = self.embed_proj(inputs_embeds)
+                if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
+                    inputs_embeds.requires_grad_(True)
+                inputs_embeds = inputs_embeds.to(hidden_states.dtype)
+
+                # compute freqs_cis (same as before)
+                if seq_length > self.freqs_cis.shape[0]:
+                    num_missing = seq_length - self.freqs_cis.shape[0]
+                    last_entries = self.freqs_cis[-10:]
+                    repeats = (num_missing + 9) // 10
+                    extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
+                    extended_freqs_cis = torch.cat([self.freqs_cis, extended_freqs], dim=0)
+                    freqs_cis = extended_freqs_cis[:seq_length].to(hidden_states.device)
+                else:
+                    freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
+
                 layer_outputs = self.midlayer(
                     input_emb=inputs_embeds,
                     hidden_states=hidden_states,
@@ -777,49 +909,37 @@ class Eagle3LlamaGenModel(nn.Module):
                     use_cache=True,
                     freqs_cis=freqs_cis,
                 )
+                hidden_states = layer_outputs[0]
+                hidden_states_out = self.norm(hidden_states)
+                if self.output_head is not None:
+                    logits = self.output_head(hidden_states_out)
+                else:
+                    logits = torch.matmul(hidden_states_out, self.embed_tokens.weight.t())
+                logits = logits.float()
+                out_logp = nn.LogSoftmax(dim=2)(logits)
+                with torch.no_grad():
+                    target_head = target
+                    target_p = nn.Softmax(dim=2)(target_head.float()).detach()
+                plogp = target_p * out_logp
+                loss = -torch.sum(loss_mask * plogp, 2).mean()
+                plosses.append(loss)  # tensor, not float
+                with torch.no_grad():
+                    acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * loss_mask.squeeze(-1)).sum().item() / (loss_mask.sum().item() + 1e-6))
 
-            hidden_states_out = layer_outputs[0]
+                if not last:
+                    input_ids = padding(input_ids, left=False)
+                    target = padding(target, left=False)
+                    loss_mask = padding(loss_mask, left=False)
+                    ind = torch.arange(seq_length, device=attention_mask.device)
+                    ind0 = ind[idx:]
+                    ind1 = ind[:seq_length-idx]
+                    attention_mask = attention_mask.clone()
+                    attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
 
-            with torch.no_grad():
-                target_head = target
-                target_max_token = target_head.argmax(-1)
-                position_mask = loss_mask
-                target_head = target_head.float()
-                target_p = nn.Softmax(dim=2)(target_head)
-                target_p = target_p.detach()
-
-            hidden_states = hidden_states_out
-            hidden_states_out = self.norm(hidden_states_out)
-
-            # For LlamaGen, use the full vocabulary size directly
-            if self.output_head is not None:
-                logits = self.output_head(hidden_states_out)
-            else:
-                logits = torch.matmul(hidden_states_out, self.embed_tokens.weight.t())
-            logits = logits.float()
-            out_logp = nn.LogSoftmax(dim=2)(logits)
-            plogp = target_p * out_logp
-            loss = -torch.sum(position_mask * plogp, 2).mean()
-            plosses.append(loss)
-            
-            with torch.no_grad():
-                acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * position_mask.squeeze(-1)).sum().item() / (
-                        loss_mask.sum().item() + 1e-6))
-
-            if not last:
-                # Eagle 3: Progressive attention masking for next iteration
-                input_ids = padding(input_ids, left=False)
-                target = padding(target, left=False)
-                loss_mask = padding(loss_mask, left=False)
-                ind = torch.arange(seq_length, device=attention_mask.device)
-                ind0 = ind[idx:]
-                ind1 = ind[:seq_length-idx]
-                # Fix: Create a copy of attention_mask before modification to avoid inplace operation
-                attention_mask = attention_mask.clone()
-                attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
-
+        # Return per-step losses (as tensors), placeholder vlosses, and per-step accuracies (floats)
         return plosses, vlosses, acces
 
+ 
     def init_tree(self, tree=None):
         if tree is not None:
             # EAGLE v1
@@ -833,4 +953,3 @@ class Eagle3LlamaGenModel(nn.Module):
 
     def reset(self):
         self.tree_mask = None
-

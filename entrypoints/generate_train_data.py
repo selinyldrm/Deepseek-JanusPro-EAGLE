@@ -269,7 +269,7 @@ def run_generate_data(args):
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
     elif args.model == "llamagen2":
         from models.kv_variants.modeling_llamagen_kv import LlamaForCausalLM
-        model = LlamaForCausalLM.from_pretrained('ckpts/llamagen/LlamaGen-T2I-2').to(dtype=dtype, device='cuda')
+        model = LlamaForCausalLM.from_pretrained('/work1/deming/shared/llamagen/LlamaGen-T2I-2').to(dtype=dtype, device='cuda')
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
     else:
         raise NotImplementedError(f"Model {args.model} not supported")
@@ -277,7 +277,8 @@ def run_generate_data(args):
     
     ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
     ds = ds.shuffle(seed=42)
-    ds = ds.select(range(min(args.num_samples, len(ds))))
+    # ds = ds.select(range(min(args.num_samples, len(ds))))
+    ds = ds.select(range(60031,args.num_samples))
     
     # Update output directory for Eagle3 mode
     if args.eagle3:

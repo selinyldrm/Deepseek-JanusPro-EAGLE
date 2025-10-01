@@ -73,8 +73,8 @@ def parse_args():
     
     parser.add_argument('--max_len', type=int, default=4096)
     parser.add_argument('--eval_freq', type=int, default=1)
-    parser.add_argument('--save_freq', type=int, default=5)
-    parser.add_argument('--wandb', action='store_true', default=False)
+    parser.add_argument('--save_freq', type=int, default=1)
+    parser.add_argument('--wandb', action='store_true', default=True)
 
     return parser
 
@@ -134,7 +134,7 @@ def log_metrics(optimizer, plosses, vloss, acces, loss_weights, correct, total, 
     if wandb_instance:
         wandb_instance.log(logdict)
 
-def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup, train_mode=True):
+def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup,  wandb_instance, train_mode=True):
     """Run one epoch of Eagle 3 training"""
     model.train() if train_mode else model.eval()
     
@@ -180,7 +180,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
         if accelerator.is_main_process and data["loss_mask"].sum().item() != 0 and train_mode:
             log_metrics(
                 optimizer, plosses, None, acces, loss_weights, 
-                correct, total, top_3acc, "train", args.wandb
+                correct, total, top_3acc, "train", wandb_instance
             )
 
         epoch_loss += loss.item()
@@ -220,9 +220,9 @@ def run_train_drafter(args):
                     mixed_precision='bf16',
                     gradient_accumulation_steps=args.gradient_accumulation_steps,)
     
+    wandb_instance = None
     if accelerator.is_main_process:
-        if args.wandb:
-            wandb.login(key="4963e169aaf4e53eb530372b2b28384bb525d1e7")
+        wandb.login(key="46d0f4a8c52a34c94859af9091c680cd79990fd6")
 
         run_name = f"{args.model}_lr{args.lr}_p_w{args.p_w}_bsz{args.bs}_gradacc_{args.gradient_accumulation_steps}"
         run_name += f"_epochs{args.num_epochs}_length{args.length}"
@@ -233,8 +233,7 @@ def run_train_drafter(args):
         if args.embed_upscale > 1.0:
             run_name += f"_embed_upscale_{args.embed_upscale}"
         run_name += "_mscoco2017train30k"
-        if args.wandb:
-            wandb.init(project="eagle3-lumina-mGPT", name=run_name, config=args)
+        wandb_instance = wandb.init(project="eagle3-llamagen2", name=run_name, config=args)
 
     # Load configuration and model
     if args.model == "lumina_mgpt":
@@ -334,6 +333,10 @@ def run_train_drafter(args):
         path=args.base_path,
         embed_upscale=args.embed_upscale
     )
+    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_15/model.safetensors"
+    from safetensors.torch import load_file
+    state_dict = load_file(ckpt_path)
+    model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))
@@ -352,26 +355,26 @@ def run_train_drafter(args):
         )
 
     # Training loop
-    for epoch in range(args.num_epochs):
+    for epoch in range(15, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
-            args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, train_mode=True
+            args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, wandb_instance, train_mode=True
         )
-        
-        if accelerator.is_main_process:
+
+        if accelerator.is_main_process and wandb_instance is not None:
             log_metrics(
                 optimizer, [torch.tensor(epoch_loss)], None, [epoch_correct/epoch_total if epoch_total > 0 else 0], 
-                [1.0], epoch_correct, epoch_total, epoch_top3, "epoch", args.wandb
+                [1.0], epoch_correct, epoch_total, epoch_top3, "epoch", wandb_instance
             )
         
         if (epoch + 1) % args.eval_freq == 0 or (epoch + 1) == args.num_epochs:
             test_loss, test_correct, test_total, test_top3 = run_epoch(
-                args, model, test_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, train_mode=False
+                args, model, test_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, wandb_instance, train_mode=False
             )
             
-            if accelerator.is_main_process:
+            if accelerator.is_main_process and wandb_instance is not None:
                 log_metrics(
                     optimizer, [torch.tensor(test_loss)], None, [test_correct/test_total if test_total > 0 else 0],
-                    [1.0], test_correct, test_total, test_top3, "test", args.wandb
+                    [1.0], test_correct, test_total, test_top3, "test", wandb_instance
                 )
 
         if (epoch + 1) % args.save_freq == 0 or (epoch + 1) == args.num_epochs:

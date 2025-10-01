@@ -1214,7 +1214,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         self.t5_model = T5Embedder(
             device = 'cuda',
             local_cache=True,
-            cache_dir='ckpts/llamagen/t5',
+            cache_dir='/work1/deming/shared/llamagen/',
             dir_or_name='flan-t5-xl',
             torch_dtype=torch.bfloat16,
             model_max_length=120

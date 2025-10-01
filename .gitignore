@@ -6,6 +6,17 @@ __pycache__/
 # C extensions
 *.so
 
+*.pt
+*.png
+*.nfs*
+__pycache__/**
+*.npz
+*.pyc
+*.npy
+*.bin
+/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/**
+wandb/
+
 # Distribution / packaging
 .Python
 build/
