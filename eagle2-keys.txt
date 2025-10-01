@@ -1,0 +1,12 @@
+Keys: odict_keys(['embed_tokens.weight', 'layers.0.self_attn.q_proj.weight', 'layers.0.self_attn.k_proj.weight', 'layers.0.self_attn.v_proj.weight', 'layers.0.self_attn.o_proj.weight', 'layers.0.mlp.gate_proj.weight', 'layers.0.mlp.up_proj.weight', 'layers.0.mlp.down_proj.weight', 'layers.0.post_attention_layernorm.weight', 'fc.weight', 'fc.bias'])
+embed_tokens.weight torch.Size([16384, 1280]) torch.float32
+layers.0.self_attn.q_proj.weight torch.Size([1280, 1280]) torch.float32
+layers.0.self_attn.k_proj.weight torch.Size([1280, 1280]) torch.float32
+layers.0.self_attn.v_proj.weight torch.Size([1280, 1280]) torch.float32
+layers.0.self_attn.o_proj.weight torch.Size([1280, 1280]) torch.float32
+layers.0.mlp.gate_proj.weight torch.Size([3584, 1280]) torch.float32
+layers.0.mlp.up_proj.weight torch.Size([3584, 1280]) torch.float32
+layers.0.mlp.down_proj.weight torch.Size([1280, 3584]) torch.float32
+layers.0.post_attention_layernorm.weight torch.Size([1280]) torch.float32
+fc.weight torch.Size([1280, 2560]) torch.float32
+fc.bias torch.Size([1280]) torch.float32

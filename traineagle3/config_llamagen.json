@@ -1,13 +1,13 @@
 {
     "model_type": "eagle3",
     "architectures": [
-        "Eagle3Model"
+        "Eagle3LlamaGenModel"
     ],
     "attention_dropout": 0.0,
     "bos_token_id": 1,
     "eos_token_id": 2,
     "hidden_act": "silu",
-    "hidden_size": 4096,
+    "hidden_size": 2560,
     "initializer_range": 0.02,
     "intermediate_size": 11008,
     "max_position_embeddings": 2048,
@@ -29,7 +29,7 @@
     "mlp_bias": false,
     "rope_theta": 10000.0,
     "dropout": 0.0,
-    
+
     "_eagle3_config": {
         "length": 7,
         "multi_layer_features": true,
@@ -37,7 +37,13 @@
         "feature_layer_indices": [1, 17, 35],
         "weight_decay_factor": 0.8,
         "gradient_checkpointing": true,
-        "progressive_attention_masking": true
+        "progressive_attention_masking": true,
+        "model_specific": {
+            "type": "llamagen",
+            "non_image_tokens": {
+                "start_range": [0, 4],
+                "end_range": [8196, 65536]
+            }
+        }
     }
 }
-

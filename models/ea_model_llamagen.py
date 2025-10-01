@@ -140,6 +140,12 @@ class EaModel(nn.Module):
 
         else:
             self.ea_layer.diff_device = False
+        
+        print("Keys:", ea_layer_state_dict.keys())   # list all tensor names
+
+        # get metadata about each tensor
+        for k, tensor in ea_layer_state_dict.items():
+            print(k, tensor.shape, tensor.dtype)
         self.ea_layer.load_state_dict(ea_layer_state_dict, strict=True)
         self.ea_layer.to(self.base_model.dtype).to(device)
         self.ea_layer.init_tree()
