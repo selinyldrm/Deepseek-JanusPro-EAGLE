@@ -21,6 +21,10 @@ def parse_args():
     parser.add_argument('--output_dir', type=str, default='data/drafter_train_data/lumina_mgpt')
     parser.add_argument('--num_samples', type=int, default=100000)
     parser.add_argument("--precision", type=str, default="bf16")
+    parser.add_argument('--eagle3', action='store_true', help="Generate Eagle3 compatible training data with multi-layer feature extraction")
+    parser.add_argument('--eagle3_config', type=str, help="Path to Eagle3 config file (required when --eagle3 is used)")
+    parser.add_argument('--feature_layer_indices', type=int, nargs='+', default=[0, 1, 2], 
+                        help="Hidden layer indices to extract for Eagle3 mode (default: [0, 1, 2])")
 
     return parser
 
@@ -109,7 +113,7 @@ class SupervisedDataset(Dataset):
         return self
 
 @torch.no_grad()
-def generate_data(model, data, model_type):
+def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=None):
     if model_type == "lumina_mgpt":
         if (data['out_token_ids'][0][:3] == torch.tensor([8197, 8828, 8828])).sum().item() != 3:
             print(data['out_token_ids'][0][:3])
@@ -124,8 +128,29 @@ def generate_data(model, data, model_type):
         uncond_input_ids = out_token_ids
         uncond_outputs = model(input_ids=uncond_input_ids.cuda(), output_hidden_states=True)
 
-        return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_outputs.hidden_states[-1].cpu()[0],
-                "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_outputs.hidden_states[-1].cpu()[0]}
+        if eagle3:
+            # Eagle3: Extract hidden states from specified layers and concatenate
+            max_layers = len(cond_outputs.hidden_states)
+            if feature_layer_indices is None:
+                feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
+            
+            # Validate layer indices
+            for idx in feature_layer_indices:
+                if idx >= max_layers or idx < 0:
+                    raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
+            
+            cond_layer_states = [cond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+            cond_hidden_states = torch.cat(cond_layer_states, dim=-1)
+            
+            uncond_layer_states = [uncond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+            uncond_hidden_states = torch.cat(uncond_layer_states, dim=-1)
+        else:
+            # Original: Use only final hidden state
+            cond_hidden_states = cond_outputs.hidden_states[-1].cpu()[0]
+            uncond_hidden_states = uncond_outputs.hidden_states[-1].cpu()[0]
+
+        return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_hidden_states,
+                "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_hidden_states}
     elif model_type == "anole":
         prompt_token_ids = data["prompt_token_ids"] # input ids (tokenized caption)
         out_token_ids = data["out_token_ids"] # tokenized images (codebook tokens for images)
@@ -136,16 +161,54 @@ def generate_data(model, data, model_type):
         uncond_input_ids = torch.cat([torch.tensor([[0, 8197]]), out_token_ids], dim=-1)
         uncond_outputs = model(input_ids=uncond_input_ids.cuda(), output_hidden_states=True)
 
-        return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_outputs.hidden_states[-1].cpu()[0],
-                "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_outputs.hidden_states[-1].cpu()[0]}
+        if eagle3:
+            max_layers = len(cond_outputs.hidden_states)
+            # Eagle3: Extract hidden states from specified layers and concatenate
+            if feature_layer_indices is None:
+                feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
+            
+            # Validate layer indices
+            for idx in feature_layer_indices:
+                if idx >= max_layers or idx < 0:
+                    raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
+            
+            cond_layer_states = [cond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+            cond_hidden_states = torch.cat(cond_layer_states, dim=-1)
+            
+            uncond_layer_states = [uncond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+            uncond_hidden_states = torch.cat(uncond_layer_states, dim=-1)
+        else:
+            # Original: Use only final hidden state
+            cond_hidden_states = cond_outputs.hidden_states[-1].cpu()[0]
+            uncond_hidden_states = uncond_outputs.hidden_states[-1].cpu()[0]
+
+        return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_hidden_states,
+                "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_hidden_states}
     elif "llamagen" in model_type:
         input_ids=data["input_ids"]
         cond_idx=data["cond_idx"].to(model.dtype)
         loss_mask=data["loss_mask"]
         attention_mask = data["attention_mask"]
         outs_big = model(cond_idx=cond_idx.cuda(), input_ids=input_ids.cuda(),attention_mask=attention_mask.cuda(), output_hidden_states=True)
-        hidden_state_big = outs_big.hidden_states[-1]
-        return {"cond_idx":cond_idx, "input_ids":input_ids.cpu()[0],"hidden_state":hidden_state_big.cpu()[0],
+        
+        if eagle3:
+            max_layers = len(outs_big.hidden_states)    
+            # Eagle3: Extract hidden states from specified layers and concatenate
+            if feature_layer_indices is None:
+                feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
+            
+            # Validate layer indices
+            for idx in feature_layer_indices:
+                if idx >= max_layers or idx < 0:
+                    raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
+            
+            layer_states = [outs_big.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+            hidden_state_big = torch.cat(layer_states, dim=-1)
+        else:
+            # Original: Use only final hidden state
+            hidden_state_big = outs_big.hidden_states[-1].cpu()[0]
+            
+        return {"cond_idx":cond_idx, "input_ids":input_ids.cpu()[0],"hidden_state":hidden_state_big,
                 "loss_mask":loss_mask.cpu()[0],'attention_mask':attention_mask[0]}
     else:
         raise NotImplementedError(f"Model {model_type} not supported")
@@ -156,9 +219,35 @@ def writedata(name, data_point):
     idx=current_length
     torch.save(data_point, f'{name}/data_{idx}.ckpt')
 
+def load_eagle3_config(config_path):
+    """Load Eagle3 configuration from JSON file."""
+    if not config_path:
+        return None
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        return config.get('_eagle3_config', {})
+    except Exception as e:
+        print(f"Warning: Could not load Eagle3 config from {config_path}: {e}")
+        return None
+
 def run_generate_data(args):
     
     dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+    
+    # Load Eagle3 configuration if provided
+    eagle3_config = None
+    feature_layer_indices = args.feature_layer_indices  # Default from args
+    
+    if args.eagle3:
+        if args.eagle3_config:
+            eagle3_config = load_eagle3_config(args.eagle3_config)
+            if eagle3_config and 'feature_layer_indices' in eagle3_config:
+                feature_layer_indices = eagle3_config['feature_layer_indices']
+                print(f"🔧 Loaded feature layer indices from config: {feature_layer_indices}")
+        else:
+            print(f"⚠️ Eagle3 mode enabled but no config provided. Using default indices: {feature_layer_indices}")
     
     if args.model == "lumina_mgpt":
         from models.base_models.lumina_mgpt.modeling_lumina_mgpt import ChameleonForConditionalGeneration
@@ -188,14 +277,25 @@ def run_generate_data(args):
     
     ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
     ds = ds.shuffle(seed=42)
-    ds = ds.select(range(min(args.num_samples, len(ds))))
+    # ds = ds.select(range(min(args.num_samples, len(ds))))
+    ds = ds.select(range(60031,args.num_samples))
     
+    # Update output directory for Eagle3 mode
+    if args.eagle3:
+        if not args.output_dir.endswith('_eagle3'):
+            args.output_dir = args.output_dir.rstrip('/') + '_eagle3'
+        print(f"🔥 Eagle3 mode enabled: Generating multi-layer feature training data")
+        print(f"📊 Feature layer indices: {feature_layer_indices}")
+        print(f"📁 Output directory: {args.output_dir}")
+    else:
+        print(f"📁 Standard mode: Generating single-layer feature training data")
+        print(f"📁 Output directory: {args.output_dir}")
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
     for data in tqdm(ds):
-        outdata = generate_data(model, data, args.model)
+        outdata = generate_data(model, data, args.model, args.eagle3, feature_layer_indices)
         if outdata is not None:
             writedata(args.output_dir, outdata)
 

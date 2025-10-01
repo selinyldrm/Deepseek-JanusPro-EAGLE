@@ -614,8 +614,8 @@ class LlamaAttention(nn.Module):
             attn_output = self.o_proj(attn_output)
         attn_output = self.resid_dropout(attn_output)
 
-        # if not output_attentions:
-        #     attn_weights = None
+        if not output_attentions:
+            attn_weights = None
 
         return attn_output, attn_weights, past_key_value
 
@@ -868,8 +868,8 @@ class LlamaDecoderLayer(nn.Module):
         # if output_attentions:
         outputs += (self_attn_weights,)
 
-        # if use_cache:
-        #     outputs += (present_key_value,)
+        if use_cache:
+            outputs += (present_key_value,)
 
         return outputs
 
@@ -1201,8 +1201,8 @@ class LlamaModel(LlamaPreTrainedModel):
 
             hidden_states = layer_outputs[0]
 
-            # if use_cache:
-            #     next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
+            if use_cache:
+                next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
 
             # if output_attentions:
             all_self_attns += (layer_outputs[1],)
