@@ -334,10 +334,10 @@ def run_train_drafter(args):
         embed_upscale=args.embed_upscale
     )
     model.eagle_head = head
-    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_10/model.safetensors"
-    from safetensors.torch import load_file
-    state_dict = load_file(ckpt_path)
-    model.load_state_dict(state_dict, strict=True)
+    # ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_10/model.safetensors"
+    # from safetensors.torch import load_file
+    # state_dict = load_file(ckpt_path)
+    # model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))
@@ -356,7 +356,7 @@ def run_train_drafter(args):
         )
 
     # Training loop
-    for epoch in range(10, args.num_epochs):
+    for epoch in range(0, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
             args, model, train_loader, optimizer, scheduler, criterion, model.eagle_head, accelerator, args.is_warmup, wandb_instance, train_mode=True
         )

@@ -752,102 +752,76 @@ class Eagle3LlamaGenModel(nn.Module):
         # Define the multistep function that will run the full iterative loop.
         # Keep losses as tensors so they can be backpropagated.
         def multistep_forward(
-            midlayer,
+            input_ids,
             inputs_embeds,
             hidden_states,
             attention_mask,
             position_ids,
             target,
             loss_mask,
-            freqs_cis_full,
-            seq_length_int,
-            length_int,
-            embed_weight,
-            output_head,
             output_attentions,
         ):
             ploss_list = []
             acc_list = []
+            for idx in range(self.length):
+                last = idx == self.length - 1
 
-            x = inputs_embeds
-            hs = hidden_states
-            attn = attention_mask
-            pos_ids = position_ids
+                # inputs_embeds = self.embed_tokens(input_ids)
+                # if self.embed_proj is not None:
+                #     inputs_embeds = self.embed_proj(inputs_embeds)
+                # if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
+                #     inputs_embeds.requires_grad_(True)
+                # inputs_embeds = inputs_embeds.to(hidden_states.dtype)
 
-            # seq_length_int and length_int are Python ints
-            for idx in range(length_int):
-                last = (idx == (length_int - 1))
-
-                # compute freqs_cis for this step (same logic as your original code)
-                if seq_length_int > freqs_cis_full.shape[0]:
-                    num_missing = seq_length_int - freqs_cis_full.shape[0]
-                    last_entries = freqs_cis_full[-10:]
+                # compute freqs_cis (same as before)
+                if seq_length > self.freqs_cis.shape[0]:
+                    num_missing = seq_length - self.freqs_cis.shape[0]
+                    last_entries = self.freqs_cis[-10:]
                     repeats = (num_missing + 9) // 10
                     extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
-                    extended_freqs_cis = torch.cat([freqs_cis_full, extended_freqs], dim=0)
-                    freqs_cis = extended_freqs_cis[:seq_length_int].to(device)
+                    extended_freqs_cis = torch.cat([self.freqs_cis, extended_freqs], dim=0)
+                    freqs_cis = extended_freqs_cis[:seq_length].to(hidden_states.device)
                 else:
-                    freqs_cis = freqs_cis_full[:seq_length_int].to(device)
+                    freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
 
-                # call the midlayer once per step
-                layer_out = midlayer(
-                    input_emb=x,
-                    hidden_states=hs,
-                    attention_mask=attn,
-                    position_ids=pos_ids,
+                layer_outputs = self.midlayer(
+                    input_emb=inputs_embeds,
+                    hidden_states=hidden_states,
+                    attention_mask=attention_mask,
+                    position_ids=position_ids,
                     past_key_value=None,
                     output_attentions=output_attentions,
                     use_cache=True,
                     freqs_cis=freqs_cis,
                 )
-                hidden_states_out = layer_out[0] if isinstance(layer_out, tuple) else layer_out
-
-                # update hidden states and compute logits
-                hs = hidden_states_out
-                hidden_norm = self.norm(hs)
-
-                if output_head is not None:
-                    logits = output_head(hidden_norm)
+                hidden_states = layer_outputs[0]
+                hidden_states_out = self.norm(hidden_states)
+                if self.output_head is not None:
+                    logits = self.output_head(hidden_states_out)
                 else:
-                    logits = torch.matmul(hidden_norm, embed_weight.t())
-                logits = logits.float()
-                out_logp = torch.nn.functional.log_softmax(logits, dim=2)
+                    logits = hidden_states_out @ self.embed_tokens.weight.T
 
-                # compute target distribution (no grad) and loss (requires grad)
+                out_logp = nn.LogSoftmax(dim=2)(logits)  # no casting
+
                 with torch.no_grad():
-                    target_p = torch.nn.functional.softmax(target.float(), dim=2)
-
+                    target_head = target
+                    target_p = nn.Softmax(dim=2)(target_head.float()).detach()
                 plogp = target_p * out_logp
-                # loss_mask shape assumed same as your original code
-                loss_tensor = -torch.sum(loss_mask * plogp, 2).mean()
-                ploss_list.append(loss_tensor)  # KEEP as tensor (requires_grad True)
-
-                # compute accuracy metric (detached)
+                loss = -torch.sum(loss_mask * plogp, 2).mean()
+                ploss_list.append(loss)  # tensor, not float
                 with torch.no_grad():
-                    preds = logits.argmax(-1)
-                    target_tokens = target_p.argmax(-1)
-                    position_mask = loss_mask
-                    correct = ((preds == target_tokens) * position_mask.squeeze(-1)).sum().float()
-                    denom = (loss_mask.sum().float() + 1e-6)
-                    acc = (correct / denom).cpu().item()
-                    acc_list.append(acc)
+                    acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * loss_mask.squeeze(-1)).sum().item() / (loss_mask.sum().item() + 1e-6))
 
-                # prepare for next iteration
                 if not last:
-                    # shift embeddings: drop first token, pad with zeros at the end
-                    x = torch.cat([x[:, 1:, :], torch.zeros_like(x[:, :1, :])], dim=1)
-                    # shift target and loss_mask similarly
-                    target = torch.cat([target[:, 1:, :], torch.zeros_like(target[:, :1, :])], dim=1)
-                    loss_mask = torch.cat([loss_mask[:, 1:, :], torch.zeros_like(loss_mask[:, :1, :])], dim=1)
+                    input_ids = padding(input_ids, left=False)
+                    target = padding(target, left=False)
+                    loss_mask = padding(loss_mask, left=False)
+                    ind = torch.arange(seq_length, device=attention_mask.device)
+                    ind0 = ind[idx:]
+                    ind1 = ind[:seq_length-idx]
+                    attention_mask = attention_mask.clone()
+                    attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
 
-                    # update attention mask (copy then modify)
-                    ind = torch.arange(seq_length_int, device=attn.device)
-                    ind0 = ind[idx + 1:]
-                    ind1 = ind[: seq_length_int - (idx + 1)]
-                    attn = attn.clone()
-                    attn[:, :, ind0, ind1] = torch.finfo(attn.dtype).min
-
-            # stack losses and accuracies
             plosses_tensor = torch.stack(ploss_list)  # shape (length_int,)
             acces_tensor = torch.tensor(acc_list, device=plosses_tensor.device)  # shape (length_int,)
 
@@ -858,25 +832,20 @@ class Eagle3LlamaGenModel(nn.Module):
             # Pass Python ints for seq_length and length
             plosses_tensor, acces_tensor = checkpoint(
                 multistep_forward,
-                self.midlayer,
+                input_ids,
                 inputs_embeds,
                 hidden_states,
                 attention_mask,
                 position_ids,
                 target,
                 loss_mask,
-                freqs_cis_full,
-                int(seq_length),
-                int(self.length),
-                self.embed_tokens.weight,
-                self.output_head if hasattr(self, "output_head") else None,
                 output_attentions,
             )
+            
             # Keep plosses as tensors (do not convert to .item())
             plosses = [pl for pl in plosses_tensor.unbind(0)]
             # acces for logging only: convert to python floats
             acces = [float(ac.detach().cpu()) for ac in acces_tensor.unbind(0)]
-
         else:
             # fallback: non-checkpointed loop (keeps original semantics)
             for idx in range(self.length):
