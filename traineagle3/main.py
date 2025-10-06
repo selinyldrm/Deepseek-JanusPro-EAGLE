@@ -333,7 +333,8 @@ def run_train_drafter(args):
         path=args.base_path,
         embed_upscale=args.embed_upscale
     )
-    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_15/model.safetensors"
+    model.eagle_head = head
+    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_10/model.safetensors"
     from safetensors.torch import load_file
     state_dict = load_file(ckpt_path)
     model.load_state_dict(state_dict, strict=True)
@@ -346,18 +347,18 @@ def run_train_drafter(args):
                                                     num_warmup_steps=args.warmup_steps_ratio * len(train_loader),
                                                     num_training_steps=args.num_epochs * len(train_loader))
 
-        model, head, optimizer, train_loader, test_loader, scheduler = accelerator.prepare(
-            model, head, optimizer, train_loader, test_loader, scheduler
+        model, model.eagle_head, optimizer, train_loader, test_loader, scheduler = accelerator.prepare(
+            model, model.eagle_head, optimizer, train_loader, test_loader, scheduler
         )
     else:
-        model, head, optimizer, train_loader, test_loader = accelerator.prepare(
-            model, head, optimizer, train_loader, test_loader
+        model, model.eagle_head, optimizer, train_loader, test_loader = accelerator.prepare(
+            model, model.eagle_head, optimizer, train_loader, test_loader
         )
 
     # Training loop
-    for epoch in range(15, args.num_epochs):
+    for epoch in range(10, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
-            args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, wandb_instance, train_mode=True
+            args, model, train_loader, optimizer, scheduler, criterion, model.eagle_head, accelerator, args.is_warmup, wandb_instance, train_mode=True
         )
 
         if accelerator.is_main_process and wandb_instance is not None:
@@ -368,7 +369,7 @@ def run_train_drafter(args):
         
         if (epoch + 1) % args.eval_freq == 0 or (epoch + 1) == args.num_epochs:
             test_loss, test_correct, test_total, test_top3 = run_epoch(
-                args, model, test_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, wandb_instance, train_mode=False
+                args, model, test_loader, optimizer, scheduler, criterion, model.eagle_head, accelerator, args.is_warmup, wandb_instance, train_mode=False
             )
             
             if accelerator.is_main_process and wandb_instance is not None:
