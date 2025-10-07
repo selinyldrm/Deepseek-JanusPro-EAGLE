@@ -141,16 +141,17 @@ class EaModel(nn.Module):
         else:
             self.ea_layer.diff_device = False
         
-        print("Keys:", ea_layer_state_dict.keys())   # list all tensor names
+        print("Loading Key:", ea_layer_state_dict.keys())   # list all tensor names
 
         # get metadata about each tensor
         for k, tensor in ea_layer_state_dict.items():
             print(k, tensor.shape, tensor.dtype)
-        self.ea_layer.load_state_dict(ea_layer_state_dict, strict=True)
-        self.ea_layer.to(self.base_model.dtype).to(device)
-        self.ea_layer.init_tree()
+       
         ea_model_dir = os.path.dirname(ea_model_path)
         self.nearest_latents = np.load("/work1/deming/seliny2/LANTERN/entrypoints/top_16383_indices.npy")
+
+        self.ea_layer.to(base_model.dtype).to(device)
+        self.ea_layer.init_tree()
 
     # def get_tokenizer(self):
     #     """Get the tokenizer of the base model.
@@ -174,17 +175,12 @@ class EaModel(nn.Module):
     ):
         #assert Type=="LLaMA" or "Mixtral"
         Type=AutoConfig.from_pretrained(base_model_path).architectures[0]
-        if Type=='LlamaForCausalLM':
+        if Type == 'LlamaForCausalLM':
             base_model = KVLlamaForCausalLM.from_pretrained(
                 base_model_path, **kwargs
             )
-
-        # configpath=os.path.join(ea_model_path,"config.json")
-        # [SY] fix
-        configpath="/work1/deming/seliny2/LANTERN/entrypoints/train_drafter/llamagen2_drafter/config.json"
-        if not os.path.exists(configpath):
-            # configpath = hf_hub_download(ea_model_path, "config.json")
-            configpath = '/home/server38/doohyuk_workspace/VisionSpec/EAGLE/eagle/train/llamagen_3B_config.json'
+     
+        configpath=os.path.join(ea_model_path,"config.json")
 
         try:
             load_model_path=os.path.join(ea_model_path, "pytorch_model.bin")
@@ -198,6 +194,13 @@ class EaModel(nn.Module):
             if not os.path.exists(load_model_path):
                 load_model_path = hf_hub_download(ea_model_path, "model.safetensors")
             ea_layer_state_dict = load_file(load_model_path)
+        
+        # ignore base model layers to prevent errors during checkpoint loading on draft model
+        filtered_state_dict = {
+            k: v for k, v in ea_layer_state_dict.items()
+            if not k.startswith("base_model.") # or target_model based on the tested checkpoint
+        }
+
         model = cls(
             base_model,
             base_model_path,
@@ -206,10 +209,21 @@ class EaModel(nn.Module):
             depth,
             top_k,
             threshold,
-            ea_layer_state_dict
+            filtered_state_dict
         )
 
-
+        # filtered_state_dict = {
+        #     (k.replace("eagle_head", "lm_head") if "eagle_head" in k else k): v
+        #     for k, v in filtered_state_dict.items()
+        # }
+        # enforce loading base model lm head. discard any drafter lm head
+        filtered_state_dict = {
+            k: v for k, v in filtered_state_dict.items()
+            if not k.startswith("eagle_head.")
+        }
+        # enforce loading base model lm head. add it here if not presaved in checkpoint
+        filtered_state_dict["lm_head.weight"] = model.base_model.lm_head.weight.data
+        model.ea_layer.load_state_dict(filtered_state_dict, strict=True)
 
         if total_token==-1:
             device = model.base_model.model.layers[0].self_attn.q_proj.weight.device
@@ -417,9 +431,6 @@ class EaModel(nn.Module):
         levels = torch.unique(tree_position_ids)
         per_level_node_counts = {int(level.item()): int((tree_position_ids == level).nonzero(as_tuple=True)[0][0]) for level in levels}
 
-        # print("initial retrieve_indices: ", retrieve_indices)
-        # print("initial sorted_tree_choices: ", sorted_tree_choices)
-
         # Aggregate the generated buffers into a dictionary
         tree_buffers = {
             "tree_attn_mask": tree_attn_mask.unsqueeze(0).unsqueeze(0),
@@ -477,16 +488,22 @@ class EaModel(nn.Module):
         zero_padding = torch.zeros((token.shape[0], 120), dtype=torch.long, device=token.device)
         input_ids = torch.cat((zero_padding, token.to(cond_combined.device)), dim=1)
         self.ea_layer.init_tree_v1(tree_choices)
+
+        ea_device = self.ea_layer.lm_head.weight.device
+        if outputs["hidden_states"][0].device != ea_device:
+            outputs["hidden_states"] = [x.to(ea_device) for x in outputs["hidden_states"]]
+        hidden_states=torch.cat(outputs["hidden_states"],dim=-1)
+
         tree_logits, bias_list, logit_sim = self.ea_layer.topK_genrate_v1(step, None, hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
-        # print(f"tree_logits after eagle's topK_genrate_v1: {tree_logits[0].shape}, {tree_logits[1].shape}, {tree_logits[2][0].shape, tree_logits[2][1].shape}")
-        # print("input_ids after eagle: ", input_ids.shape)
+
         self.base_model.model.tree_mask = tree_attn_mask
         return tree_logits, logits, token, bias_list, logit_sim
 
     @torch.no_grad()
     def evaluate_posterior_v1(
         self,
-        idx,
+        idx,      
+        tree_logits, #draft logits for testing KL
         relaxed,
         testing,
         bias_list,
@@ -631,25 +648,26 @@ class EaModel(nn.Module):
             return best_candidate, accept_length, logits[best_candidate, accept_length]
 
         else:
+            # logit processor always is not None
             cart_candidates_prob = cart_candidates_prob.to(logits.device)
             accept_length = 1
             accept_cand = candidates[0][:1]
             best_candidate = 0
+
             # BFS
-            eval_overhead = 0.0
-            # for x in range(len(op)):
-                # print("op[x].shape: ", op[x].shape)
+            eval_overhead = 0.0 # test overhead for token merging method
             for i in range(1, candidates.shape[1]): # token depth
                 if i != accept_length:
                     break
-                # print("verifying at depth: ", i, " curr accept_length: ", accept_length)
                 m_bias_list = None
                 level_sim = None
+
+                ### DISABLED TOKEN MERGING OPTIMIZATIONS ON ACCEPTANCE SCORE
                 past_nodes = l_node_counts[i]
                 prev_past_nodes = l_node_counts[i-1]
-                if i < len(bias_list) and len(bias_list[i]):
-                    m_bias_list = copy.deepcopy(bias_list[i])
-                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+                # if i < len(bias_list) and len(bias_list[i]):
+                #     m_bias_list = copy.deepcopy(bias_list[i])
+                #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                 # if i <= len(level_bias_list) and len(level_bias_list[i-1]):
                 #     sim_list = level_bias_list[i-1]
                 #     if len(sim_list) :
@@ -671,92 +689,55 @@ class EaModel(nn.Module):
                         # xi is the token ID in the codebook !!! 
                         x = candidates[j, i]
                         xi = x.item()
-                        # repetitive nodes due to j,i indexing is prevented with candidate set
                         if xi in candidates_set or xi == -1:
                             continue
                         candidates_set.append(xi)
                         r = random.random()
                         px = gtp[xi]
 
-                        accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
-                        accept_length_fake =  accept_length + 1
-                        is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                        # fi = list(IDs of only TRUE branches)
-                        fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                        # print("fi_fake: ", fi_fake)
-                        # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                        gt_logits_fake = logits[fi_fake, i][None]
+                        if lantern:
+                            nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
+                            cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
+
+                            if lantern_delta > 1.0:
+                                indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
+                            else:
+                                indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
+                            if indices.numel() == 0:
+                                indices = -1
+                            else:
+                                indices = indices[-1]
+                            if indices == -1:
+                                px = px
+                            else:
+                                px = px + cumsum_nearest_probs[indices]
+
+                        ### DISABLED TOKEN MERGING OPTIMIZATIONS ON ACCEPTANCE SCORE
+
+                        # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
+                        # accept_length_fake =  accept_length + 1
+                        # is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
+                        # # fi = list(IDs of only TRUE branches)
+                        # fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
+                        # # print("fi_fake: ", fi_fake)
+                        # # target logits of the nodes on the candidate sequences returned True by fi and current depth
+                        # gt_logits_fake = logits[fi_fake, i][None]
                         # print("gt_logits_fake.shape: ", gt_logits_fake.shape)
-                        normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
-                        normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
-                        lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                        # normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
+                        # normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
+                        # lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
                         # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                         # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        if lev_sim_score > 0.625 :
-                            px +=  r * lev_sim_score 
+                        # if lev_sim_score > 0.625 :
+                        #     px +=  r * lev_sim_score 
                             # print("lev_sim_score: ", lev_sim_score, " r * combined_score: ", r * combined_score )
 
                         curr_tree_node_idx = retrieve_indices[j,i]
-                        
-                        ## OLD CODE BASED ON DRAFTER-GUIDED CROSS-LEVEL MERGING BELOW. it used to get filled in sample() of ea_model.py
-                        # if level_sim is not None:
-                            # if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
-                            #     lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                                
-                            #     inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
-                            #     combined_score = (lev_sim_score + inv_l2_d) / 2
-                            #     px +=  r * combined_score
-                                                        
-                        if m_bias_list is not None:
-                            indices_l_lantern = [[] for _ in range(len(m_bias_list))]  
-                            for bias_idx, tpl in enumerate(m_bias_list) :
-                                id1,id2 = tpl
-                                if id1 == curr_tree_node_idx:
-                                    similar_xi = tree_candidates[0][id2]
-                                    px += r * gtp[similar_xi]
-
-                                    # if lantern:
-                                    #     # [10, 1]
-                                    #     nearest_probs = gtp[self.nearest_latents[similar_xi, :lantern_k]].reshape(lantern_k, 1)
-                                    #     # [10, 1]
-                                    #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
-                                    #     if lantern_delta > 1.0:
-                                    #         indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
-                                    #     else:
-                                    #         indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
-                                    #     if indices.numel() == 0:
-                                    #         indices = -1
-                                    #     else:
-                                    #         indices = indices[-1]
-                                    #     if indices == -1:
-                                    #         px = px
-                                    #     else:
-                                    #         # pick one index from cumsum
-                                    #         # print(f"indices: {indices}, adding cumsum_nearest_probs: {cumsum_nearest_probs[indices]}")
-                                    #         px = px + cumsum_nearest_probs[indices]
-                                    #     indices_l_lantern[bias_idx] = indices
                            
                             
                         if testing:
                             px_prior = px
-                        # if lantern:
-                        #     # [10, 1]
-                        #     nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
-                        #     # [10, 1]
-                        #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
-                        #     if lantern_delta > 1.0:
-                        #         indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
-                        #     else:
-                        #         indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
-                        #     if indices.numel() == 0:
-                        #         indices = -1
-                        #     else:
-                        #         indices = indices[-1]
-                        #     if indices == -1:
-                        #         px = px
-                        #     else:
-                        #         # pick one index from cumsum
-                        #         px = px + cumsum_nearest_probs[indices]
+
                         qx = cart_candidates_prob[j, i]
                         if qx <= 0:
                             continue
@@ -785,17 +766,10 @@ class EaModel(nn.Module):
                                 mask = tree_candidates[0][b]
                                 q[mask] = 0
                                 q = q / q.sum()
-                            # if lantern:
-                            #     if (indices != -1):
-                            #         # cancel probs of curr token's neighbor tokens in the parent
-                            #         q[self.nearest_latents[xi, :lantern_k + 1]] = 0
-                                # if m_bias_list is not None:
-                                #     for bias_idx, tpl in enumerate(m_bias_list) :
-                                #         id1, id2 = tpl
-                                #         if id1 == curr_tree_node_idx:
-                                #             similar_xi = tree_candidates[0][id2]
-                                #             if indices_l_lantern[bias_idx] != -1:
-                                #                 q[self.nearest_latents[similar_xi, :lantern_k + 1]] = 0
+                            if lantern:
+                                if (indices != -1):
+                                    # cancel probs of curr token's neighbor tokens in the parent
+                                    q[self.nearest_latents[xi, :lantern_k + 1]] = 0
                             gtp = gtp - q
                             gtp[gtp < 0] = 0
 
@@ -811,7 +785,7 @@ class EaModel(nn.Module):
                 gt_logits = logits_processor(None, gt_logits)[0]
                 sample_p = torch.softmax(gt_logits, dim=0)
             if testing:
-                return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r, eval_overhead
+                return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r, eval_overhead, kl
             return torch.tensor(best_candidate), accept_length - 1, sample_p
 
     
@@ -1065,17 +1039,10 @@ class EaModel(nn.Module):
         attention_mask = None,
 ): 
         position_ids = tree_position_ids + input_ids.shape[1] # 58+250 = 308
-        # print("tree_decoding: position_ids: ", position_ids.shape, flush=True)
-        # print("tree_decoding: position_ids: ", position_ids, flush=True)
         if attention_mask is not None: # [2, 120]
             remaining_length = input_ids.shape[1] + tree_candidates.shape[1] - attention_mask.shape[1]
-            # print("tree_decoding: remaining_length: ", remaining_length, flush=True)
             one_padding = torch.ones((attention_mask.shape[0], remaining_length), dtype=torch.long, device=attention_mask.device)
             attention_mask = torch.cat([attention_mask, one_padding], dim=1) 
-        # for x in past_key_values: 
-        #     print("tree_decoding: past_key_values.x: ", x.shape, flush=True)
-        # print("tree_decoding: attention_mask: ", attention_mask.shape, flush=True)
-        # print("tree_decoding: tree_candidates: ", tree_candidates.shape, flush=True)
 
         outputs, tree_logits, hidden_state = self(
             input_ids=tree_candidates,# [1,58]
@@ -1084,6 +1051,12 @@ class EaModel(nn.Module):
             position_ids=position_ids, 
             attention_mask=attention_mask # [2, 308]
         )
+
+        ea_device = self.ea_layer.lm_head.weight.device
+        if outputs["hidden_states"][0].device != ea_device:
+            outputs["hidden_states"] = [x.to(ea_device) for x in outputs["hidden_states"]]
+        hidden_state = torch.cat(outputs["hidden_states"], dim=-1)
+
         tree_logits = cfg_logit_process(tree_logits, cfg_scale)
         logits = tree_logits[0, retrieve_indices]
         return logits, hidden_state, outputs
@@ -1127,7 +1100,6 @@ class EaModel(nn.Module):
             dst = past_key_values_data[..., prev_input_len: prev_input_len + tgt.shape[-2], :]
             # Copy relevant past information from the source to the destination
             dst.copy_(tgt, non_blocking=True)
-        # print("past_key_values_data.shape: ", past_key_values_data.shape)
 
         # Update the current length tensor (currently only support batch size is 1)
         current_length_data.fill_(prev_input_len + tgt.shape[-2])
@@ -1159,7 +1131,6 @@ class EaModel(nn.Module):
                                                         input_ids=ea_input_ids,
                                                         head=self.base_model.lm_head,logits_processor=logits_processor,
                                                         cfg_scale=cfg_scale)
-            # print(f"topk sampling shape at {idx}: ", tree_logits[0].shape, flush=True)
             new_token += accept_length + 1
             return input_ids, tree_logits, new_token, None, token, bias_list, logit_sim
         else:
@@ -1241,9 +1212,7 @@ class EaModel(nn.Module):
         
         import models.drafters.choices as choices
         if static_tree:
-            # if hasattr(self, "tree_choices") and self.tree_choices == tree_choices:
-            #     tree_buffers = self.tree_buffers
-            # else:
+            # relaxed mode means increasing max. dree depth gradually across generation. for debugging, relaxed mode is not recommended.
             if relaxed:
                 tree_buffers_two, tree_choices_two = self.generate_tree_buffers(
                         tree_choices, 2, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
@@ -1260,27 +1229,12 @@ class EaModel(nn.Module):
                 tree_buffers_six, tree_choices_six = self.generate_tree_buffers(
                     tree_choices, None, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
                 )
-                # tree_buffers_seven, tree_choices_seven = self.generate_tree_buffers(
-                #     choices.sequoia, 7, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
-                # )
-                # tree_buffers_eight, tree_choices_eight = self.generate_tree_buffers(
-                #     choices.sequoia, 8, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
-                # )
-                # tree_buffers_nine, tree_choices_nine = self.generate_tree_buffers(
-                #     choices.sequoia, 9, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
-                # )
-                # tree_buffers_ten, tree_choices_ten = self.generate_tree_buffers(
-                #     choices.sequoia, 10, device=self.base_model.model.layers[-1].self_attn.q_proj.weight.device
-                # )
+                
                 tree_buffers_two["retrieve_indices_head"] = tree_buffers_two["retrieve_indices"].to(self.base_model.lm_head.weight.device)
                 tree_buffers_three["retrieve_indices_head"] = tree_buffers_three["retrieve_indices"].to(self.base_model.lm_head.weight.device)
                 tree_buffers_four["retrieve_indices_head"] = tree_buffers_four["retrieve_indices"].to(self.base_model.lm_head.weight.device)
                 tree_buffers_five["retrieve_indices_head"] = tree_buffers_five["retrieve_indices"].to(self.base_model.lm_head.weight.device)
                 tree_buffers_six["retrieve_indices_head"] = tree_buffers_six["retrieve_indices"].to(self.base_model.lm_head.weight.device)
-                # tree_buffers_seven["retrieve_indices_head"] = tree_buffers_seven["retrieve_indices"].to(self.base_model.lm_head.weight.device)
-                # tree_buffers_eight["retrieve_indices_head"] = tree_buffers_eight["retrieve_indices"].to(self.base_model.lm_head.weight.device)
-                # tree_buffers_nine["retrieve_indices_head"] = tree_buffers_nine["retrieve_indices"].to(self.base_model.lm_head.weight.device)
-                # tree_buffers_ten["retrieve_indices_head"] = tree_buffers_ten["retrieve_indices"].to(self.base_model.lm_head.weight.device)
 
                 tree_buffers = tree_buffers_two
                 tree_choices = tree_choices_two
@@ -1293,9 +1247,6 @@ class EaModel(nn.Module):
 
             self.tree_choices = tree_choices
             self.tree_buffers = tree_buffers
-            # print("tree_indices: ", tree_buffers['tree_indices'])
-            # print("retrieve_indices: ", tree_buffers['retrieve_indices'])
-            # print("tree_position_ids: ", tree_buffers["tree_position_ids"])
             
 
         # if hasattr(self.base_model, "past_key_values"):
@@ -1333,8 +1284,6 @@ class EaModel(nn.Module):
             )
             bias_list = init_bias_list
             img_sim_list = sim_list
-            # print("logits after initialize_tree_v1: ", logits.shape, flush=True)
-            # print(f"tree_logits after initialize_tree_v1: {tree_logits[0].shape}, {tree_logits[1].shape}, {tree_logits[2][0].shape, tree_logits[2][1].shape}", flush=True)
         else:
             draft_tokens, retrieve_indices,tree_mask,tree_position_ids, logits, hidden_state, sample_token = self.initialize_tree(
                 cond_combined, past_key_values, logits_processor, cfg, attention_mask
@@ -1364,22 +1313,15 @@ class EaModel(nn.Module):
 
         recent_acc_logits = None
 
-        # print("input ids shape: ", input_ids.shape, flush=True)
         st = time.time()
         for idx in range(max_steps):
             
             if static_tree:
-                # print("tree_buffers['tree_attn_mask']: ", tree_buffers['tree_attn_mask'].shape, flush=True)
-                # print("attention_mask: ", attention_mask.shape, flush=True)
-                # print("self.ea_layer.tree_mask: ", self.ea_layer.tree_mask.shape, flush=True)
-                # print("self.base_model.model.tree_mask: ", self.base_model.model.tree_mask.shape, flush=True)
-                # print("len(self.ea_layer.tree_buffer['tree_indices']): ", len(self.ea_layer.tree_buffer['tree_indices']), flush=True)
-                
+            
                 candidates, cart_candidates_prob, tree_candidates = self.generate_candidates(
                     tree_logits, tree_buffers["tree_indices"], tree_buffers["retrieve_indices"], sample_token, logits_processor
                 )
-                # print("candidates after generate_candidates: ", candidates.shape, flush=True)
-                # print("cart_candidates_prob after generate_candidates: ", cart_candidates_prob.shape, flush=True)
+
                 tree_candidates = torch.cat([tree_candidates, tree_candidates]).to(self.base_model.device)
                 logits, hidden_state_new, outputs = self.tree_decoding(
                     tree_candidates, past_key_values, tree_buffers["tree_position_ids"], input_ids, tree_buffers["retrieve_indices_head"], cfg, attention_mask
@@ -1387,9 +1329,10 @@ class EaModel(nn.Module):
                 # [13, 3, 16384]
                 # print("logits after tree_decoding: ", logits.shape, flush=True)
                 if testing:
-                    best_candidate, accept_length, sample_p, p, pp, r, overhead = self.evaluate_posterior_v1(
-                        idx, relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
+                    best_candidate, accept_length, sample_p, p, pp, r, overhead  = self.evaluate_posterior_v1(
+                        idx, tree_logits,  relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                     )
+                    # some debugging is enabled via --test option
                     accept_list.append(accept_length)
                     analysis_p.append(p)
                     analysis_p_p.append(pp)
@@ -1399,11 +1342,8 @@ class EaModel(nn.Module):
 
                 else:
                     best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
-                    idx, relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
+                    idx, tree_logits, relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                 )
-                # [1, 16384] --> [1, 2000]
-                # recent_acc_logits = logits_processor(None, logits[best_candidate, accept_length:accept_length + 1])
-                # recent_acc_logits[recent_acc_logits == float('-inf')] = 0.0
                 
                 if relaxed and idx % 25 == 0 and idx < 101:
                     tree_buffers_old =  tree_buffers
@@ -1423,26 +1363,6 @@ class EaModel(nn.Module):
                         # update tree logic
                         tree_buffers = tree_buffers_six
                         tree_choices = tree_choices_six
-                    # elif idx == 125 :
-                    #     # update tree logic
-                    #     tree_buffers = tree_buffers_seven
-                    #     tree_choices = tree_choices_seven
-                    #     levels = 7
-                    # elif idx == 150 :
-                    #     # update tree logic
-                    #     tree_buffers = tree_buffers_eight
-                    #     tree_choices = tree_choices_eight
-                    #     levels = 8
-                    # elif idx == 175 :
-                    #     # update tree logic
-                    #     tree_buffers = tree_buffers_nine
-                    #     tree_choices = tree_choices_nine
-                    #     levels = 9
-                    # elif idx == 200 :
-                    #     # update tree logic
-                    #     tree_buffers = tree_buffers_ten
-                    #     tree_choices = tree_choices_ten
-                    #     levels = 10
                     input_ids, tree_logits, new_token, hidden_state, sample_token, new_bias_list, sim_list = self.update_inference_inputs(
                         idx,
                         True,
@@ -1486,8 +1406,6 @@ class EaModel(nn.Module):
                             static_tree=static_tree
                         )
                 bias_list = new_bias_list
-                # level_bias_list = new_level_bias_list
-                # img_sim_list += sim_list
             else:
                 self.base_model.model.tree_mask = tree_mask
                 
@@ -1517,20 +1435,9 @@ class EaModel(nn.Module):
                     sample_p,
                     cfg,
                 )
-            # if torch.is_tensor(accept_length):
-            #     accept_length_list.append(accept_length.item()+1)
-            # else:
-            #     accept_length_list.append(accept_length+1)
-            
-           
-            # ids_padded = pad_to_square(input_ids[:, 120:120+new_token])
-            # _, generated_image = self.base_model.decode_ids(ids_padded)
-            # os.makedirs(f"/home/syildiri/LANTERN/lantern-imgs/{prompt}", exist_ok=True)
-            # save_image(generated_image,  f"/home/syildiri/LANTERN/lantern-imgs/{prompt}/step_{idx}.png", normalize=True, value_range=(-1, 1))
 
             if new_token > max_length:
                 break
-        
         if testing:
             p = [i for p in analysis_p for i in p]
             pp = [i for p_p in analysis_p_p for i in p_p]

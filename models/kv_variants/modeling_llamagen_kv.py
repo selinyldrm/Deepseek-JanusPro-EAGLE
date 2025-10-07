@@ -540,26 +540,22 @@ class LlamaAttention(nn.Module):
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value[0].shape[-2]
-        # TODO: Modify applying rotary pos emb for LlamaGen
-        # cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
-        # query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        
+        # Apply rotary embeddings using LlamaGen's method
         query_states = apply_rotary_emb(query_states.transpose(1, 2), freqs_cis).transpose(1, 2)
         key_states = apply_rotary_emb(key_states.transpose(1, 2), freqs_cis).transpose(1, 2)
-        # ! until here
-        
-        # [MODIFIED] Using KVCache mechanism for preallocated GPU memory optimization
-        # past_key_value is utilized to leverage previously computed key and value states.
-        # If past_key_value is available, reuse the states for k, v, and self_attention.
+
         if past_key_value is not None:
+            # reuse k, v, self_attention
             key_states = past_key_value[0].cat(key_states, dim=2)
             value_states = past_key_value[1].cat(value_states, dim=2)
-        # Reset past_key_value to avoid return past_key_value.
-        past_key_value = None
+
         past_key_value = (key_states, value_states) if use_cache else None
 
+        # repeat k/v heads if n_kv_heads < n_heads
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
-        
+
         attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
@@ -1163,29 +1159,36 @@ class LlamaModel(LlamaPreTrainedModel):
                 use_cache = False
 
         # decoder layers
-        all_hidden_states = () if output_hidden_states else None
+        all_hidden_states = () 
         # all_self_attns = () if output_attentions else None
         all_self_attns = () 
         next_decoder_cache = () if use_cache else None
 
         last_attn_weights = None
         for idx, decoder_layer in enumerate(self.layers):
-            if output_hidden_states:
+            if idx==len(self.layers)-3 or idx==len(self.layers)//2 or idx==2:
                 all_hidden_states += (hidden_states,)
 
-            past_key_value = past_key_values[idx] if past_key_values is not None else None
+            past_key_value = (
+                past_key_values[idx] if past_key_values is not None else None
+            )
 
             if self.gradient_checkpointing and self.training:
 
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
                         # None for past_key_value
-                        return module(*inputs, past_key_value, output_attentions, padding_mask=padding_mask)
+                        return module(*inputs, output_attentions, None)
 
                     return custom_forward
 
                 layer_outputs = torch.utils.checkpoint.checkpoint(
-                    create_custom_forward(decoder_layer), hidden_states, attention_mask, position_ids, freqs_cis
+                    create_custom_forward(decoder_layer),
+                    hidden_states,
+                    attention_mask,
+                    position_ids,
+                    freqs_cis=freqs_cis,
+
                 )
             else:
                 layer_outputs = decoder_layer(
@@ -1196,7 +1199,6 @@ class LlamaModel(LlamaPreTrainedModel):
                     past_key_value=past_key_value,
                     output_attentions=output_attentions,
                     use_cache=use_cache,
-                    padding_mask=padding_mask,
                 )
 
             hidden_states = layer_outputs[0]
@@ -1204,17 +1206,25 @@ class LlamaModel(LlamaPreTrainedModel):
             if use_cache:
                 next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
 
-            # if output_attentions:
-            all_self_attns += (layer_outputs[1],)
+            if output_attentions:
+                all_self_attns += (layer_outputs[1],)
+
         hidden_states = self.norm(hidden_states)
 
         # add hidden states from the last decoder layer
         if output_hidden_states:
             all_hidden_states += (hidden_states,)
 
+        # !!!
+        # all_hidden_states += (hidden_states,)
+
         next_cache = next_decoder_cache if use_cache else None
         if not return_dict:
-            return tuple(v for v in [hidden_states, next_cache, all_hidden_states, all_self_attns] if v is not None)
+            return tuple(
+                v
+                for v in [hidden_states, next_cache, all_hidden_states, all_self_attns]
+                if v is not None
+            )
         return BaseModelOutputWithPast(
             last_hidden_state=hidden_states,
             past_key_values=next_cache,

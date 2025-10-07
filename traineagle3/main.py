@@ -62,7 +62,7 @@ def parse_args():
     parser.add_argument('--is_warmup', action='store_true', default=True)
     
     # Eagle 3 specific arguments
-    parser.add_argument('--length', type=int, default=7, help='Eagle 3 multi-step training length')
+    parser.add_argument('--length', type=int, default=1, help='Eagle 3 multi-step training length')
     parser.add_argument('--eagle3_weight_decay', type=float, default=0.8, help='Weight decay for Eagle 3 multi-step loss')
     
     parser.add_argument('--p_w', type=float, default=0.1)
@@ -152,14 +152,15 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 optimizer.zero_grad()
                 
             # Eagle 3 forward pass returns multiple losses and accuracies
-            plosses, vlosses, acces = model(
-                input_ids=data["input_ids"], 
-                attention_mask=data["attention_mask"],
-                loss_mask=data["loss_mask"]
-            )
-            
+            # plosses, vlosses, acces = model(
+            #     input_ids=data["input_ids"], 
+            #     attention_mask=data["attention_mask"],
+            #     loss_mask=data["loss_mask"]
+            # )
+            plosses, vlosses, acces = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
             # Compute weighted loss for Eagle 3
             weighted_loss = sum([loss_weights[i] * plosses[i] for i in range(len(plosses))])
+
             loss = weighted_loss
             
             if train_mode:
@@ -247,7 +248,8 @@ def run_train_drafter(args):
     elif "llamagen" in args.model:
         from transformers import AutoConfig
         base_config = AutoConfig.from_pretrained(args.base_path)
-        ModelClass = Eagle3LlamaGenModel
+        from models.drafters.cnets_llamagen import Model
+        ModelClass = Model
     else:
         raise ValueError("Invalid model name. Supported: lumina_mgpt, anole, llamagen, llamagen2")
 
@@ -326,15 +328,16 @@ def run_train_drafter(args):
     # Create Eagle 3 model
     config = EConfig.from_pretrained(args.config_path)
     training_config = Eagle3TrainingConfig(args)
-    model = ModelClass(
-        config, 
-        training_config,
-        load_emb=True, 
-        path=args.base_path,
-        embed_upscale=args.embed_upscale
-    )
+    # model = ModelClass(
+    #     config, 
+    #     training_config,
+    #     load_emb=True, 
+    #     path=args.base_path,
+    #     embed_upscale=args.embed_upscale
+    # )
+    model = ModelClass(config, load_emb=True, path=args.base_path)
     model.eagle_head = head
-    # ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_10/model.safetensors"
+    # ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixed-length1/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length1_mscoco2017train30k/state_2/model.safetensors"
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)
     # model.load_state_dict(state_dict, strict=True)

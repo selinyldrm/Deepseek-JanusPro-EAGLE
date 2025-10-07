@@ -17,6 +17,7 @@ import torch.nn.functional as F
 
 from models.configs.configs import EConfig
 
+
 from .data_utils import (
     list_files,
     AddGaussianNoise,
@@ -35,7 +36,7 @@ def parse_args():
     # paths and directories
     parser.add_argument("--model", type=str, default="lumina_mgpt")
     parser.add_argument('--base_path', type=str, default='ckpts/lumina_mgpt/Lumina-mGPT-7B-768')
-    parser.add_argument('--config_path', type=str, default='data/configs/lumina_mgpt_config.json')
+    parser.add_argument('--config_path', type=str, default='data/configs/llamagen_t2i2_config.json')
     # parser.add_argument('--data_dir', type=str, default='data/drafter_train_data/lumina_mgpt/mscoco2017train')
     parser.add_argument('--data_dir', type=str, default='/home/server44/sihwan_workspace/ssd/lumina_mgpt_eagle_mscoco2017train')
     parser.add_argument('--save_dir', type=str, default='ckpts/lumina_mgpt/trained_drafters')
@@ -115,6 +116,56 @@ def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, 
     if wandb_check:
         wandb.log(logdict)
 
+@torch.no_grad()
+def padding(tensor, left=True):
+    """Helper function for padding tensors"""
+    zeropadding = torch.zeros_like(tensor[:, -1:])
+    if left:
+        tensor = torch.cat((zeropadding, tensor[:, :-1]), dim=1)
+    else:
+        tensor = torch.cat((tensor[:, 1:], zeropadding), dim=1)
+    return tensor
+
+@torch.no_grad()
+def dataprepare(base_model, input_ids, attention_mask, loss_mask):
+    """
+    Eagle 3: Extract features from 3 different layers of the target model (LlamaGen)
+    """
+    device = input_ids.device
+    
+    # Get outputs with hidden states from all layers
+    with torch.no_grad():
+        outputs = base_model(input_ids=input_ids, attention_mask=attention_mask)
+    
+    # # Eagle 3: Extract hidden states from 3 different layers
+    # # Use layer 0, 1, and 2 (early, middle, late features)
+    # hidden_states0 = outs.hidden_states[0]  # Early layer features
+    # hidden_states1 = outs.hidden_states[1]  # Middle layer features  
+    # hidden_states2 = outs.hidden_states[2]  # Late layer features
+    
+    # # Concatenate the 3 layer features
+    # hidden_states = torch.cat((hidden_states0, hidden_states1, hidden_states2), dim=-1)
+
+    # hidden state concat from EAGLE codebase: 
+    if outputs["hidden_states"][0].device != device:
+        outputs["hidden_states"] = [x.to(device) for x in outputs["hidden_states"]]
+    hidden_states = torch.cat(outputs["hidden_states"], dim=-1)
+    
+    target = outputs["logits"]
+
+     # not sure what these are
+    # target = padding(target, left=False)
+    # input_ids = padding(input_ids, left=False)
+
+    if target is not None:
+        target = target.to(device)
+
+         # not sure what these are
+        # loss_mask = loss_mask[..., None]
+        # loss_mask = loss_mask.to(device)
+
+    return hidden_states, target, loss_mask, input_ids
+
 def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup, train_mode=True):
     model.train() if train_mode else model.eval()
     
@@ -128,10 +179,16 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             if train_mode:
                 optimizer.zero_grad()
             predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
-            # print("predict shape: ", predict.shape)
             
             with torch.no_grad():
-                target_head = head(data["target"])
+                hidden_states, target_logits, loss_mask, input_ids = dataprepare(model.module.base_model, input_ids=data["input_ids"], attention_mask=data["attention_mask"], loss_mask=data["loss_mask"])
+                # target_head = head(data["target"])
+                # print("data[input_ids].shape: ", data["input_ids"].shape)
+                # print("data[hidden_states].shape: ", data["hidden_states"].shape)
+                # print("draft predict.shape: ", predict.shape)
+                # print("base hidden_states.shape: ", hidden_states.shape)
+                # print("base target_logits.shape: ", target_logits.shape)
+                target_head = target_logits
                 if args.cfg_loss:
                     """
                         Note that target_head[::2] is a conditioned logits and target_head[1::2] is an unconditioned logits.
@@ -145,20 +202,6 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                     target_head = target_head[::2] + args.cfg_scale * (target_head[::2] - target_head[1::2])
                     
                 target_p = nn.Softmax(dim=2)(target_head).detach()
-                
-           
-            n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
-            cosine_sim_matrix = torch.bmm(n_target_logits, n_target_logits.transpose(1, 2))
-            B, L, _ = cosine_sim_matrix.shape
-
-            thresh = 0.625
-            # build upper-triangular mask (i < j)
-            upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
-            upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
-
-            # combine with threshold condition
-            logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
-            token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
 
 
             out_head = head(predict)
@@ -172,14 +215,15 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             else:
                 p_loss_mask = loss_mask
 
-            weight = 4.0
-            weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
-
             plogp = target_p * out_logp
-            ploss = -torch.sum(torch.sum(weighted_mask * plogp, 2)) / (weighted_mask.sum() + 1e-5)
+            ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
 
-            vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
-            loss = vloss + args.p_w * ploss
+            # vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
+            # loss = vloss + args.p_w * ploss
+            
+            # [SY] no more v_loss via criterion(). data["target"] is not created for training data
+            vloss= None
+            loss = args.p_w * ploss 
 
             if train_mode:
                 accelerator.backward(loss)
@@ -226,10 +270,16 @@ def run_train_drafter(args):
         raise ValueError("--cfg_loss can not be activated without --coupled.")
 
     set_seed(0)
+    from accelerate.utils import DistributedDataParallelKwargs
+
+    # [SY]: added this DDP kwargs handler to silence gradient related errors
+    ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
     accelerator = Accelerator(
                     mixed_precision='bf16',
-                    gradient_accumulation_steps=args.gradient_accumulation_steps,)
-    
+                    gradient_accumulation_steps=args.gradient_accumulation_steps,
+                    kwargs_handlers=[ddp_kwargs]
+                  )
+
     if accelerator.is_main_process:
         if args.wandb:
             wandb.login(key="46d0f4a8c52a34c94859af9091c680cd79990fd6")
@@ -287,6 +337,7 @@ def run_train_drafter(args):
             weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
             tensor = weights["lm_head.weight"].float()
     head.weight.data = tensor
+    print("LOADED BASE MODEL LM HEAD")
     head.eval()
 
     for param in head.parameters():
@@ -334,9 +385,17 @@ def run_train_drafter(args):
     config = EConfig.from_pretrained(args.config_path)
     # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
     model = Model(config, load_emb=True, path=args.base_path)
+    from traineagle3.modeling_llamagen_kv import LlamaForCausalLM as KVLlamaForCausalLM
+    model.base_model = KVLlamaForCausalLM.from_pretrained(args.base_path)
+    for param in model.base_model.parameters():
+        param.requires_grad = False
+
+    model.eagle_head = head
+
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)
     # model.load_state_dict(state_dict, strict=True)
+    
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))

@@ -11,14 +11,14 @@ echo "🚀 Starting Eagle 3 Training for Image Generation Models"
 MODEL="llamagen2"
 BASE_PATH="/work1/deming/shared/llamagen/LlamaGen-T2I-2"
 DATA_DIR="/work1/deming/shared/llamagen/training-data-eagle3_eagle3"
-SAVE_DIR="/work1/deming/shared/llamagen/llamagen2-eagle3-fixed"
+SAVE_DIR="/work1/deming/shared/llamagen/llamagen2-eagle3-fixedbase-length1"
 CONFIG_DIR="/work1/deming/seliny2/LANTERN/traineagle3/config_llamagen.json"
 
 # Training parameters
 NUM_EPOCHS=20
 BATCH_SIZE=8 # for MI300s !!!!!
 LEARNING_RATE=1e-4
-LENGTH=7  # Eagle 3 multi-step length
+LENGTH=1 # Eagle 3 multi-step length
 
 # Create save directory if it doesn't exist
 mkdir -p $SAVE_DIR
@@ -71,7 +71,7 @@ accelerate launch -m main \
     --grad_clip 0.5 \
     --max_len 4096 \
     --eval_freq 1 \
-    --save_freq 5 \
+    --save_freq 2 \
     --data_noise uniform \
     --std 0.2 \
     --train_data_ratio 0.95 \

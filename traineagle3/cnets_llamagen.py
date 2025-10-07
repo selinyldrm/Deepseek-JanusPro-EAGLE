@@ -13,6 +13,9 @@ from models.configs.configs import EConfig
 from models.drafters.choices import *
 from torch.utils.checkpoint import checkpoint
 
+from traineagle3.modeling_llamagen_kv import LlamaForCausalLM as KVLlamaForCausalLM
+
+
 
 TOPK=10
 
@@ -505,13 +508,15 @@ class Eagle3LlamaGenModel(nn.Module):
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
         self.hidden_size = config.hidden_size
-        self.length = 7  # Eagle 3 multi-step training length
+        self.length = 1  # Eagle 3 multi-step training length
 
         # Load target model for multi-layer feature extraction
         if path is not None:
-            # For LlamaGen, use the appropriate model class
-            from transformers import AutoModelForCausalLM
-            self.target_model = AutoModelForCausalLM.from_pretrained(path, torch_dtype=torch.float16, output_hidden_states=True)
+            # [SY]: fix this 
+            # self.target_model = LlamaForCausalLM.from_pretrained(path, torch_dtype=torch.float16, output_hidden_states=True)
+            self.target_model = KVLlamaForCausalLM.from_pretrained(
+                path
+            )
             self.target_model.eval()
             for param in self.target_model.parameters():
                 param.requires_grad = False
@@ -626,18 +631,22 @@ class Eagle3LlamaGenModel(nn.Module):
         
         # Get outputs with hidden states from all layers
         with torch.no_grad():
-            outs = self.target_model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+            outputs = self.target_model(input_ids=input_ids, attention_mask=attention_mask)
         
-        # Eagle 3: Extract hidden states from 3 different layers
-        # Use layer 0, 1, and 2 (early, middle, late features)
-        hidden_states0 = outs.hidden_states[0]  # Early layer features
-        hidden_states1 = outs.hidden_states[1]  # Middle layer features  
-        hidden_states2 = outs.hidden_states[2]  # Late layer features
+        # # Eagle 3: Extract hidden states from 3 different layers
+        # # Use layer 0, 1, and 2 (early, middle, late features)
+        # hidden_states0 = outs.hidden_states[0]  # Early layer features
+        # hidden_states1 = outs.hidden_states[1]  # Middle layer features  
+        # hidden_states2 = outs.hidden_states[2]  # Late layer features
         
-        # Concatenate the 3 layer features
-        hidden_states = torch.cat((hidden_states0, hidden_states1, hidden_states2), dim=-1)
+        # # Concatenate the 3 layer features
+        # hidden_states = torch.cat((hidden_states0, hidden_states1, hidden_states2), dim=-1)
+
+        if outputs["hidden_states"][0].device != device:
+            outputs["hidden_states"] = [x.to(device) for x in outputs["hidden_states"]]
+        hidden_states = torch.cat(outputs["hidden_states"], dim=-1)
         
-        target = outs.logits
+        target = outputs["logits"]
         target = padding(target, left=False)
         input_ids = padding(input_ids, left=False)
 
@@ -766,13 +775,6 @@ class Eagle3LlamaGenModel(nn.Module):
             for idx in range(self.length):
                 last = idx == self.length - 1
 
-                # inputs_embeds = self.embed_tokens(input_ids)
-                # if self.embed_proj is not None:
-                #     inputs_embeds = self.embed_proj(inputs_embeds)
-                # if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
-                #     inputs_embeds.requires_grad_(True)
-                # inputs_embeds = inputs_embeds.to(hidden_states.dtype)
-
                 # compute freqs_cis (same as before)
                 if seq_length > self.freqs_cis.shape[0]:
                     num_missing = seq_length - self.freqs_cis.shape[0]
@@ -810,7 +812,7 @@ class Eagle3LlamaGenModel(nn.Module):
                 loss = -torch.sum(loss_mask * plogp, 2).mean()
                 ploss_list.append(loss)  # tensor, not float
                 with torch.no_grad():
-                    acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * loss_mask.squeeze(-1)).sum().item() / (loss_mask.sum().item() + 1e-6))
+                    acc_list.append(((logits.argmax(-1) == target_p.argmax(-1)) * loss_mask.squeeze(-1)).sum().item() / (loss_mask.sum().item() + 1e-6))
 
                 if not last:
                     input_ids = padding(input_ids, left=False)
@@ -822,7 +824,7 @@ class Eagle3LlamaGenModel(nn.Module):
                     attention_mask = attention_mask.clone()
                     attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
 
-            plosses_tensor = torch.stack(ploss_list)  # shape (length_int,)
+            plosses_tensor = torch.stack(ploss_list)  # always 1D tensor
             acces_tensor = torch.tensor(acc_list, device=plosses_tensor.device)  # shape (length_int,)
 
             return plosses_tensor, acces_tensor
@@ -850,12 +852,12 @@ class Eagle3LlamaGenModel(nn.Module):
             # fallback: non-checkpointed loop (keeps original semantics)
             for idx in range(self.length):
                 last = idx == self.length - 1
-                inputs_embeds = self.embed_tokens(input_ids)
+                
+                # Recompute inputs_embeds for each step in non-checkpointed mode
+                current_inputs_embeds = self.embed_tokens(input_ids)
                 if self.embed_proj is not None:
-                    inputs_embeds = self.embed_proj(inputs_embeds)
-                if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
-                    inputs_embeds.requires_grad_(True)
-                inputs_embeds = inputs_embeds.to(hidden_states.dtype)
+                    current_inputs_embeds = self.embed_proj(current_inputs_embeds)
+                current_inputs_embeds = current_inputs_embeds.to(hidden_states.dtype)
 
                 # compute freqs_cis (same as before)
                 if seq_length > self.freqs_cis.shape[0]:
@@ -869,7 +871,7 @@ class Eagle3LlamaGenModel(nn.Module):
                     freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
 
                 layer_outputs = self.midlayer(
-                    input_emb=inputs_embeds,
+                    input_emb=current_inputs_embeds,
                     hidden_states=hidden_states,
                     attention_mask=attention_mask,
                     position_ids=position_ids,
