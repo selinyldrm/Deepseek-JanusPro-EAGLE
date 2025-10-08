@@ -178,11 +178,18 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
         with torch.set_grad_enabled(train_mode):
             if train_mode:
                 optimizer.zero_grad()
-            predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
             
             with torch.no_grad():
                 hidden_states, target_logits, loss_mask, input_ids = dataprepare(model.module.base_model, input_ids=data["input_ids"], attention_mask=data["attention_mask"], loss_mask=data["loss_mask"])
-                target_head = head(data["target"])
+            
+            #draft prediction
+            hidden_states = model.module.fc(hidden_states) # initial 3K -> 1K
+            predict = model(hidden_states, input_ids=data["input_ids"], attention_mask=data["attention_mask"])
+
+            with torch.no_grad():
+                # print("data[target].shape: ", data["target"].shape) 
+                target_head = head(data["target"][:,:,2560:]) # ground truth hidden states did not need to be concat'd from 3 layers
+
                 # print("data[input_ids].shape: ", data["input_ids"].shape)
                 # print("data[hidden_states].shape: ", data["hidden_states"].shape)
                 # print("draft predict.shape: ", predict.shape)
