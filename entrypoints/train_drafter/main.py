@@ -182,13 +182,12 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             
             with torch.no_grad():
                 hidden_states, target_logits, loss_mask, input_ids = dataprepare(model.module.base_model, input_ids=data["input_ids"], attention_mask=data["attention_mask"], loss_mask=data["loss_mask"])
-                # target_head = head(data["target"])
+                target_head = head(data["target"])
                 # print("data[input_ids].shape: ", data["input_ids"].shape)
                 # print("data[hidden_states].shape: ", data["hidden_states"].shape)
                 # print("draft predict.shape: ", predict.shape)
                 # print("base hidden_states.shape: ", hidden_states.shape)
                 # print("base target_logits.shape: ", target_logits.shape)
-                target_head = target_logits
                 if args.cfg_loss:
                     """
                         Note that target_head[::2] is a conditioned logits and target_head[1::2] is an unconditioned logits.
