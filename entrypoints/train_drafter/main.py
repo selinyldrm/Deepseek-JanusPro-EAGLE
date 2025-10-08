@@ -188,7 +188,9 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
 
             with torch.no_grad():
                 # print("data[target].shape: ", data["target"].shape) 
-                target_head = head(data["target"][:,:,2560:]) # ground truth hidden states did not need to be concat'd from 3 layers
+                # target_head = head(data["target"][:,:,2560:]) # ground truth hidden states did not need to be concat'd from 3 layers
+                target_head = head(data["target"]) # ground truth hidden states did not need to be concat'd from 3 layers
+
 
                 # print("data[input_ids].shape: ", data["input_ids"].shape)
                 # print("data[hidden_states].shape: ", data["hidden_states"].shape)
@@ -389,7 +391,6 @@ def run_train_drafter(args):
             os.makedirs(args.save_dir)
 
     config = EConfig.from_pretrained(args.config_path)
-    # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
     model = Model(config, load_emb=True, path=args.base_path)
     from traineagle3.modeling_llamagen_kv import LlamaForCausalLM as KVLlamaForCausalLM
     model.base_model = KVLlamaForCausalLM.from_pretrained(args.base_path)
@@ -397,10 +398,10 @@ def run_train_drafter(args):
         param.requires_grad = False
 
     model.eagle_head = head
-
-    # from safetensors.torch import load_file
-    # state_dict = load_file(ckpt_path)
-    # model.load_state_dict(state_dict, strict=True)
+    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixedbase-fixedconfig-fixedds-length1/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_mscoco2017train30k/state_10/model.safetensors"
+    from safetensors.torch import load_file
+    state_dict = load_file(ckpt_path)
+    model.load_state_dict(state_dict, strict=True)
     
 
     criterion = nn.SmoothL1Loss(reduction="none")
@@ -419,7 +420,7 @@ def run_train_drafter(args):
             model, head, optimizer, train_loader, test_loader
         )
  
-    for epoch in range(0, args.num_epochs):
+    for epoch in range(10, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3\
             = run_epoch(args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, train_mode=True)
         

@@ -1023,7 +1023,7 @@ class Model(nn.Module):
         for i in range(len(self.tree_buffer['tree_indices'])):
             if logits_processor is not None:
                 topk_index,topk_prob,op, bias, filtered_logits = self.sample(recent_logits, last_headout,step,logits_processor,k=self.top_k)
-                bias_list[i] = bias
+                # bias_list[i] = bias
             else:
                 top=torch.topk(last_headout, self.top_k, dim=-1)
                 topk_index,topk_prob = top.indices,top.values
@@ -1061,8 +1061,8 @@ class Model(nn.Module):
                     last_headout = F.linear(out_hidden, self.headweight)
             last_headout = cfg_logit_process(last_headout, cfg_scale)[0]
             
-            # [1, 1], [5,1]
-            bias_list[i] = bias
+            # # [1, 1], [5,1]
+            # bias_list[i] = bias
 
         if logits_processor is not None:
             topk_index,topk_prob,op, bias, _ = self.sample(recent_logits, last_headout,step, logits_processor,k=self.top_k)
@@ -1074,7 +1074,7 @@ class Model(nn.Module):
         # print("topk_index: ", topk_index.shape, flush=True)
         ss_prob.append(topk_prob)
         ss_op.append(op)
-        bias_list[len(self.tree_buffer['tree_indices'])] = bias
+        # bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
         # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
         return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim

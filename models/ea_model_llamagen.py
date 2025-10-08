@@ -523,6 +523,7 @@ class EaModel(nn.Module):
         lantern_delta=0.1,
     ) -> Tuple[torch.Tensor, int]:
         # Greedy decoding based on temperature value
+
         if testing: 
             analysis_p_p = []
             analysis_p = []
@@ -695,7 +696,9 @@ class EaModel(nn.Module):
                         r = random.random()
                         px = gtp[xi]
 
+                        px_prior = px
                         if lantern:
+                            
                             nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
                             cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
 
@@ -733,18 +736,15 @@ class EaModel(nn.Module):
                             # print("lev_sim_score: ", lev_sim_score, " r * combined_score: ", r * combined_score )
 
                         curr_tree_node_idx = retrieve_indices[j,i]
-                           
-                            
-                        if testing:
-                            px_prior = px
+                        
 
                         qx = cart_candidates_prob[j, i]
                         if qx <= 0:
                             continue
                         acp = px / qx
-                        if testing and (px_prior/ qx) < acp:
-                            analysis_p.append(px_prior/ qx)
-                            analysis_p_p.append(acp)
+                        if testing :
+                            analysis_p.append(acp)
+                            analysis_p_p.append(px_prior / qx )
                             analysis_r.append(r)
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)

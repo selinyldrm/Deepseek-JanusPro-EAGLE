@@ -669,7 +669,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             max_accpt = np.max(acceptance_lists, axis=0)
             avg_accpt = np.mean(acceptance_lists, axis=0)
 
-            plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 5 Images")
+            # plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 5 Images")
             plt.scatter(range(len(avg_accpt)), avg_accpt, marker='o', label=f"Avg Acceptance Length over 5 Images={np.mean(avg_accpt):.2f}")
             plt.xlabel("Generation Index")
             plt.ylabel("Number of Tokens Accepted")
@@ -677,6 +677,29 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             plt.grid(True)
             plt.tight_layout()
             plt.savefig(f"{args.output_dir}/5imgs-avg-accept-length.png")
+            plt.close()
+
+            def to_float(x):
+                """Convert list of tensors or mixed types (possibly CUDA) to pure float list."""
+                out = []
+                for v in x:
+                    if torch.is_tensor(v):
+                        out.append(float(v.detach().cpu().item()))
+                    else:
+                        out.append(float(v))
+                return out
+
+            plt.scatter(range(len(analysis_r)), to_float(analysis_r), marker='o', label=f"R")
+            plt.scatter(range(len(analysis_p_p)), to_float(analysis_p_p), marker='*', label=f"prior ratio (score)")
+            plt.scatter(range(len(analysis_p)), to_float(analysis_p), marker='x', label=f"lantern ratio (score)")
+            plt.ylim(0, 1)
+
+            plt.xlabel("Generation Index")
+            plt.ylabel("Latency (sec)")
+            plt.legend()
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig(f"{args.output_dir}/5imgs-acc-scores.png")
             plt.close()
 
           
