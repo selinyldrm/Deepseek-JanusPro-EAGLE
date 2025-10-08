@@ -785,7 +785,7 @@ class EaModel(nn.Module):
                 gt_logits = logits_processor(None, gt_logits)[0]
                 sample_p = torch.softmax(gt_logits, dim=0)
             if testing:
-                return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r, eval_overhead, kl
+                return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r, eval_overhead
             return torch.tensor(best_candidate), accept_length - 1, sample_p
 
     
