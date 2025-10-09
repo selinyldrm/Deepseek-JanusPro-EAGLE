@@ -437,7 +437,7 @@ class LlamaDecoderLayeremb(nn.Module):
         self.last = last
         # self.fc = nn.Linear(config.hidden_size * 2, config.hidden_size)
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        # if self.index!=0:
+        
 
         self.post_attention_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
@@ -468,7 +468,7 @@ class LlamaDecoderLayeremb(nn.Module):
 
         residual = hidden_states
 
-        hidden_states = self.input_layernorm(hidden_states)
+        hidden_states = self.hidden_norm(hidden_states)
         input_emb = self.input_layernorm(input_emb)  
 
         hidden_states = torch.cat((input_emb, hidden_states), dim=-1)
