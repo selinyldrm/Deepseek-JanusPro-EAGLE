@@ -118,6 +118,7 @@ class EaModel(nn.Module):
         self.hidden_size = base_model.lm_head.weight.shape[-1]
         self.vocab_size = base_model.lm_head.weight.shape[0]
         self.base_model_name_or_path = base_model_name_or_path
+        self.depth= 6 # [SY]: Add for static tree
         # self.tokenizer = AutoTokenizer.from_pretrained(self.base_model_name_or_path,use_fast=False)
         config = EConfig.from_pretrained(ea_model_path)
         with open(ea_model_path,"r") as f:
@@ -428,8 +429,17 @@ class EaModel(nn.Module):
                         iblist.append(b)
             b_indices_new.append(iblist)
 
+        # levels = torch.unique(tree_position_ids)
+        # per_level_node_counts = {int(level.item()): int((tree_position_ids == level).nonzero(as_tuple=True)[0][0]) for level in levels}
+        # eagle 3 adaptation based on all tokens rather than non-leaf nodes with logits
         levels = torch.unique(tree_position_ids)
-        per_level_node_counts = {int(level.item()): int((tree_position_ids == level).nonzero(as_tuple=True)[0][0]) for level in levels}
+        per_level_node_counts = {}
+        for level in levels:
+            # first index of this level
+            first_idx = (tree_position_ids == level).nonzero(as_tuple=True)[0][0].item()
+            # last index of this level
+            last_idx = (tree_position_ids == level).nonzero(as_tuple=True)[0][-1].item()
+            per_level_node_counts[int(level.item())] = last_idx + 1  # end index
 
         # Aggregate the generated buffers into a dictionary
         tree_buffers = {
@@ -452,7 +462,7 @@ class EaModel(nn.Module):
         return tree_buffers, sorted_tree_choices
     
     @torch.no_grad()
-    def initialize_tree(self, cond_combined, past_key_values, logits_processor, cfg_scale, attention_mask = None):
+    def initialize_tree(self, tree_attn_mask, tree_node_counts, cond_combined, past_key_values, logits_processor, cfg_scale, attention_mask = None, tree_choices=mc_sim_7b_63):
         outputs, orig, hidden_states = self(
             cond_idx=cond_combined, past_key_values=past_key_values, output_orig=True, attention_mask=attention_mask
         )
@@ -468,8 +478,18 @@ class EaModel(nn.Module):
         token = torch.cat([token, token], dim=0)
         zero_padding = torch.zeros((token.shape[0], 120), dtype=torch.long, device=token.device)
         input_ids = torch.cat((zero_padding, token.to(cond_combined.device)), dim=1)
-        draft_tokens, retrieve_indices,tree_mask,tree_position_ids = self.ea_layer.topK_genrate(hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
-        return draft_tokens, retrieve_indices,tree_mask,tree_position_ids, orig, hidden_states, token
+
+        self.ea_layer.init_tree_v1(tree_choices)
+
+        ea_device = self.ea_layer.lm_head.weight.device
+        if outputs["hidden_states"][0].device != ea_device:
+            outputs["hidden_states"] = [x.to(ea_device) for x in outputs["hidden_states"]]
+        hidden_states=torch.cat(outputs["hidden_states"],dim=-1)
+
+        draft_tokens = self.ea_layer.topK_genrate_v1(None, None, tree_node_counts, hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
+        new_draft_tokens = torch.cat((token, draft_tokens), dim=-1)
+        self.base_model.model.tree_mask = tree_attn_mask
+        return new_draft_tokens, orig, hidden_states, token, input_ids
     
     @torch.no_grad()
     def initialize_tree_v1(self, step, cond_combined, tree_attn_mask, past_key_values, logits_processor, cfg_scale, attention_mask = None, tree_choices=mc_sim_7b_63):
@@ -664,8 +684,8 @@ class EaModel(nn.Module):
                 level_sim = None
 
                 ### DISABLED TOKEN MERGING OPTIMIZATIONS ON ACCEPTANCE SCORE
-                past_nodes = l_node_counts[i]
-                prev_past_nodes = l_node_counts[i-1]
+                # past_nodes = l_node_counts[i]
+                # prev_past_nodes = l_node_counts[i-1]
                 # if i < len(bias_list) and len(bias_list[i]):
                 #     m_bias_list = copy.deepcopy(bias_list[i])
                 #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
@@ -878,8 +898,8 @@ class EaModel(nn.Module):
                                 px = px + cumsum_nearest_probs[indices]
                         
                         qx = 1.0
-                        acp = px / qx
                         r = random.random()
+                        acp = px / qx 
 
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
@@ -1030,7 +1050,7 @@ class EaModel(nn.Module):
     @torch.no_grad()
     def tree_decoding(
         self,
-        tree_candidates,
+        draft_tokens,
         past_key_values,
         tree_position_ids,
         input_ids,
@@ -1038,18 +1058,24 @@ class EaModel(nn.Module):
         cfg_scale,
         attention_mask = None,
 ): 
-        position_ids = tree_position_ids + input_ids.shape[1] # 58+250 = 308
+        
+
+        # input_ids shape:  torch.Size([1, 120])
+        # tree_candidates new shape:  [1, 58]
+
+        # attention_mask shape:  torch.Size([2, 120])
+        position_ids = tree_position_ids + input_ids.shape[1] # 58+120 = 178
         if attention_mask is not None: # [2, 120]
-            remaining_length = input_ids.shape[1] + tree_candidates.shape[1] - attention_mask.shape[1]
+            remaining_length = input_ids.shape[1] + draft_tokens.shape[1] - attention_mask.shape[1]
             one_padding = torch.ones((attention_mask.shape[0], remaining_length), dtype=torch.long, device=attention_mask.device)
             attention_mask = torch.cat([attention_mask, one_padding], dim=1) 
 
         outputs, tree_logits, hidden_state = self(
-            input_ids=tree_candidates,# [1,58]
+            input_ids=draft_tokens,
             output_orig=True,
             past_key_values=past_key_values,
-            position_ids=position_ids, 
-            attention_mask=attention_mask # [2, 308]
+            position_ids=position_ids,
+            attention_mask=attention_mask
         )
 
         ea_device = self.ea_layer.lm_head.weight.device
@@ -1070,6 +1096,8 @@ class EaModel(nn.Module):
         tree_choices_new,
         recent_logits,
         input_ids,
+        per_level_node_counts,
+        draft_tokens,
         candidates,
         best_candidate,
         accept_length,
@@ -1089,8 +1117,9 @@ class EaModel(nn.Module):
                 retrieve_indices[best_candidate, : accept_length + 1] + prev_input_len
         )
 
+        accepted_token_id = candidates[None, best_candidate, : accept_length + 1]
         input_ids = torch.cat(
-            [input_ids, candidates[None, best_candidate, : accept_length + 1]], dim=-1
+            [input_ids, accepted_token_id], dim=-1
         )
         # Update the past key values based on the selected tokens
         # Source tensor that contains relevant past information based on the selected candidate
@@ -1106,17 +1135,20 @@ class EaModel(nn.Module):
 
         retrieve_hidden_state_new = hidden_state_new[:, retrieve_indices]
         accept_hidden_state_new = retrieve_hidden_state_new[:, best_candidate, : accept_length + 1]
-        # token=model.base_model.lm_head(accept_hidden_state_new[:,-1]).argmax()
-        # token=token[None,None]
+        
+        # next_base_token=self.base_model.lm_head(accept_hidden_state_new[:,-1]).argmax()
+        # token=next_base_token[None,None]
         prob = sample_p
         if logits_processor is not None:
-            token = torch.multinomial(prob, 1)
-            token = token[None]
+            next_base_token = torch.multinomial(prob, 1)
+            next_base_token = next_base_token[None]
         else:
-            token = torch.argmax(prob)
-            token = token[None, None]
-        # hidden_state = torch.cat((hidden_state, accept_hidden_state_new), dim=1)
-        ea_input_ids = torch.cat((input_ids, token.to(input_ids.device)), dim=1).repeat(2, 1)
+            next_base_token = torch.argmax(prob)
+            next_base_token = next_base_token[None, None]
+        concat_base_token = torch.cat([next_base_token,next_base_token], dim=0)
+        # print("next_base_token ID: ", next_base_token)
+        ea_input_ids = torch.cat((input_ids, next_base_token.to(input_ids.device)), dim=1).repeat(2, 1)
+        # print("update inputs ea_input_ids: ", ea_input_ids.shape)
         
         if static_tree:
             if relaxed:
@@ -1126,20 +1158,26 @@ class EaModel(nn.Module):
                 self.ea_layer.init_tree_v1(tree_choices_new)
                 self.base_model.model.tree_mask = tree_buffers_new['tree_attn_mask']
 
-            tree_logits, bias_list, logit_sim = self.ea_layer.topK_genrate_v1(idx, recent_logits,
-                                                        accept_hidden_state_new,
-                                                        input_ids=ea_input_ids,
-                                                        head=self.base_model.lm_head,logits_processor=logits_processor,
-                                                        cfg_scale=cfg_scale)
+            # tree_logits, bias_list, logit_sim = self.ea_layer.topK_genrate_v1(idx, recent_logits,
+            #                                             accept_hidden_state_new,
+            #                                             input_ids=ea_input_ids,
+            #                                             head=self.base_model.lm_head,logits_processor=logits_processor,
+            #                                             cfg_scale=cfg_scale)
+            
+            draft_tokens = self.ea_layer.topK_genrate_v1( idx, recent_logits,
+                                                         per_level_node_counts, accept_hidden_state_new, ea_input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
             new_token += accept_length + 1
-            return input_ids, tree_logits, new_token, None, token, bias_list, logit_sim
+            new_draft_tokens = torch.cat([concat_base_token, draft_tokens], dim=-1)
+            # print("new draft tokens: ", new_draft_tokens.shape)
+            return input_ids, new_draft_tokens, new_token, next_base_token
+            # return input_ids, tree_logits, new_token, None, token, bias_list, logit_sim            # lantern code
         else:
             draft_tokens, retrieve_indices,tree_mask,tree_position_ids = self.ea_layer.topK_genrate(accept_hidden_state_new,
                                                     input_ids=ea_input_ids,
                                                     head=self.base_model.lm_head,logits_processor=logits_processor,
                                                     cfg_scale=cfg_scale)
             new_token += accept_length + 1
-            return input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, None, token
+            return input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, None, next_base_token
 
     @torch.no_grad()
     def generate(
@@ -1279,11 +1317,15 @@ class EaModel(nn.Module):
         bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
         level_bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices']))]
         if static_tree:
-            tree_logits, logits, sample_token, init_bias_list, sim_list = self.initialize_tree_v1(
-                -1, cond_combined, tree_buffers['tree_attn_mask'], past_key_values, logits_processor, cfg, attention_mask, tree_choices
-            )
-            bias_list = init_bias_list
-            img_sim_list = sim_list
+            # tree_logits, logits, sample_token, init_bias_list, sim_list = self.initialize_tree_v1(
+            #     -1, cond_combined, tree_buffers['tree_attn_mask'], past_key_values, logits_processor, cfg, attention_mask, tree_choices
+            # )
+
+            draft_tokens, logits, hidden_state, sample_token, _ = self.initialize_tree(
+                tree_buffers['tree_attn_mask'], tree_buffers['per_level_node_counts'], cond_combined, past_key_values, logits_processor, cfg, attention_mask, tree_choices
+            )  
+            # bias_list = init_bias_list
+            # img_sim_list = sim_list
         else:
             draft_tokens, retrieve_indices,tree_mask,tree_position_ids, logits, hidden_state, sample_token = self.initialize_tree(
                 cond_combined, past_key_values, logits_processor, cfg, attention_mask
@@ -1313,19 +1355,28 @@ class EaModel(nn.Module):
 
         recent_acc_logits = None
 
+        # draft_tokens = tree_logits[0].flatten()[None] # eagle-3 directly uses draft tokens rather than features. shape : [1,250]
         st = time.time()
         for idx in range(max_steps):
             
             if static_tree:
             
-                candidates, cart_candidates_prob, tree_candidates = self.generate_candidates(
-                    tree_logits, tree_buffers["tree_indices"], tree_buffers["retrieve_indices"], sample_token, logits_processor
-                )
-
-                tree_candidates = torch.cat([tree_candidates, tree_candidates]).to(self.base_model.device)
+                # candidates, cart_candidates_prob, tree_candidates = self.generate_candidates(
+                #     tree_logits, tree_buffers["tree_indices"], tree_buffers["retrieve_indices"], sample_token, logits_processor
+                # )
+                # draft_tokens_base = torch.cat([draft_tokens, draft_tokens]).to(self.base_model.device)
+                # logits, hidden_state_new, outputs = self.tree_decoding(
+                #     tree_candidates, past_key_values, tree_buffers["tree_position_ids"], input_ids, tree_buffers["retrieve_indices_head"], cfg, attention_mask
+                # )
                 logits, hidden_state_new, outputs = self.tree_decoding(
-                    tree_candidates, past_key_values, tree_buffers["tree_position_ids"], input_ids, tree_buffers["retrieve_indices_head"], cfg, attention_mask
+                    draft_tokens, past_key_values, tree_buffers["tree_position_ids"], input_ids, tree_buffers["retrieve_indices_head"], cfg, attention_mask
                 )
+             
+
+                # draft_tokens = torch.cat((draft_tokens, padding), dim=1)
+                # print("draft_tokens padded shape  after tree decoding : ", draft_tokens.shape)
+                candidates = draft_tokens[0,  tree_buffers["retrieve_indices"]]
+
                 # [13, 3, 16384]
                 # print("logits after tree_decoding: ", logits.shape, flush=True)
                 if testing:
@@ -1341,9 +1392,10 @@ class EaModel(nn.Module):
                     accepted_logits.append(logits[best_candidate, :accept_length + 1])
 
                 else:
-                    best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
-                    idx, tree_logits, relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
+                    best_candidate, accept_length, sample_p = self.evaluate_posterior(
+                    logits, candidates, logits_processor
                 )
+              
                 
                 if relaxed and idx % 25 == 0 and idx < 101:
                     tree_buffers_old =  tree_buffers
@@ -1385,27 +1437,30 @@ class EaModel(nn.Module):
                     )
                         
                 else: 
-                    input_ids, tree_logits, new_token, hidden_state, sample_token, new_bias_list, sim_list = self.update_inference_inputs(
-                            idx,
-                            False,
-                            None,
-                            None,
-                            recent_acc_logits,
-                            input_ids,
-                            candidates,
-                            best_candidate,
-                            accept_length,
-                            tree_buffers["retrieve_indices_head"],
-                            logits_processor,
-                            new_token,
-                            past_key_values_data,
-                            current_length_data,
-                            hidden_state_new,
-                            sample_p,
-                            cfg,
-                            static_tree=static_tree
-                        )
-                bias_list = new_bias_list
+                     # Adjusting the input sequence, draft model forward
+                    input_ids, draft_tokens, new_token, sample_token = self.update_inference_inputs(
+                        idx,
+                        False,
+                        None,
+                        None,
+                        None,
+                        input_ids,
+                        tree_buffers["per_level_node_counts"],
+                        draft_tokens,
+                        candidates,
+                        best_candidate,
+                        accept_length,
+                        tree_buffers["retrieve_indices_head"], # lantern passes this
+                        logits_processor,
+                        new_token,
+                        past_key_values_data,
+                        current_length_data,
+                        hidden_state_new,
+                        sample_p,
+                        cfg,
+                        static_tree=True
+                    )
+                # bias_list = new_bias_list
             else:
                 self.base_model.model.tree_mask = tree_mask
                 

@@ -1,22 +1,22 @@
 {
     "prompt_0": {
         "prompt": "A tranquil mountain scene with a glassy lake at the base, reflecting the snowcapped peaks above, with a small wooden boat docked by the shore.",
-        "latency": 42.450217723846436
+        "latency": 54.2847261428833
     },
     "prompt_1": {
         "prompt": "A close-up of a young man with short dreadlocks, a confident expression, and a patterned bandana tied around his forehead.",
-        "latency": 46.11008167266846
+        "latency": 59.81241202354431
     },
     "prompt_2": {
         "prompt": "A close-up of a wolf with intense, focused eyes and thick gray fur, staring directly at the camera, set against a blurred forest background.",
-        "latency": 51.5556378364563
+        "latency": 63.864959955215454
     },
     "prompt_3": {
         "prompt": "A detailed painting of a bouquet of wildflowers, with vibrant colors and different textures for each flower, set against a soft-focus background.",
-        "latency": 43.73555397987366
+        "latency": 62.818995237350464
     },
     "prompt_4": {
         "prompt": "A 3D rendered portrait of a young woman with a flower crown, her expression calm, with realistic skin texture and warm lighting.",
-        "latency": 47.471577405929565
+        "latency": 58.49079751968384
     }
 }

@@ -545,10 +545,12 @@ class LlamaAttention(nn.Module):
         query_states = apply_rotary_emb(query_states.transpose(1, 2), freqs_cis).transpose(1, 2)
         key_states = apply_rotary_emb(key_states.transpose(1, 2), freqs_cis).transpose(1, 2)
 
+
         if past_key_value is not None:
             # reuse k, v, self_attention
             key_states = past_key_value[0].cat(key_states, dim=2)
             value_states = past_key_value[1].cat(value_states, dim=2)
+
 
         past_key_value = (key_states, value_states) if use_cache else None
 
@@ -557,6 +559,7 @@ class LlamaAttention(nn.Module):
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
         attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
+
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -1470,7 +1473,6 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         features = output.hidden_states[-1]
         guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
         features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
-        print("features[:, -1, :].shape: ", features[:, -1, :].shape)
         logits = cfg_logit_process(combined_logits, cfg)
         
         logit_list.append(logits[:, -1, :].squeeze(0))
