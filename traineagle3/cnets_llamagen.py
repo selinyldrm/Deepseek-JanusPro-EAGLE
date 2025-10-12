@@ -338,6 +338,7 @@ class LlamaAttention(nn.Module):
         self.num_heads = config.num_attention_heads
         self.head_dim = self.hidden_size // self.num_heads
         self.num_key_value_heads = config.num_key_value_heads
+        self.pretraining_tp = config.pretraining_tp
         self.num_key_value_groups = self.num_heads // self.num_key_value_heads
         self.max_position_embeddings = config.max_position_embeddings
 
@@ -393,91 +394,80 @@ class LlamaAttention(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         bsz, q_len, _ = hidden_states.size()
 
-        if self.config.pretraining_tp > 1:
-            key_value_slicing = (self.num_key_value_heads * self.head_dim) // self.config.pretraining_tp
-            query_slices = self.q_proj.weight.split(
-                (self.num_heads * self.head_dim) // self.config.pretraining_tp, dim=0
-            )
-            key_slices = self.k_proj.weight.split(key_value_slicing, dim=0)
-            value_slices = self.v_proj.weight.split(key_value_slicing, dim=0)
+        query_states = self.q_proj(hidden_states)
+        key_states = self.k_proj(hidden_states)
+        value_states = self.v_proj(hidden_states)
 
-            query_states = [F.linear(hidden_states, query_slices[i]) for i in range(self.config.pretraining_tp)]
-            query_states = torch.cat(query_states, dim=-1)
+        lck = len(cache_hidden[0])
 
-            key_states = [F.linear(hidden_states, key_slices[i]) for i in range(self.config.pretraining_tp)]
-            key_states = torch.cat(key_states, dim=-1)
-
-            value_states = [F.linear(hidden_states, value_slices[i]) for i in range(self.config.pretraining_tp)]
-            value_states = torch.cat(value_states, dim=-1)
-
-        else:
-            query_states = self.q_proj(hidden_states)
-            key_states = self.k_proj(hidden_states)
-            value_states = self.v_proj(hidden_states)
+        # cache_k = [self.k_proj(hidden) for hidden in cache_hidden]
+        # cache_v = [self.v_proj(hidden) for hidden in cache_hidden]
 
         query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
         key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
 
-        kv_seq_len = key_states.shape[-2]
-        if past_key_value is not None:
-            kv_seq_len += past_key_value[0].shape[-2]
-        # cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
-        # query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+
         query_states = apply_rotary_emb(query_states.transpose(1, 2), freqs_cis.to(query_states.device)).transpose(1, 2)
         key_states = apply_rotary_emb(key_states.transpose(1, 2), freqs_cis.to(key_states.device)).transpose(1, 2)
-        
-        if past_key_value is not None:
-            # reuse k, v, self_attention
-            key_states = torch.cat([past_key_value[0], key_states], dim=2)
-            value_states = torch.cat([past_key_value[1], value_states], dim=2)
 
-        past_key_value = (key_states, value_states) if use_cache else None
-
-        # repeat k/v heads if n_kv_heads < n_heads
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
+        # Avoid modify hidden cache inplace which will cause in-place modification error when enable gradient checkpoint. 
+        # Return the updated hidden cache instead.
+        if cache_hidden is None:
+            local_cache_k = []
+            local_cache_v = []
+        else:
+            local_cache_k = list(cache_hidden[0])
+            local_cache_v = list(cache_hidden[1])
 
-        if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
-            raise ValueError(
-                f"Attention weights should be of size {(bsz, self.num_heads, q_len, kv_seq_len)}, but is"
-                f" {attn_weights.size()}"
-            )
+        local_cache_k.append(key_states)
+        local_cache_v.append(value_states)
+            
+        cache_k = local_cache_k
+        cache_v = local_cache_v
 
-        if attention_mask is not None:
-            if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
-                raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
-                )
-            attn_weights = attn_weights + attention_mask
+        k0 = cache_k[0]
+        v0 = cache_v[0]
+
+        attn_weights = torch.matmul(query_states, k0.transpose(2, 3)) / math.sqrt(self.head_dim)
+        lck = len(cache_k)
+
+
+        attn_weights = attn_weights + attention_mask
+
+        for i in range(1, lck):
+            ki = cache_k[i]
+
+            qi = query_states
+            kiq = ki
+
+            attn_weightsi = (qi * kiq).sum(-1) / math.sqrt(self.head_dim)
+            attn_weights = torch.cat((attn_weights, attn_weightsi[..., None]), dim=-1)
 
         # upcast attention to fp32
         attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
-        attn_output = torch.matmul(attn_weights, value_states)
+        attn_weights0 = attn_weights[..., :q_len]
 
-        if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
-            raise ValueError(
-                f"`attn_output` should be of size {(bsz, self.num_heads, q_len, self.head_dim)}, but is"
-                f" {attn_output.size()}"
-            )
+        attn_output = torch.matmul(attn_weights0, v0)
+
+        for i in range(1, lck):
+            vi = cache_v[i]
+            attn_weightsi = attn_weights[..., q_len + i - 1]
+            attn_outputi = attn_weightsi[..., None] * vi
+            attn_output = attn_output + attn_outputi
 
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
 
-        if self.config.pretraining_tp > 1:
-            attn_output = attn_output.split(self.hidden_size // self.config.pretraining_tp, dim=2)
-            o_proj_slices = self.o_proj.weight.split(self.hidden_size // self.config.pretraining_tp, dim=1)
-            attn_output = sum([F.linear(attn_output[i], o_proj_slices[i]) for i in range(self.config.pretraining_tp)])
-        else:
-            attn_output = self.o_proj(attn_output)
+        attn_output = self.o_proj(attn_output)
 
-        if not output_attentions:
-            attn_weights = None
+        # Return the updated hidden cache.
+        new_past_key_value = [local_cache_k,local_cache_v]
+        return attn_output, new_past_key_value
 
-        return attn_output, attn_weights, past_key_value
-    
 class LlamaMLP(nn.Module):
     def __init__(self, config, last=True):
         super().__init__()
@@ -533,7 +523,7 @@ class LlamaDecoderLayeremb(nn.Module):
         self,
         input_emb: torch.Tensor,
         hidden_states: torch.Tensor,
-        cache_hidden: [List[torch.Tensor]] = [],
+        cache_hidden: Optional[List[torch.Tensor]] = None,
         freqs_cis: Optional[torch.Tensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
@@ -550,39 +540,38 @@ class LlamaDecoderLayeremb(nn.Module):
         hidden_states = self.hidden_norm(hidden_states)
         input_emb = self.input_layernorm(input_emb)
 
-        # Eagle 3: Concatenate input embeddings with hidden states
+        
         hidden_states = torch.cat((input_emb, hidden_states), dim=-1)
 
+        return_hidden = hidden_states
+
+        # cache_hidden.append(hidden_states)
+
         # Self Attention
-        hidden_states, self_attn_weights, present_key_value = self.self_attn(
+        hidden_states, latest_hidden_cache = self.self_attn(
+            cache_hidden=cache_hidden,
             hidden_states=hidden_states,
             attention_mask=attention_mask,
+            freqs_cis=freqs_cis,
             position_ids=position_ids,
-            cache_hidden=cache_hidden,
             past_key_value=past_key_value,
             output_attentions=output_attentions,
             use_cache=use_cache,
-            freqs_cis=freqs_cis,
         )
-
         hidden_states = residual + hidden_states
-        
-        # Fully Connected
+
+
         residual = hidden_states
+
         hidden_states = self.post_attention_layernorm(hidden_states)
         hidden_states = self.mlp(hidden_states)
         hidden_states = residual + hidden_states
 
-        outputs = (hidden_states,)
+        outputs = (hidden_states, return_hidden)
 
-        if output_attentions:
-            outputs += (self_attn_weights,)
 
-        if use_cache:
-            outputs += (present_key_value,)
-
-        return outputs
-
+        return outputs, latest_hidden_cache
+    
 @torch.no_grad()
 def padding(tensor, left=True):
     """Helper function for padding tensors"""
@@ -666,9 +655,9 @@ class Model(nn.Module):
             for param in self.embed_tokens.parameters():
                 param.requires_grad = False
 
-            self.lm_head.weight = self.target_model.lm_head.weight # wrong: tie lm head to embed tokens since they are identical. for llamagen they are separate !!!
-            for param in self.lm_head.parameters():
-                param.requires_grad = False
+            # self.lm_head.weight = self.target_model.lm_head.weight # wrong: tie lm head to embed tokens since they are identical. for llamagen they are separate !!!
+            # for param in self.lm_head.parameters():
+            #     param.requires_grad = False
 
         else:
             self.target_model = None
@@ -870,7 +859,8 @@ class Model(nn.Module):
             )
 
             # hidden_states_out = layer_outputs[0]
-            hidden_states_out = layer_outputs # [SY] not returning a tuple of trivial stuff anymore !!
+            # hidden_states_out = layer_outputs # [SY] not returning a tuple of trivial stuff anymore !!
+            hidden_states_out = layer_outputs[0]
 
             with torch.no_grad():
                 # hidden_states_target = padding(hidden_states, left=False)
