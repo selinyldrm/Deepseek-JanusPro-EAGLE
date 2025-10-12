@@ -154,6 +154,88 @@ def generate_tree_buffers(tree_choices, device="cuda"):
     }
     return tree_buffers
 
+class LlamaRotaryEmbedding(torch.nn.Module):
+    def __init__(self, dim, max_position_embeddings=2048, base=10000, device=None):
+        super().__init__()
+
+        self.dim = dim
+        self.max_position_embeddings = max_position_embeddings
+        self.base = base
+        inv_freq = 1.0 / (self.base ** (torch.arange(0, self.dim, 2).float().to(device) / self.dim))
+        self.register_buffer("inv_freq", inv_freq, persistent=False)
+
+        # Build here to make `torch.jit.trace` work.
+        self._set_cos_sin_cache(
+            seq_len=max_position_embeddings, device=self.inv_freq.device, dtype=torch.get_default_dtype()
+        )
+
+    def _set_cos_sin_cache(self, seq_len, device, dtype):
+        self.max_seq_len_cached = seq_len
+        t = torch.arange(self.max_seq_len_cached, device=device, dtype=self.inv_freq.dtype)
+
+        freqs = torch.einsum("i,j->ij", t, self.inv_freq)
+        # Different from paper, but it uses a different permutation in order to obtain the same calculation
+        emb = torch.cat((freqs, freqs), dim=-1)
+        self.register_buffer("cos_cached", emb.cos()[None, None, :, :].to(dtype), persistent=False)
+        self.register_buffer("sin_cached", emb.sin()[None, None, :, :].to(dtype), persistent=False)
+
+    def forward(self, x, seq_len=None):
+        # x: [bs, num_attention_heads, seq_len, head_size]
+        if seq_len > self.max_seq_len_cached:
+            self._set_cos_sin_cache(seq_len=seq_len, device=x.device, dtype=x.dtype)
+
+        return (
+            self.cos_cached[:, :, :seq_len, ...].to(dtype=x.dtype),
+            self.sin_cached[:, :, :seq_len, ...].to(dtype=x.dtype),
+        )
+
+
+class LlamaLinearScalingRotaryEmbedding(LlamaRotaryEmbedding):
+    """LlamaRotaryEmbedding extended with linear scaling. Credits to the Reddit user /u/kaiokendev"""
+
+    def __init__(self, dim, max_position_embeddings=2048, base=10000, device=None, scaling_factor=1.0):
+        self.scaling_factor = scaling_factor
+        super().__init__(dim, max_position_embeddings, base, device)
+
+    def _set_cos_sin_cache(self, seq_len, device, dtype):
+        self.max_seq_len_cached = seq_len
+        t = torch.arange(self.max_seq_len_cached, device=device, dtype=self.inv_freq.dtype)
+        t = t / self.scaling_factor
+
+        freqs = torch.einsum("i,j->ij", t, self.inv_freq)
+        # Different from paper, but it uses a different permutation in order to obtain the same calculation
+        emb = torch.cat((freqs, freqs), dim=-1)
+        self.register_buffer("cos_cached", emb.cos()[None, None, :, :].to(dtype), persistent=False)
+        self.register_buffer("sin_cached", emb.sin()[None, None, :, :].to(dtype), persistent=False)
+
+
+class LlamaDynamicNTKScalingRotaryEmbedding(LlamaRotaryEmbedding):
+    """LlamaRotaryEmbedding extended with Dynamic NTK scaling. Credits to the Reddit users /u/bloc97 and /u/emozilla"""
+
+    def __init__(self, dim, max_position_embeddings=2048, base=10000, device=None, scaling_factor=1.0):
+        self.scaling_factor = scaling_factor
+        super().__init__(dim, max_position_embeddings, base, device)
+
+    def _set_cos_sin_cache(self, seq_len, device, dtype):
+        self.max_seq_len_cached = seq_len
+
+        if seq_len > self.max_position_embeddings:
+            base = self.base * (
+                    (self.scaling_factor * seq_len / self.max_position_embeddings) - (self.scaling_factor - 1)
+            ) ** (self.dim / (self.dim - 2))
+            inv_freq = 1.0 / (base ** (torch.arange(0, self.dim, 2).float().to(device) / self.dim))
+            self.register_buffer("inv_freq", inv_freq, persistent=False)
+
+        t = torch.arange(self.max_seq_len_cached, device=device, dtype=self.inv_freq.dtype)
+
+        freqs = torch.einsum("i,j->ij", t, self.inv_freq)
+        # Different from paper, but it uses a different permutation in order to obtain the same calculation
+        emb = torch.cat((freqs, freqs), dim=-1)
+        self.register_buffer("cos_cached", emb.cos()[None, None, :, :].to(dtype), persistent=False)
+        self.register_buffer("sin_cached", emb.sin()[None, None, :, :].to(dtype), persistent=False)
+
+
+
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask
 def _make_causal_mask(
         input_ids_shape: torch.Size, dtype: torch.dtype, device: torch.device, past_key_values_length: int = 0
@@ -187,72 +269,37 @@ def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] 
     return inverted_mask.masked_fill(inverted_mask.to(torch.bool), torch.finfo(dtype).min)
 
 # LlamaGen specific functions and classes
-def precompute_freqs_cis_2d(grid_size, n_elem, rope_base=10000, cls_token_num=120):
-    """
-    Precompute frequencies for 2D RoPE as used in LlamaGen
-    """
-    # 1D RoPE - generates n_elem//2 complex frequencies for n_elem real dimensions
-    def precompute_freqs_cis_1d(seq_len, n_elem, base=10000):
-        freqs = 1.0 / (base ** (torch.arange(0, n_elem, 2).float() / n_elem))
-        t = torch.arange(seq_len, device=freqs.device)
-        freqs = torch.outer(t, freqs).float()
-        freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
-        return freqs_cis
+def precompute_freqs_cis_2d(grid_size: int, n_elem: int, base: int = 10000, cls_token_num=120):
+    # split the dimension into half, one for x and one for y
+    half_dim = n_elem // 2
+    freqs = 1.0 / (base ** (torch.arange(0, half_dim, 2)[: (half_dim // 2)].float() / half_dim))
+    t = torch.arange(grid_size, device=freqs.device)
+    freqs = torch.outer(t, freqs) # (grid_size, head_dim // 2)
+    freqs_grid = torch.concat([
+        freqs[:, None, :].expand(-1, grid_size, -1),
+        freqs[None, :, :].expand(grid_size, -1, -1),
+    ], dim=-1)  # (grid_size, grid_size, head_dim // 2)
+    cache_grid = torch.stack([torch.cos(freqs_grid), torch.sin(freqs_grid)], dim=-1) # (grid_size, grid_size, head_dim // 2, 2)
+    cache = cache_grid.flatten(0, 1)
+    if cls_token_num > 0:
+        cond_cache = torch.cat([torch.zeros(cls_token_num, n_elem // 2, 2), cache]) # (cls_token_num+grid_size**2, head_dim // 2, 2)
+        cond_cache = torch.cat([cond_cache, torch.zeros(10, n_elem // 2, 2)])
+    else:
+        cond_cache = torch.cat([cache, torch.zeros(10, n_elem // 2, 2)])
+    return cond_cache 
 
-    # 2D RoPE: For n_elem complex dimensions, we need n_elem/2 frequencies for each spatial direction
-    # Each spatial direction gets n_elem/4 complex frequencies
-    quarter_dim = n_elem // 4
-    
-    freqs_cis_h = precompute_freqs_cis_1d(grid_size, quarter_dim * 2, rope_base)  # generates quarter_dim complex numbers
-    freqs_cis_w = precompute_freqs_cis_1d(grid_size, quarter_dim * 2, rope_base)  # generates quarter_dim complex numbers
-    
-    freqs_cis = torch.cat([
-        freqs_cis_h[:, None, :].expand(grid_size, grid_size, quarter_dim).flatten(0, 1),
-        freqs_cis_w[None, :, :].expand(grid_size, grid_size, quarter_dim).flatten(0, 1),
+
+def apply_rotary_emb(x: torch.Tensor, freqs_cis: torch.Tensor):
+    # x: (bs, seq_len, n_head, head_dim)
+    # freqs_cis (seq_len, head_dim // 2, 2)
+    xshaped = x.float().reshape(*x.shape[:-1], -1, 2) # (bs, seq_len, n_head, head_dim//2, 2)
+    freqs_cis = freqs_cis.view(1, xshaped.size(1), 1, xshaped.size(3), 2) # (1, seq_len, 1, head_dim//2, 2)
+    x_out2 = torch.stack([
+            xshaped[..., 0] * freqs_cis[..., 0] - xshaped[..., 1] * freqs_cis[..., 1],
+            xshaped[..., 1] * freqs_cis[..., 0] + xshaped[..., 0] * freqs_cis[..., 1],
     ], dim=-1)
-
-    # Cache should match the frequency tensor dimensions (n_elem/2 complex numbers)
-    cache = torch.cat([
-        torch.zeros(cls_token_num, n_elem // 2, dtype=torch.complex64),
-        freqs_cis
-    ], dim=0)
-
-    return cache
-
-def apply_rotary_emb(xq, xk, freqs_cis):
-    """Apply rotary embeddings to query and key tensors.
-    
-    Args:
-        xq: query states with shape [batch, num_heads, seq_len, head_dim] (after transpose)
-        xk: key states with shape [batch, num_key_value_heads, seq_len, head_dim] (after transpose)  
-        freqs_cis: frequency tensor with shape [seq_len, head_dim//2]
-    """
-    # Get sequence length from xq (dimension 2 after transpose)
-    seq_len = xq.shape[2]
-    
-    # Handle case where sequence length exceeds freqs_cis length
-    if seq_len > freqs_cis.shape[0]:
-        # Extend freqs_cis by repeating the last few entries
-        num_missing = seq_len - freqs_cis.shape[0]
-        # Repeat the last 10 entries cyclically to fill the gap
-        last_entries = freqs_cis[-10:]
-        repeats = (num_missing + 9) // 10  # Ceiling division
-        extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
-        freqs_cis = torch.cat([freqs_cis, extended_freqs], dim=0)
-    
-    # Slice freqs_cis to match the sequence length
-    freqs_cis = freqs_cis[:seq_len]  # [seq_len, head_dim//2]
-    
-    # Reshape for broadcasting: [1, 1, seq_len, head_dim//2]
-    freqs_cis = freqs_cis[None, None, :, :]
-    
-    # Convert to complex and apply rotary embeddings
-    xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
-    xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
-    
-    xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
-    xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
-    return xq_out.type_as(xq), xk_out.type_as(xk)
+    x_out2 = x_out2.flatten(3)
+    return x_out2.type_as(x)
 
 class LlamaRMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
@@ -305,11 +352,39 @@ class LlamaAttention(nn.Module):
         self.k_proj = nn.Linear(self.hidden_size * 2, self.num_key_value_heads * self.head_dim, bias=False)
         self.v_proj = nn.Linear(self.hidden_size * 2, self.num_key_value_heads * self.head_dim, bias=False)
         self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        self._init_rope()
+
+    def _init_rope(self):
+        if self.config.rope_scaling is None:
+            if hasattr(self.config, "rope_theta"):
+                self.rotary_emb = LlamaRotaryEmbedding(self.head_dim,
+                                                       max_position_embeddings=self.max_position_embeddings,
+                                                       base=self.config.rope_theta)
+            else:
+                self.rotary_emb = LlamaRotaryEmbedding(self.head_dim,
+                                                       max_position_embeddings=self.max_position_embeddings)
+        else:
+            scaling_type = self.config.rope_scaling["type"]
+            scaling_factor = self.config.rope_scaling["factor"]
+            if scaling_type == "linear":
+                self.rotary_emb = LlamaLinearScalingRotaryEmbedding(
+                    self.head_dim, max_position_embeddings=self.max_position_embeddings, scaling_factor=scaling_factor
+                )
+            elif scaling_type == "dynamic":
+                self.rotary_emb = LlamaDynamicNTKScalingRotaryEmbedding(
+                    self.head_dim, max_position_embeddings=self.max_position_embeddings, scaling_factor=scaling_factor
+                )
+            else:
+                raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
+
+    def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
+        return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
 
     def forward(
             self,
             hidden_states: torch.Tensor,
             attention_mask: Optional[torch.Tensor] = None,
+            cache_hidden: Optional[List[torch.Tensor]] = None,
             position_ids: Optional[torch.LongTensor] = None,
             past_key_value: Optional[Tuple[torch.Tensor]] = None,
             output_attentions: bool = False,
@@ -318,9 +393,27 @@ class LlamaAttention(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         bsz, q_len, _ = hidden_states.size()
 
-        query_states = self.q_proj(hidden_states)
-        key_states = self.k_proj(hidden_states)
-        value_states = self.v_proj(hidden_states)
+        if self.config.pretraining_tp > 1:
+            key_value_slicing = (self.num_key_value_heads * self.head_dim) // self.config.pretraining_tp
+            query_slices = self.q_proj.weight.split(
+                (self.num_heads * self.head_dim) // self.config.pretraining_tp, dim=0
+            )
+            key_slices = self.k_proj.weight.split(key_value_slicing, dim=0)
+            value_slices = self.v_proj.weight.split(key_value_slicing, dim=0)
+
+            query_states = [F.linear(hidden_states, query_slices[i]) for i in range(self.config.pretraining_tp)]
+            query_states = torch.cat(query_states, dim=-1)
+
+            key_states = [F.linear(hidden_states, key_slices[i]) for i in range(self.config.pretraining_tp)]
+            key_states = torch.cat(key_states, dim=-1)
+
+            value_states = [F.linear(hidden_states, value_slices[i]) for i in range(self.config.pretraining_tp)]
+            value_states = torch.cat(value_states, dim=-1)
+
+        else:
+            query_states = self.q_proj(hidden_states)
+            key_states = self.k_proj(hidden_states)
+            value_states = self.v_proj(hidden_states)
 
         query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
         key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
@@ -329,11 +422,11 @@ class LlamaAttention(nn.Module):
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value[0].shape[-2]
+        # cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
+        # query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states = apply_rotary_emb(query_states.transpose(1, 2), freqs_cis.to(query_states.device)).transpose(1, 2)
+        key_states = apply_rotary_emb(key_states.transpose(1, 2), freqs_cis.to(key_states.device)).transpose(1, 2)
         
-        # Apply rotary embeddings using LlamaGen's method
-        if freqs_cis is not None:
-            query_states, key_states = apply_rotary_emb(query_states, key_states, freqs_cis)
-
         if past_key_value is not None:
             # reuse k, v, self_attention
             key_states = torch.cat([past_key_value[0], key_states], dim=2)
@@ -373,47 +466,80 @@ class LlamaAttention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
 
-        attn_output = self.o_proj(attn_output)
+        if self.config.pretraining_tp > 1:
+            attn_output = attn_output.split(self.hidden_size // self.config.pretraining_tp, dim=2)
+            o_proj_slices = self.o_proj.weight.split(self.hidden_size // self.config.pretraining_tp, dim=1)
+            attn_output = sum([F.linear(attn_output[i], o_proj_slices[i]) for i in range(self.config.pretraining_tp)])
+        else:
+            attn_output = self.o_proj(attn_output)
 
         if not output_attentions:
             attn_weights = None
 
         return attn_output, attn_weights, past_key_value
-
+    
 class LlamaMLP(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, last=True):
         super().__init__()
+        self.last = last
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
         self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
         self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
+        # if last:
         self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
+        # else:
+        #     self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size * 2, bias=False)
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+        if self.config.pretraining_tp > 1:
+            slice = self.intermediate_size // self.config.pretraining_tp
+            gate_proj_slices = self.gate_proj.weight.split(slice, dim=0)
+            up_proj_slices = self.up_proj.weight.split(slice, dim=0)
+            down_proj_slices = self.down_proj.weight.split(slice, dim=1)
+
+            gate_proj = torch.cat(
+                [F.linear(x, gate_proj_slices[i]) for i in range(self.config.pretraining_tp)], dim=-1
+            )
+            up_proj = torch.cat([F.linear(x, up_proj_slices[i]) for i in range(self.config.pretraining_tp)], dim=-1)
+
+            intermediate_states = (self.act_fn(gate_proj) * up_proj).split(slice, dim=2)
+            down_proj = [
+                F.linear(intermediate_states[i], down_proj_slices[i]) for i in range(self.config.pretraining_tp)
+            ]
+            down_proj = sum(down_proj)
+        else:
+            down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+
         return down_proj
 
-class LlamaDecoderLayer(nn.Module):
-    def __init__(self, config, layer_idx: int):
+
+class LlamaDecoderLayeremb(nn.Module):
+    def __init__(self, config, last=True):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = LlamaAttention(config=config)
-        self.mlp = LlamaMLP(config)
+        self.mlp = LlamaMLP(config, last=last)
+        self.last = last
+        # self.fc = nn.Linear(config.hidden_size * 2, config.hidden_size)
+        self.hidden_norm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+
         self.post_attention_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(
         self,
         input_emb: torch.Tensor,
         hidden_states: torch.Tensor,
+        cache_hidden: [List[torch.Tensor]] = [],
+        freqs_cis: Optional[torch.Tensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
         past_key_value: Optional[Tuple[torch.Tensor]] = None,
         output_attentions: Optional[bool] = False,
         use_cache: Optional[bool] = False,
-        freqs_cis: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
         """
@@ -421,8 +547,8 @@ class LlamaDecoderLayer(nn.Module):
         """
         residual = hidden_states
 
-        hidden_states = self.input_layernorm(hidden_states)
-        input_emb = self.input_layernorm(input_emb)  # Also normalize input embeddings
+        hidden_states = self.hidden_norm(hidden_states)
+        input_emb = self.input_layernorm(input_emb)
 
         # Eagle 3: Concatenate input embeddings with hidden states
         hidden_states = torch.cat((input_emb, hidden_states), dim=-1)
@@ -432,11 +558,13 @@ class LlamaDecoderLayer(nn.Module):
             hidden_states=hidden_states,
             attention_mask=attention_mask,
             position_ids=position_ids,
+            cache_hidden=cache_hidden,
             past_key_value=past_key_value,
             output_attentions=output_attentions,
             use_cache=use_cache,
             freqs_cis=freqs_cis,
         )
+
         hidden_states = residual + hidden_states
         
         # Fully Connected
@@ -495,7 +623,7 @@ def sample(logits, k=1):
 
     return sampled_indices, sampled_probs, probabilities
 
-class Eagle3LlamaGenModel(nn.Module):
+class Model(nn.Module):
     """
     Eagle 3 Model for LlamaGen with Multi-Layer Feature Extraction
     """
@@ -504,11 +632,13 @@ class Eagle3LlamaGenModel(nn.Module):
 
         self.config = config
         self.training_config = training_config
-        self.gradient_checkpointing = training_config.gradient_checkpointing if hasattr(training_config, 'gradient_checkpointing') else True
+        self.gradient_checkpointing = False
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
         self.hidden_size = config.hidden_size
-        self.length = 1  # Eagle 3 multi-step training length
+        self.length = training_config.length  # Eagle 3 multi-step training length = 7
+
+        self.lm_head=nn.Linear(config.hidden_size,config.vocab_size,bias=False)
 
         # Load target model for multi-layer feature extraction
         if path is not None:
@@ -523,55 +653,27 @@ class Eagle3LlamaGenModel(nn.Module):
             # Use target model's hidden size and vocab size for feature dimensions
             self.target_hidden_size = self.target_model.config.hidden_size
             self.target_vocab_size = self.target_model.config.vocab_size
+
+            
+            state_dict = torch.load(path + "/pytorch_model.bin", map_location="cpu")
+
+            # If it's saved under "state_dict", unwrap it
+            if "state_dict" in state_dict:
+                state_dict = state_dict["state_dict"]
+
+            tensor = state_dict["model.embed_tokens.weight"]
+            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx, _weight=tensor.float())
+            for param in self.embed_tokens.parameters():
+                param.requires_grad = False
+
+            self.lm_head.weight = self.target_model.lm_head.weight # wrong: tie lm head to embed tokens since they are identical. for llamagen they are separate !!!
+            for param in self.lm_head.parameters():
+                param.requires_grad = False
+
         else:
             self.target_model = None
             self.target_hidden_size = config.hidden_size
             self.target_vocab_size = config.vocab_size
-
-        # Initialize embedding layer with correct dimensions
-        if load_emb and path is not None:
-            # First, get the actual embedding dimensions from the target model
-            from safetensors import safe_open
-            import json
-            embedding_dim = config.hidden_size  # Default fallback
-            try:
-                try:
-                    head_path = "model.safetensors"
-                    with safe_open(os.path.join(path, head_path),
-                                framework="pt",
-                                device="cpu") as f:
-                        tensor_slice = f.get_slice("lm_head.weight")
-                        vocab_size, embedding_dim = tensor_slice.get_shape()
-                        tensor = tensor_slice[:, :embedding_dim].float()
-                except:
-                    head_path = "pytorch_model.bin"
-                    weights = torch.load(os.path.join(path, head_path), weights_only=True)
-                    tensor = weights["lm_head.weight"]
-                    embedding_dim = tensor.shape[1]
-            except Exception as e:
-                print(f"Warning: Could not load embeddings: {e}")
-                tensor = None
-                embedding_dim = config.hidden_size
-            
-            # Create embedding layer with correct dimensions (use target vocab size)
-            self.embed_tokens = nn.Embedding(self.target_vocab_size, embedding_dim, self.padding_idx)
-            if tensor is not None:
-                self.embed_tokens.weight.data = tensor
-            # Add projection layer if dimensions don't match
-            if embedding_dim != config.hidden_size:
-                self.embed_proj = nn.Linear(embedding_dim, config.hidden_size, bias=False)
-            else:
-                self.embed_proj = None
-        else:
-            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
-            self.embed_proj = None
-        
-        # Add output head for proper logits computation (use target vocab size)
-        if self.embed_proj is not None:
-            # If we have embedding projection, we need output projection too
-            self.output_head = nn.Linear(config.hidden_size, self.target_vocab_size, bias=False)
-        else:
-            self.output_head = None
 
         self.top_k = top_k
         self.total_tokens = total_tokens - 1
@@ -580,7 +682,7 @@ class Eagle3LlamaGenModel(nn.Module):
         self.embed_upscale = embed_upscale
 
         # Eagle 3: Single decoder layer for multi-step processing
-        self.midlayer = LlamaDecoderLayer(config, 0)
+        self.midlayer = LlamaDecoderLayeremb(config)
         
         # Eagle 3: 3-feature input fusion (hidden_states from 3 layers)
         # Use target model's hidden size instead of config hidden size
@@ -619,11 +721,10 @@ class Eagle3LlamaGenModel(nn.Module):
         padding_freqs = torch.zeros_like(self.freqs_cis[:10])
         self.freqs_cis = torch.cat([self.freqs_cis, padding_freqs], dim=0)
         
-        for param in self.embed_tokens.parameters():
-            param.requires_grad = False
+        
 
     @torch.no_grad()
-    def dataprepare(self, input_ids, attention_mask, loss_mask):
+    def dataprepare(self, cond_idx, input_ids, attention_mask, loss_mask):
         """
         Eagle 3: Extract features from 3 different layers of the target model (LlamaGen)
         """
@@ -631,22 +732,18 @@ class Eagle3LlamaGenModel(nn.Module):
         
         # Get outputs with hidden states from all layers
         with torch.no_grad():
-            outputs = self.target_model(input_ids=input_ids, attention_mask=attention_mask)
+            outs = self.target_model(cond_idx=cond_idx, input_ids=input_ids, attention_mask=attention_mask)
         
         # # Eagle 3: Extract hidden states from 3 different layers
         # # Use layer 0, 1, and 2 (early, middle, late features)
-        # hidden_states0 = outs.hidden_states[0]  # Early layer features
-        # hidden_states1 = outs.hidden_states[1]  # Middle layer features  
-        # hidden_states2 = outs.hidden_states[2]  # Late layer features
+        hidden_states0 = outs.hidden_states[0]  # Early layer features
+        hidden_states1 = outs.hidden_states[1]  # Middle layer features  
+        hidden_states2 = outs.hidden_states[2]  # Late layer features
         
         # # Concatenate the 3 layer features
-        # hidden_states = torch.cat((hidden_states0, hidden_states1, hidden_states2), dim=-1)
+        hidden_states = torch.cat((hidden_states0, hidden_states1, hidden_states2), dim=-1)
 
-        if outputs["hidden_states"][0].device != device:
-            outputs["hidden_states"] = [x.to(device) for x in outputs["hidden_states"]]
-        hidden_states = torch.cat(outputs["hidden_states"], dim=-1)
-        
-        target = outputs["logits"]
+        target = outs["logits"]
         target = padding(target, left=False)
         input_ids = padding(input_ids, left=False)
 
@@ -688,6 +785,7 @@ class Eagle3LlamaGenModel(nn.Module):
     def forward(
             self,
             input_ids,
+            cond_idx: torch.LongTensor = None,
             attention_mask: Optional[torch.Tensor] = None,
             position_ids: Optional[torch.LongTensor] = None,
             past_key_values: Optional[List[torch.FloatTensor]] = None,
@@ -705,14 +803,13 @@ class Eagle3LlamaGenModel(nn.Module):
             acces: list of floats (per-step accuracies, detached)
         """
         # Eagle 3: Extract multi-layer features
-        hidden_states, target, loss_mask, input_ids = self.dataprepare(input_ids, attention_mask, loss_mask)
+        # input_ids's are padded with empty tokens during preprocessing of training data !!!
+        hidden_states, target, loss_mask, input_ids = self.dataprepare(cond_idx, input_ids, attention_mask, loss_mask)
 
         batch_size, seq_length, _ = hidden_states.shape
         seq_length_with_past = seq_length
         past_key_values_length = 0
 
-        if self.training and self.gradient_checkpointing and not hidden_states.requires_grad:
-            hidden_states.requires_grad_(True)
 
         # Eagle 3: Process concatenated 3-layer features
         hidden_states = self.fc(hidden_states)
@@ -729,6 +826,10 @@ class Eagle3LlamaGenModel(nn.Module):
         else:
             position_ids = position_ids.view(-1, seq_length).long()
 
+        if self.freqs_cis.device != position_ids.device:
+            self.freqs_cis = self.freqs_cis.to(position_ids.device)
+        freqs_cis = self.freqs_cis[position_ids].squeeze(0)
+
         if attention_mask is None:
             attention_mask = torch.ones(
                 (batch_size, seq_length_with_past), dtype=torch.bool, device=hidden_states.device
@@ -737,190 +838,78 @@ class Eagle3LlamaGenModel(nn.Module):
             attention_mask, (batch_size, seq_length), hidden_states, past_key_values_length
         )
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                use_cache = False
-
         # Eagle 3: Multi-step iterative training
         plosses = []
         vlosses = []
         acces = []
+        cache_hidden = [[], []]
 
         # precompute device and freqs
         device = hidden_states.device
         freqs_cis_full = self.freqs_cis.to(device)
 
-        # prepare inputs_embeds once (we will mutate x inside the wrapper)
-        inputs_embeds = self.embed_tokens(input_ids)
-        if self.embed_proj is not None:
-            inputs_embeds = self.embed_proj(inputs_embeds)
-        if self.training and self.gradient_checkpointing and not inputs_embeds.requires_grad:
-            inputs_embeds.requires_grad_(True)
-        inputs_embeds = inputs_embeds.to(hidden_states.dtype)
+        for idx in range(self.length):
+            last = idx == self.length - 1
+            # [SY] re-inject cond_idx dropped during preprocessing
+            cond_idx_embedding = self.target_model.model.cls_embedding(cond_idx, train=self.target_model.model.training)[:, :120]
+            inputs_embeds = self.embed_tokens(input_ids)
+            inputs_embeds = torch.cat((cond_idx_embedding , inputs_embeds), dim=1)
 
-        # Define the multistep function that will run the full iterative loop.
-        # Keep losses as tensors so they can be backpropagated.
-        def multistep_forward(
-            input_ids,
-            inputs_embeds,
-            hidden_states,
-            attention_mask,
-            position_ids,
-            target,
-            loss_mask,
-            output_attentions,
-        ):
-            ploss_list = []
-            acc_list = []
-            for idx in range(self.length):
-                last = idx == self.length - 1
+            inputs_embeds = inputs_embeds.to(hidden_states.dtype)
 
-                # compute freqs_cis (same as before)
-                if seq_length > self.freqs_cis.shape[0]:
-                    num_missing = seq_length - self.freqs_cis.shape[0]
-                    last_entries = self.freqs_cis[-10:]
-                    repeats = (num_missing + 9) // 10
-                    extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
-                    extended_freqs_cis = torch.cat([self.freqs_cis, extended_freqs], dim=0)
-                    freqs_cis = extended_freqs_cis[:seq_length].to(hidden_states.device)
-                else:
-                    freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
-
-                layer_outputs = self.midlayer(
-                    input_emb=inputs_embeds,
-                    hidden_states=hidden_states,
-                    attention_mask=attention_mask,
-                    position_ids=position_ids,
-                    past_key_value=None,
-                    output_attentions=output_attentions,
-                    use_cache=True,
-                    freqs_cis=freqs_cis,
-                )
-                hidden_states = layer_outputs[0]
-                hidden_states_out = self.norm(hidden_states)
-                if self.output_head is not None:
-                    logits = self.output_head(hidden_states_out)
-                else:
-                    logits = hidden_states_out @ self.embed_tokens.weight.T
-
-                out_logp = nn.LogSoftmax(dim=2)(logits)  # no casting
-
-                with torch.no_grad():
-                    target_head = target
-                    target_p = nn.Softmax(dim=2)(target_head.float()).detach()
-                plogp = target_p * out_logp
-                loss = -torch.sum(loss_mask * plogp, 2).mean()
-                ploss_list.append(loss)  # tensor, not float
-                with torch.no_grad():
-                    acc_list.append(((logits.argmax(-1) == target_p.argmax(-1)) * loss_mask.squeeze(-1)).sum().item() / (loss_mask.sum().item() + 1e-6))
-
-                if not last:
-                    input_ids = padding(input_ids, left=False)
-                    target = padding(target, left=False)
-                    loss_mask = padding(loss_mask, left=False)
-                    ind = torch.arange(seq_length, device=attention_mask.device)
-                    ind0 = ind[idx:]
-                    ind1 = ind[:seq_length-idx]
-                    attention_mask = attention_mask.clone()
-                    attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
-
-            plosses_tensor = torch.stack(ploss_list)  # always 1D tensor
-            acces_tensor = torch.tensor(acc_list, device=plosses_tensor.device)  # shape (length_int,)
-
-            return plosses_tensor, acces_tensor
-
-        # Run checkpointed whole-multistep (so midlayer params participate in a single reentrant backward)
-        if self.gradient_checkpointing and self.training:
-            # Pass Python ints for seq_length and length
-            plosses_tensor, acces_tensor = checkpoint(
-                multistep_forward,
-                input_ids,
-                inputs_embeds,
-                hidden_states,
-                attention_mask,
-                position_ids,
-                target,
-                loss_mask,
-                output_attentions,
+            layer_outputs, cache_hidden = self.midlayer(
+                input_emb=inputs_embeds,
+                hidden_states=hidden_states,
+                cache_hidden=cache_hidden,                    
+                freqs_cis=freqs_cis,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                past_key_value=None,
+                output_attentions=output_attentions,
+                use_cache=True,
             )
-            
-            # Keep plosses as tensors (do not convert to .item())
-            plosses = [pl for pl in plosses_tensor.unbind(0)]
-            # acces for logging only: convert to python floats
-            acces = [float(ac.detach().cpu()) for ac in acces_tensor.unbind(0)]
-        else:
-            # fallback: non-checkpointed loop (keeps original semantics)
-            for idx in range(self.length):
-                last = idx == self.length - 1
-                
-                # Recompute inputs_embeds for each step in non-checkpointed mode
-                current_inputs_embeds = self.embed_tokens(input_ids)
-                if self.embed_proj is not None:
-                    current_inputs_embeds = self.embed_proj(current_inputs_embeds)
-                current_inputs_embeds = current_inputs_embeds.to(hidden_states.dtype)
 
-                # compute freqs_cis (same as before)
-                if seq_length > self.freqs_cis.shape[0]:
-                    num_missing = seq_length - self.freqs_cis.shape[0]
-                    last_entries = self.freqs_cis[-10:]
-                    repeats = (num_missing + 9) // 10
-                    extended_freqs = last_entries.repeat(repeats, 1)[:num_missing]
-                    extended_freqs_cis = torch.cat([self.freqs_cis, extended_freqs], dim=0)
-                    freqs_cis = extended_freqs_cis[:seq_length].to(hidden_states.device)
-                else:
-                    freqs_cis = self.freqs_cis[:seq_length].to(hidden_states.device)
+            # hidden_states_out = layer_outputs[0]
+            hidden_states_out = layer_outputs # [SY] not returning a tuple of trivial stuff anymore !!
 
-                layer_outputs = self.midlayer(
-                    input_emb=current_inputs_embeds,
-                    hidden_states=hidden_states,
-                    attention_mask=attention_mask,
-                    position_ids=position_ids,
-                    past_key_value=None,
-                    output_attentions=output_attentions,
-                    use_cache=True,
-                    freqs_cis=freqs_cis,
-                )
-                hidden_states = layer_outputs[0]
-                hidden_states_out = self.norm(hidden_states)
-                if self.output_head is not None:
-                    logits = self.output_head(hidden_states_out)
-                else:
-                    logits = torch.matmul(hidden_states_out, self.embed_tokens.weight.t())
-                logits = logits.float()
-                out_logp = nn.LogSoftmax(dim=2)(logits)
-                with torch.no_grad():
-                    target_head = target
-                    target_p = nn.Softmax(dim=2)(target_head.float()).detach()
-                plogp = target_p * out_logp
-                loss = -torch.sum(loss_mask * plogp, 2).mean()
-                plosses.append(loss)  # tensor, not float
-                with torch.no_grad():
-                    acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * loss_mask.squeeze(-1)).sum().item() / (loss_mask.sum().item() + 1e-6))
+            with torch.no_grad():
+                # hidden_states_target = padding(hidden_states, left=False)
+                target_head = target
 
-                if not last:
-                    input_ids = padding(input_ids, left=False)
-                    target = padding(target, left=False)
-                    loss_mask = padding(loss_mask, left=False)
-                    ind = torch.arange(seq_length, device=attention_mask.device)
-                    ind0 = ind[idx:]
-                    ind1 = ind[:seq_length-idx]
-                    attention_mask = attention_mask.clone()
-                    attention_mask[:, :, ind0, ind1] = torch.finfo(attention_mask.dtype).min
+                # [SY] disable hidden state/token mapping of eagle3 since dimensions are the same
 
-        # Return per-step losses (as tensors), placeholder vlosses, and per-step accuracies (floats)
+                target_max_token = target_head.argmax(-1) 
+                target_mask = torch.ones_like(target_max_token, dtype=torch.int) # [SY] add this since all tokens are valid due to d=t
+                # # Move d2t to the same device as target_max_token
+                # self.t2d = self.t2d.to(target_max_token.device) 
+                # target_mask = self.t2d[target_max_token] # for each target token (ID from target_max_token), get the corresponding drafter token or mask.
+                target_mask = target_mask[..., None].int()
+                position_mask = target_mask * loss_mask
+                # target_head = target_head[..., self.t2d]
+                # target_head = target_head.float()
+                target_p = nn.Softmax(dim=2)(target_head)
+                target_p = target_p.detach()
+
+
+
+            hidden_states = hidden_states_out
+
+            hidden_states_out = self.norm(hidden_states_out)
+
+            logits = self.lm_head(hidden_states_out)
+            logits = logits.float()
+            out_logp = nn.LogSoftmax(dim=2)(logits)
+            plogp = target_p * out_logp
+            loss = -torch.sum(position_mask * plogp, 2).mean()
+            plosses.append(loss)
+            with torch.no_grad():
+                acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * position_mask.squeeze(-1)).sum().item() / (
+                        loss_mask.sum().item() + 1e-6))
+
+            if not last:
+                input_ids = padding(input_ids, left=False)
+                target = padding(target, left=False)
+                loss_mask = padding(loss_mask, left=False)
+
         return plosses, vlosses, acces
 
- 
-    def init_tree(self, tree=None):
-        if tree is not None:
-            # EAGLE v1
-            self.tree = tree
-            self.tree_buffer=generate_tree_buffers(self.tree, self.embed_tokens.weight.device)
-        else:
-            # EAGLE v2
-            self.tree_mask_init = torch.eye(self.top_k, device=self.embed_tokens.weight.device)[None, None]
-            self.position_ids = torch.zeros(self.top_k, device=self.embed_tokens.weight.device, dtype=torch.long)
-            self.tree_mask_init = self.tree_mask_init.to(self.embed_tokens.weight.device)
-
-    def reset(self):
-        self.tree_mask = None

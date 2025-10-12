@@ -197,10 +197,54 @@ class EaModel(nn.Module):
             ea_layer_state_dict = load_file(load_model_path)
         
         # ignore base model layers to prevent errors during checkpoint loading on draft model
-        filtered_state_dict = {
-            k: v for k, v in ea_layer_state_dict.items()
-            if not k.startswith("base_model.") # or target_model based on the tested checkpoint
-        }
+        filtered_state_dict = {}
+        with torch.no_grad():
+            for k, v in ea_layer_state_dict.items() :
+                if k.startswith("target_model.model.layers"):
+                    continue
+                if k.startswith("target_model.lm_head."):
+                    new_k = k[len("target_model."):]  # remove the prefix
+                    filtered_state_dict[new_k] = v
+                elif k.startswith("target_model.model.embed_tokens.weight"):
+                    base_model.model.embed_tokens.weight.copy_(
+                        ea_layer_state_dict["target_model.model.embed_tokens.weight"]
+                    )
+                elif k.startswith("target_model.model.cls_embedding.uncond_embedding"):
+                    base_model.model.cls_embedding.uncond_embedding.copy_(
+                        ea_layer_state_dict["target_model.model.cls_embedding.uncond_embedding"]
+                    )
+                elif k.startswith("target_model.model.cls_embedding.cap_proj.fc1"):
+                    base_model.model.cls_embedding.cap_proj.fc1.weight.copy_(
+                        ea_layer_state_dict["target_model.model.cls_embedding.cap_proj.fc1.weight"]
+                    )
+                elif k.startswith("target_model.model.cls_embedding.cap_proj.fc2"):
+                    base_model.model.cls_embedding.cap_proj.fc2.weight.copy_(
+                        ea_layer_state_dict["target_model.model.cls_embedding.cap_proj.fc2.weight"]
+                    )
+                elif k.startswith("target_model.model.norm"):
+                    base_model.model.norm.weight.copy_(
+                        ea_layer_state_dict["target_model.model.norm.weight"]
+                    )
+                else:
+                    filtered_state_dict[k] = v
+        
+        base_w = base_model.lm_head.weight.detach()
+        base_e = base_model.model.embed_tokens.weight.detach()
+        # Optional: check shape first to avoid runtime error
+        if base_e.shape != base_w.shape:
+            print(f"Shape mismatch: base_emb {base_e.shape} vs base lmhead {base_w.shape}")
+            identical = False
+        else:
+            # Exact elementwise comparison
+            identical = torch.equal(base_e, base_w)
+
+            # Optionally, check closeness for floating point tolerance
+            close = torch.allclose(base_e, base_w, atol=1e-1)
+
+        print(f"Identical weights: {identical}")
+        print(f"Numerically close: {close}")
+        
+
 
         model = cls(
             base_model,

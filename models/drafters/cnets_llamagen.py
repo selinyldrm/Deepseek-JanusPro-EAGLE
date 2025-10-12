@@ -366,14 +366,18 @@ class LlamaAttention(nn.Module):
 
 
 class LlamaMLP(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, last=True):
         super().__init__()
+        self.last = last
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
         self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
         self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
+        # if last:
         self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
+        # else:
+        #     self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size * 2, bias=False)
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, x):
@@ -433,11 +437,11 @@ class LlamaDecoderLayeremb(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = LlamaAttention(config=config)
-        self.mlp = LlamaMLP(config)
+        self.mlp = LlamaMLP(config, last=last)
         self.last = last
         # self.fc = nn.Linear(config.hidden_size * 2, config.hidden_size)
+        self.hidden_norm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        
 
         self.post_attention_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
@@ -469,7 +473,7 @@ class LlamaDecoderLayeremb(nn.Module):
         residual = hidden_states
 
         hidden_states = self.hidden_norm(hidden_states)
-        input_emb = self.input_layernorm(input_emb)  
+        input_emb = self.input_layernorm(input_emb)
 
         hidden_states = torch.cat((input_emb, hidden_states), dim=-1)
 
@@ -508,42 +512,43 @@ class Model(nn.Module):
     def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=6, top_k=10, threshold=1.0):
         super().__init__()
 
-        self.gradient_checkpointing = True
+        self.gradient_checkpointing = False
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
         self.hidden_size = config.hidden_size
 
-        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
         self.lm_head=nn.Linear(config.hidden_size,config.vocab_size,bias=False)
 
-        if load_emb:
+        if not load_emb:
+            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
+        else:
+
             from safetensors import safe_open
             import json
+            import os
             try:
                 with open(os.path.join(path, "model.safetensors.index.json"), "r") as f:
                     index_json = json.loads(f.read())
                     emb_path = index_json["weight_map"]["model.embed_tokens.weight"]
                 with safe_open(os.path.join(path, emb_path),
                                framework="pt",
-                               device="cuda") as f:
+                               device="cpu") as f:
                     tensor_slice = f.get_slice("model.embed_tokens.weight")
                     vocab_size, hidden_dim = tensor_slice.get_shape()
                     tensor = tensor_slice[:, :hidden_dim].float()
             except:
-                try:
-                    head_path = "model.safetensors"
-                    with safe_open(os.path.join(path, head_path),
-                                framework="pt",
-                                device="cuda") as f:
-                        tensor_slice = f.get_slice("lm_head.weight")
-                        vocab_size, hidden_dim = tensor_slice.get_shape()
-                        tensor = tensor_slice[:, :hidden_dim].float()
-                except:
-                    head_path = "pytorch_model.bin"
-                    weights = torch.load(os.path.join(path, head_path), weights_only=True)
-                    tensor = weights["lm_head.weight"]
-            self.embed_tokens.weight.data = tensor
+                with open(os.path.join(path, "pytorch_model.bin.index.json"), "r") as f:
+                    index_json = json.loads(f.read())
+                    emb_path = index_json["weight_map"]["model.embed_tokens.weight"]
+                weights = torch.load(os.path.join(path, emb_path))
+                tensor = weights["model.embed_tokens.weight"].float()
+            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx, _weight=tensor)
 
+        for param in self.embed_tokens.parameters():
+            param.requires_grad = False
+
+        self.lm_head.weight = self.embed_tokens.weight # tie lm head to embed tokens since they are identical
+        
         self.top_k = top_k
         self.total_tokens = total_tokens - 1
         self.depth = depth
@@ -558,8 +563,7 @@ class Model(nn.Module):
         self.fc = nn.Linear(2 * config.hidden_size, config.hidden_size, bias=bias)
         self.act = ACT2FN[config.hidden_act]
         self.logsoftmax = nn.LogSoftmax(dim=-1)
-        for param in self.embed_tokens.parameters():
-            param.requires_grad = False
+       
         # ! manually set the block size
         if config.input_type =="c2i":
             config.block_size = 576

@@ -4,8 +4,6 @@
 #SBATCH --output=train-%j.log            # Output log file
 #SBATCH --error=train-%j.log              # Error log file
 #SBATCH --time=4:00:00                # Max runtime (HH:MM:SS)
-#SBATCH --begin=2025-10-08T06:25:00
-
 #SBATCH --partition=mi3258x          # Partition to submit to
 #SBATCH --nodes=1                      # Number of nodes
 #SBATCH --ntasks-per-node=8
@@ -18,6 +16,6 @@ conda activate lantern
 cd /work1/deming/seliny2/LANTERN
 # accelerate launch -m entrypoints.train_drafter.main --model llamagen2  --base_path ../../shared/llamagen/LlamaGen-T2I-2/  --config_path ./data/configs/llamagen_t2i2_config.json  --data_dir ../../shared/llamagen/training-data/  --save_dir ../../shared/llamagen/trained-model-temp-loss4x
 HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-# cd traineagle3
-# ./run_training.sh
-accelerate launch -m entrypoints.train_drafter.main --model llamagen2 --base_path  /work1/deming/shared/llamagen/LlamaGen-T2I-2 --config_path /work1/deming/seliny2/LANTERN/data/configs/llamagen_t2i2_config.json   --data_dir /work1/deming/shared/llamagen/training-data  --save_dir /work1/deming/shared/llamagen/llamagen2-eagle3-fixedbase-fixedconfig-fixedds-length1 --bs 8 --save_freq 2  
+cd traineagle3
+./run_training.sh
+# accelerate launch -m entrypoints.train_drafter.main --model llamagen2 --base_path  /work1/deming/shared/llamagen/LlamaGen-T2I-2 --config_path /work1/deming/seliny2/LANTERN/data/configs/llamagen_t2i2_config.json   --data_dir /work1/deming/shared/llamagen/training-data  --save_dir /work1/deming/shared/llamagen/llamagen2-eagle3-fixedbase-fixedconfig-fixedds-length1 --bs 8 --save_freq 2  

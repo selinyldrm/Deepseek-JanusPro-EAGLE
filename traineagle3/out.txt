@@ -1,0 +1,1999 @@
+🚀 Starting Eagle 3 Training for Image Generation Models
+📋 Training Configuration:
+  Model: llamagen2
+  Base Path: /work1/deming/shared/llamagen/LlamaGen-T2I-2
+  Data Directory: /work1/deming/shared/llamagen/training-data-eagle3_eagle3
+  Save Directory: /work1/deming/shared/llamagen/llamagen2-eagle3-lmhead-embed-fixed
+  Epochs: 20
+  Batch Size: 8
+  Learning Rate: 1e-4
+  Eagle 3 Length: 7
+
+🔥 Starting Eagle 3 Training...
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])input_ids
+target  torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+
+attention_maskcond_idx torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])loss_mask
+ hidden_statestorch.Size([8, 1144]) 
+torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])input_ids
+passing base model:   torch.Size([8, 120, 2048]) torch.Size([8, 1024])torch.Size([8, 1024])
+ cond_idxtorch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:   torch.Size([8, 120, 2048]) torch.Size([8, 1024])torch.Size([8, 120, 2048]) torch.Size([8, 1144])
+ torch.Size([8, 1144])hidden_states
+ torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model: passing base model: passing base model: passing base model:  passing base model: passing base model:  passing base model:  torch.Size([8, 120, 2048])passing base model:  torch.Size([8, 120, 2048])   torch.Size([8, 120, 2048])   torch.Size([8, 1024]) torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])torch.Size([8, 1024]) torch.Size([8, 120, 2048])  torch.Size([8, 1144])torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1024])  torch.Size([8, 1144]) torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+torch.Size([8, 1144]) torch.Size([8, 1024])torch.Size([8, 1144])
+torch.Size([8, 1144]) 
+torch.Size([8, 1144]) torch.Size([8, 1144])
+torch.Size([8, 1144])
+ torch.Size([8, 1144])torch.Size([8, 1144])
+torch.Size([8, 1144])
+ torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned: base model returned:  base model returned: base model returned: base model returned: base model returned:  torch.Size([8, 1144, 3840]) base model returned:     torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+
+
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])input_ids
+ attention_mask torch.Size([8, 1024])torch.Size([8, 1144])
+
+loss_maskcond_idx  torch.Size([8, 1144])torch.Size([8, 120, 2048])
+
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask passing base model: torch.Size([8, 1144])
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids passing base model: torch.Size([8, 1024]) 
+torch.Size([8, 120, 2048]) cond_idx torch.Size([8, 1024])torch.Size([8, 120, 2048]) torch.Size([8, 1144])input_ids
+hidden_states torch.Size([8, 1144])  torch.Size([8, 1144, 3840])
+torch.Size([8, 1024])
+target
+ cond_idxtorch.Size([8, 1144, 3840])
+ attention_mask torch.Size([8, 120, 2048])torch.Size([8, 1144])
+
+loss_mask hidden_states torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024])input_idsinput_ids torch.Size([8, 1144])  torch.Size([8, 1024]) torch.Size([8, 1144])
+
+cond_idxpassing base model: torch.Size([8, 1024])  
+torch.Size([8, 120, 2048])torch.Size([8, 120, 2048]) cond_idx
+hidden_statestorch.Size([8, 1024])   torch.Size([8, 1144])torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+ 
+target torch.Size([8, 1144])
+hidden_statestorch.Size([8, 1144, 3840])
+ attention_mask torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+
+loss_masktarget  torch.Size([8, 1144])
+input_idstorch.Size([8, 1144, 3840]) 
+torch.Size([8, 1024])attention_mask
+ cond_idxtorch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])
+loss_maskpassing base model: hidden_states   torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])torch.Size([8, 120, 2048]) target 
+torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144]) attention_masktorch.Size([8, 1144])
+ torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:  torch.Size([8, 1144, 3840])base model returned:   torch.Size([8, 1144, 16384])base model returned:  torch.Size([8, 1144, 3840]) base model returned: base model returned: 
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+   torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) 
+ torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])
+
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idxinput_ids  torch.Size([8, 120, 2048])
+torch.Size([8, 1024])hidden_states input_ids
+torch.Size([8, 1144, 3840])
+ cond_idx targettorch.Size([8, 1024])torch.Size([8, 120, 2048])
+ torch.Size([8, 1144, 3840])
+hidden_states
+cond_idx torch.Size([8, 1144, 3840])attention_mask  
+torch.Size([8, 1144])
+torch.Size([8, 120, 2048])
+targetloss_mask hidden_states  torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+
+attention_mask target torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+loss_maskattention_mask  torch.Size([8, 1144])torch.Size([8, 1144])
+loss_maskpassing base model: 
+  torch.Size([8, 1144])
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024])passing base model:   torch.Size([8, 1144])torch.Size([8, 120, 2048]) torch.Size([8, 1144]) torch.Size([8, 1024])input_ids
+ torch.Size([8, 1144]) input_ids torch.Size([8, 1144])torch.Size([8, 1024])
+
+ cond_idx torch.Size([8, 120, 2048])
+torch.Size([8, 1024])input_idshidden_states
+  torch.Size([8, 1144, 3840])cond_idxtorch.Size([8, 1024])
+ 
+cond_idxtarget torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+
+
+attention_mask hidden_stateshidden_states torch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])
+loss_mask torch.Size([8, 1144, 3840])target torch.Size([8, 1144])
+
+torch.Size([8, 1144, 3840])
+targetattention_mask  torch.Size([8, 1144])
+input_idstorch.Size([8, 1144, 3840])loss_mask  
+torch.Size([8, 1144])
+torch.Size([8, 1024])
+passing base model: attention_maskcond_idx torch.Size([8, 120, 2048])  torch.Size([8, 120, 2048]) torch.Size([8, 1024])torch.Size([8, 1144])
+ torch.Size([8, 1144])passing base model: 
+hidden_states torch.Size([8, 1144]) loss_mask 
+torch.Size([8, 120, 2048])  torch.Size([8, 1144, 3840])
+torch.Size([8, 1024]) torch.Size([8, 1144])targettorch.Size([8, 1144]) 
+ torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model: passing base model:   torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])torch.Size([8, 1024])  torch.Size([8, 1024])torch.Size([8, 1144])  torch.Size([8, 1144])torch.Size([8, 1144])
+ torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840])base model returned:  base model returned: base model returned:  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+
+base model returned: base model returned:   torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+input_idshidden_states  torch.Size([8, 1144, 3840])torch.Size([8, 1024])
+target
+ cond_idxtorch.Size([8, 1144, 3840])
+ torch.Size([8, 120, 2048])attention_mask
+ hidden_states torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+loss_mask
+target torch.Size([8, 1144])input_ids torch.Size([8, 1144, 3840])
+ 
+torch.Size([8, 1024])attention_mask
+ cond_idxtorch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])
+loss_maskhidden_states  torch.Size([8, 1144, 3840])passing base model: torch.Size([8, 1144])
+target torch.Size([8, 120, 2048])
+  torch.Size([8, 1144, 3840])
+torch.Size([8, 1024])attention_mask  torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1144])
+
+loss_mask passing base model: torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_maskinput_ids torch.Size([8, 1144])
+loss_mask  torch.Size([8, 1144])
+torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states passing base model: torch.Size([8, 1144, 3840]) 
+torch.Size([8, 120, 2048])target  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+ attention_masktorch.Size([8, 1144])
+input_ids  torch.Size([8, 1144])torch.Size([8, 1024])
+
+loss_maskcond_idx  torch.Size([8, 1144])torch.Size([8, 120, 2048])
+
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:  base model returned:  torch.Size([8, 1144, 3840])base model returned: base model returned:  torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])   torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) base model returned:  
+ torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_idspassing base model:   torch.Size([8, 1024])torch.Size([8, 120, 2048])
+ cond_idxtorch.Size([8, 1024])  torch.Size([8, 1144]) torch.Size([8, 120, 2048])torch.Size([8, 1144])
+
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])passing base model: 
+ torch.Size([8, 120, 2048])cond_idx torch.Size([8, 1024])  torch.Size([8, 120, 2048])torch.Size([8, 1144])
+ hidden_statestorch.Size([8, 1144])
+ input_idstorch.Size([8, 1144, 3840]) 
+torch.Size([8, 1024])target
+ cond_idx torch.Size([8, 1144, 3840])torch.Size([8, 120, 2048])
+
+hidden_statesattention_mask  torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+
+targetloss_mask torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144])attention_mask
+ torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048])input_idspassing base model:    torch.Size([8, 120, 2048])torch.Size([8, 1024])torch.Size([8, 1024])
+ torch.Size([8, 1024]) cond_idx  torch.Size([8, 1144])torch.Size([8, 1144])torch.Size([8, 120, 2048])
+ torch.Size([8, 1144]) hidden_states 
+torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+
+target torch.Size([8, 1144, 3840])
+attention_maskinput_ids torch.Size([8, 1144]) 
+torch.Size([8, 1024])loss_mask
+ torch.Size([8, 1144])cond_idx
+ torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+passing base model: loss_mask  torch.Size([8, 120, 2048])torch.Size([8, 1144])
+ torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned: base model returned: base model returned:  torch.Size([8, 1144, 3840])  base model returned:  torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids input_idstorch.Size([8, 1024]) 
+torch.Size([8, 1024])cond_idx 
+torch.Size([8, 120, 2048])
+cond_idx hidden_states input_idstorch.Size([8, 120, 2048])
+torch.Size([8, 1144, 3840])
+ hidden_states target torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])
+
+cond_idxtarget attention_mask  torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+torch.Size([8, 120, 2048])
+attention_mask loss_mask hidden_states torch.Size([8, 1144])
+torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+loss_mask targettorch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask passing base model: torch.Size([8, 1144])
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) passing base model: torch.Size([8, 1144])  torch.Size([8, 120, 2048])torch.Size([8, 1144]) 
+torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048])input_ids torch.Size([8, 1024]) torch.Size([8, 1144])  torch.Size([8, 1144])
+torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])input_ids
+ torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_maskinput_idspassing base model:   torch.Size([8, 1144]) torch.Size([8, 1024])
+input_idstorch.Size([8, 120, 2048])
+cond_idx   torch.Size([8, 1024])
+torch.Size([8, 1024])torch.Size([8, 120, 2048])
+cond_idx  hidden_states passing base model: torch.Size([8, 120, 2048])
+torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+ torch.Size([8, 120, 2048])hidden_states  target  torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144])target 
+attention_mask  torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+attention_mask 
+loss_masktorch.Size([8, 1144]) torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])
+passing base model:  passing base model: torch.Size([8, 120, 2048])  torch.Size([8, 1024])torch.Size([8, 120, 2048])  torch.Size([8, 1024])torch.Size([8, 1144]) torch.Size([8, 1144]) torch.Size([8, 1144]) torch.Size([8, 1144])
+
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned: base model returned:  base model returned:  torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 3840]) 
+ torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned: base model returned:   torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_maskinput_ids  torch.Size([8, 1144])
+torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+passing base model: target  torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1024]) attention_masktorch.Size([8, 1144])  torch.Size([8, 1144])
+torch.Size([8, 1144])loss_mask
+ torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])passing base model: 
+ attention_masktorch.Size([8, 120, 2048])  torch.Size([8, 1024])torch.Size([8, 1144]) 
+loss_masktorch.Size([8, 1144]) torch.Size([8, 1144]) 
+torch.Size([8, 1144])
+input_idspassing base model:   torch.Size([8, 1024])torch.Size([8, 120, 2048]) 
+torch.Size([8, 1024])cond_idx  torch.Size([8, 120, 2048])torch.Size([8, 1144]) input_ids
+torch.Size([8, 1144]) hidden_states 
+torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+
+targetinput_idscond_idx  torch.Size([8, 1144, 3840])torch.Size([8, 120, 2048]) 
+attention_mask
+hidden_statestorch.Size([8, 1024])  torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+cond_idx
+loss_masktarget   torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048])torch.Size([8, 1144])
+attention_mask 
+input_idstorch.Size([8, 1144])
+hidden_states loss_mask  torch.Size([8, 1024])torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+cond_idxpassing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])target
+hidden_states   torch.Size([8, 1024]) passing base model: torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])  torch.Size([8, 120, 2048])
+target torch.Size([8, 1144])
+ torch.Size([8, 1024])attention_masktorch.Size([8, 1144, 3840])
+ torch.Size([8, 1144]) attention_mask torch.Size([8, 1144])torch.Size([8, 1144]) torch.Size([8, 1144])
+
+
+loss_maskloss_mask  torch.Size([8, 1144])
+torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) passing base model: torch.Size([8, 1144])  torch.Size([8, 1144])
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  base model returned: base model returned: torch.Size([8, 1144, 3840])   torch.Size([8, 1144, 3840])base model returned: base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384])
+
+ torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+base model returned: 
+ torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_idsinput_ids  torch.Size([8, 1024])torch.Size([8, 1024])
+
+cond_idxcond_idx torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])
+hidden_states
+ hidden_statestorch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 3840])target 
+targettorch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 3840])
+input_idsattention_maskattention_mask   torch.Size([8, 1144])torch.Size([8, 1024])torch.Size([8, 1144])
+
+cond_idx
+loss_mask loss_mask  torch.Size([8, 1144])torch.Size([8, 120, 2048])
+torch.Size([8, 1144])
+
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask passing base model: torch.Size([8, 1144])
+ torch.Size([8, 120, 2048])passing base model:   torch.Size([8, 1024])torch.Size([8, 120, 2048])  torch.Size([8, 1144])torch.Size([8, 1024]) input_ids torch.Size([8, 1144])torch.Size([8, 1144]) passing base model:  
+torch.Size([8, 1144])
+ torch.Size([8, 1024])torch.Size([8, 120, 2048])
+ cond_idxtorch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 120, 2048])
+ torch.Size([8, 1144])hidden_states 
+torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])input_idspassing base model: 
+  cond_idxtorch.Size([8, 1024])torch.Size([8, 120, 2048])  
+torch.Size([8, 1024])torch.Size([8, 120, 2048])cond_idx  torch.Size([8, 1144])
+torch.Size([8, 120, 2048])
+ torch.Size([8, 1144])input_idshidden_stateshidden_states 
+  torch.Size([8, 1144, 3840])
+torch.Size([8, 1024])torch.Size([8, 1144, 3840])target 
+cond_idx
+torch.Size([8, 1144, 3840]) target
+torch.Size([8, 120, 2048]) attention_mask 
+hidden_statestorch.Size([8, 1144, 3840])torch.Size([8, 1144]) torch.Size([8, 1144, 3840])
+
+
+attention_maskloss_mask target  torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])attention_mask 
+torch.Size([8, 1144])
+loss_maskloss_mask  passing base model: torch.Size([8, 1144])
+torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) passing base model: torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 120, 2048])  torch.Size([8, 1144])
+torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) base model returned: base model returned: torch.Size([8, 1144, 16384]) base model returned: base model returned:  
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])
+
+ torch.Size([8, 1144, 16384])base model returned: 
+ torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384]) 
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+passing base model: target  torch.Size([8, 1144, 3840])torch.Size([8, 120, 2048])
+attention_maskinput_ids torch.Size([8, 1024]) torch.Size([8, 1144])  torch.Size([8, 1144])
+loss_masktorch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+cond_idx
+
+ torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids input_idstorch.Size([8, 1024]) torch.Size([8, 1024])input_ids
+
+ cond_idxcond_idx torch.Size([8, 1024]) torch.Size([8, 120, 2048])
+
+torch.Size([8, 120, 2048])hidden_states cond_idx 
+torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048])
+hidden_statestargethidden_states   torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+
+target
+attention_mask  targettorch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+ loss_mask input_idsattention_mask torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+ torch.Size([8, 1144])
+
+torch.Size([8, 1024])loss_mask attention_mask
+cond_idxtorch.Size([8, 1144])
+  torch.Size([8, 1144])torch.Size([8, 120, 2048])
+passing base model: 
+hidden_states loss_mask torch.Size([8, 120, 2048]) torch.Size([8, 1144, 3840])
+ torch.Size([8, 1024])passing base model: torch.Size([8, 1144])target  torch.Size([8, 1144]) torch.Size([8, 120, 2048])
+torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144]) attention_mask
+torch.Size([8, 1024])  torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned: base model returned:    torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 16384])base model returned:  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])    torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 16384])
+  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids input_idstorch.Size([8, 1024]) 
+cond_idxtorch.Size([8, 1024])passing base model:  
+ torch.Size([8, 120, 2048])torch.Size([8, 120, 2048])
+cond_idx torch.Size([8, 1024])hidden_states   torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048])
+torch.Size([8, 1144]) target hidden_statestorch.Size([8, 1144])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])
+
+targetattention_mask torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144])attention_mask 
+torch.Size([8, 1144])
+loss_maskloss_mask  torch.Size([8, 1144])torch.Size([8, 1144])
+
+passing base model: passing base model: input_ids  torch.Size([8, 120, 2048])  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1024])torch.Size([8, 1024])input_idstorch.Size([8, 1144]) 
+ torch.Size([8, 1144]) torch.Size([8, 1144])
+cond_idx torch.Size([8, 1144])torch.Size([8, 1024])
+ 
+cond_idxtorch.Size([8, 120, 2048])input_ids 
+ torch.Size([8, 120, 2048])
+hidden_statestorch.Size([8, 1024])hidden_states  
+torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])cond_idx 
+target
+torch.Size([8, 120, 2048])
+ targethidden_states torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])
+
+attention_masktorch.Size([8, 1144, 3840])target torch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])input_ids
+loss_maskattention_mask
+attention_mask  torch.Size([8, 1144])  torch.Size([8, 1144])torch.Size([8, 1024])
+
+torch.Size([8, 1144])
+cond_idx 
+loss_mask torch.Size([8, 120, 2048])
+loss_masktorch.Size([8, 1144])
+hidden_states passing base model:  torch.Size([8, 1144, 3840])torch.Size([8, 1144]) torch.Size([8, 120, 2048])
+target
+ torch.Size([8, 1024]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144])passing base model: 
+attention_mask torch.Size([8, 1144])  
+torch.Size([8, 120, 2048])torch.Size([8, 1144])
+ torch.Size([8, 1024])passing base model: loss_mask  torch.Size([8, 1144]) torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 120, 2048])
+
+ torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:   torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) base model returned:  base model returned: base model returned: torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 3840])base model returned: 
+torch.Size([8, 1144, 16384])
+  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idxinput_ids  torch.Size([8, 120, 2048])
+torch.Size([8, 1024])hidden_states
+ torch.Size([8, 1144, 3840])cond_idx
+ targettorch.Size([8, 120, 2048]) 
+torch.Size([8, 1144, 3840])hidden_states input_ids
+attention_masktorch.Size([8, 1144, 3840])  
+torch.Size([8, 1024])torch.Size([8, 1144])target 
+cond_idxinput_ids
+loss_masktorch.Size([8, 1144, 3840])
+input_ids   torch.Size([8, 1144])attention_mask torch.Size([8, 120, 2048])
+torch.Size([8, 1024])
+ 
+torch.Size([8, 1144])
+hidden_states cond_idx torch.Size([8, 1024])loss_mask torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048])
+
+torch.Size([8, 1144])target passing base model: hidden_states cond_idx
+torch.Size([8, 1144, 3840])
+ torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+ attention_mask input_ids torch.Size([8, 1024])target torch.Size([8, 120, 2048])torch.Size([8, 1144])
+  torch.Size([8, 1144])passing base model: torch.Size([8, 1144, 3840])
+
+loss_mask torch.Size([8, 1024])
+ torch.Size([8, 1144]) torch.Size([8, 120, 2048])attention_mask hidden_statestorch.Size([8, 1144])
+cond_idx 
+ torch.Size([8, 1024])torch.Size([8, 1144])
+ torch.Size([8, 120, 2048])
+ torch.Size([8, 1144])loss_mask torch.Size([8, 1144, 3840])hidden_states  torch.Size([8, 1144])passing base model:  torch.Size([8, 1144])
+
+torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048]) target
+torch.Size([8, 1024])  targettorch.Size([8, 1144])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144])passing base model: 
+
+
+ attention_maskattention_mask torch.Size([8, 120, 2048])  torch.Size([8, 1144])
+torch.Size([8, 1024]) torch.Size([8, 1144])loss_masktorch.Size([8, 1144]) 
+ torch.Size([8, 1144])torch.Size([8, 1144])loss_mask
+
+ torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  base model returned: torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 16384])
+base model returned: base model returned:  base model returned: torch.Size([8, 1144, 3840])   torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384]) 
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask input_idstorch.Size([8, 1144]) 
+torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+passing base model: attention_mask  torch.Size([8, 1144])torch.Size([8, 120, 2048]) input_ids
+torch.Size([8, 1024])  loss_mask torch.Size([8, 1144]) torch.Size([8, 1024])torch.Size([8, 1144])torch.Size([8, 1144])
+
+
+input_idscond_idx torch.Size([8, 120, 2048])
+ hidden_states torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+target 
+passing base model: torch.Size([8, 1144, 3840])cond_idx 
+ torch.Size([8, 120, 2048]) input_idsattention_mask torch.Size([8, 120, 2048])torch.Size([8, 1024])  torch.Size([8, 1144])
+torch.Size([8, 1144]) torch.Size([8, 1024])
+
+loss_maskhidden_statestorch.Size([8, 1144])
+cond_idx  torch.Size([8, 1144]) input_idstorch.Size([8, 120, 2048])
+
+torch.Size([8, 1144, 3840]) hidden_states 
+torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+target
+target cond_idx  torch.Size([8, 1144, 3840])passing base model: torch.Size([8, 120, 2048])
+torch.Size([8, 1144, 3840])
+
+ hidden_states attention_mask attention_masktorch.Size([8, 120, 2048]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+ torch.Size([8, 1024]) target loss_mask torch.Size([8, 1144])torch.Size([8, 1144]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+
+torch.Size([8, 1144])
+attention_mask loss_masktorch.Size([8, 1144])
+ loss_masktorch.Size([8, 1144]) 
+torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048])input_ids torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 1024]) torch.Size([8, 1144])
+
+passing base model: cond_idx passing base model:  torch.Size([8, 120, 2048])torch.Size([8, 120, 2048])  
+hidden_statestorch.Size([8, 1024]) torch.Size([8, 120, 2048]) torch.Size([8, 1144, 3840])torch.Size([8, 1144])  
+torch.Size([8, 1144])
+torch.Size([8, 1024])target  torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+attention_mask  torch.Size([8, 1144])torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:   torch.Size([8, 1144, 3840])base model returned: base model returned: base model returned: torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384])base model returned:   torch.Size([8, 1144, 3840])   torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])base model returned: torch.Size([8, 1144, 16384])
+
+torch.Size([8, 1144, 16384])
+
+
+
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask input_idstorch.Size([8, 1144])
+ torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+passing base model: attention_mask  torch.Size([8, 1144])
+torch.Size([8, 120, 2048])loss_mask  torch.Size([8, 1144])torch.Size([8, 1024])
+ torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])input_ids
+ attention_masktorch.Size([8, 1024]) 
+torch.Size([8, 1144])cond_idx
+ loss_masktorch.Size([8, 120, 2048]) 
+torch.Size([8, 1144])hidden_states 
+torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_maskinput_ids torch.Size([8, 1144]) 
+torch.Size([8, 1024])loss_mask
+ torch.Size([8, 1144])cond_idx passing base model: 
+torch.Size([8, 120, 2048])
+ hidden_statestorch.Size([8, 120, 2048]) torch.Size([8, 1144, 3840])input_ids 
+ torch.Size([8, 1024])target torch.Size([8, 1024]) passing base model: torch.Size([8, 1144, 3840])
+
+torch.Size([8, 1144]) attention_mask cond_idx  torch.Size([8, 120, 2048]) torch.Size([8, 1144])
+torch.Size([8, 120, 2048])
+torch.Size([8, 1144])torch.Size([8, 1024]) loss_mask hidden_states 
+torch.Size([8, 1144]) torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+passing base model: loss_mask  torch.Size([8, 1144])
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned: base model returned: base model returned:    torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384]) 
+base model returned: 
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])passing base model: 
+ hidden_statestorch.Size([8, 120, 2048])  torch.Size([8, 1024])torch.Size([8, 1144, 3840]) torch.Size([8, 1144])
+ torch.Size([8, 1144])target
+ torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask input_idstorch.Size([8, 1144])
+input_ids  torch.Size([8, 1024])torch.Size([8, 1024])
+
+cond_idxcond_idx torch.Size([8, 120, 2048]) 
+torch.Size([8, 120, 2048])hidden_states passing base model: 
+input_idstorch.Size([8, 1144, 3840])
+ hidden_states target torch.Size([8, 120, 2048])  torch.Size([8, 1024])
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1024]) torch.Size([8, 1144, 3840])cond_idx attention_mask torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])
+torch.Size([8, 1144])
+torch.Size([8, 1144])
+targethidden_states loss_mask torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144])torch.Size([8, 1144, 3840])target 
+
+torch.Size([8, 1144, 3840])
+attention_maskattention_mask  torch.Size([8, 1144])
+torch.Size([8, 1144])loss_mask 
+torch.Size([8, 1144])
+loss_maskpassing base model:   torch.Size([8, 120, 2048])input_idstorch.Size([8, 1144]) torch.Size([8, 1024]) 
+ passing base model: torch.Size([8, 1024])torch.Size([8, 1144])  
+cond_idxtorch.Size([8, 1144])
+torch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 120, 2048])
+torch.Size([8, 1144]) passing base model: hidden_states torch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])torch.Size([8, 120, 2048])
+ target torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+ attention_masktorch.Size([8, 1144])  torch.Size([8, 1144])
+torch.Size([8, 1144])loss_mask
+ torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:  base model returned:  base model returned: torch.Size([8, 1144, 3840]) base model returned: base model returned: torch.Size([8, 1144, 3840])   torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 16384])
+  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384]) 
+base model returned:  torch.Size([8, 1144, 16384])
+
+torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144])input_ids  torch.Size([8, 1144])torch.Size([8, 1024])
+
+cond_idx torch.Size([8, 120, 2048])
+hidden_states input_idstorch.Size([8, 1144, 3840]) 
+targetinput_idstorch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+
+attention_mask cond_idx torch.Size([8, 1144]) torch.Size([8, 120, 2048])torch.Size([8, 1024])
+loss_mask
+hidden_states
+  torch.Size([8, 1144, 3840])cond_idxtorch.Size([8, 1144])
+
+target  torch.Size([8, 1144, 3840])input_idstorch.Size([8, 120, 2048])
+ 
+attention_mask torch.Size([8, 1024])hidden_statestorch.Size([8, 1144])
+passing base model: 
+cond_idx loss_mask   torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+torch.Size([8, 120, 2048]) 
+hidden_states
+input_idstorch.Size([8, 1024]) torch.Size([8, 1144, 3840])target  torch.Size([8, 1144])
+target torch.Size([8, 1024])
+passing base model:  torch.Size([8, 1144]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])cond_idx  torch.Size([8, 120, 2048])
+
+attention_mask
+torch.Size([8, 120, 2048])
+ torch.Size([8, 1024]) attention_maskhidden_states  torch.Size([8, 1144])torch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144])loss_mask torch.Size([8, 1144])target 
+torch.Size([8, 1144])
+
+torch.Size([8, 1144, 3840])loss_mask
+ attention_masktorch.Size([8, 1144]) 
+torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  passing base model: torch.Size([8, 120, 2048])  torch.Size([8, 120, 2048]) torch.Size([8, 1024])torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 1144]) torch.Size([8, 1144]) 
+torch.Size([8, 1144])
+base model returned: base model returned:   torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])base model returned:  base model returned: torch.Size([8, 1144, 16384])
+base model returned: 
+ torch.Size([8, 1144, 3840])   torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+base model returned: base model returned:   torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idxinput_ids torch.Size([8, 120, 2048]) 
+torch.Size([8, 1024])hidden_states
+ torch.Size([8, 1144, 3840])cond_idx
+ targettorch.Size([8, 120, 2048]) 
+torch.Size([8, 1144, 3840])
+hidden_states attention_mask torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])target
+loss_mask torch.Size([8, 1144, 3840]) torch.Size([8, 1144])
+
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048])input_ids  input_idstorch.Size([8, 1024]) torch.Size([8, 1024])
+ torch.Size([8, 1144]) passing base model: cond_idx torch.Size([8, 1024])torch.Size([8, 1144])
+ torch.Size([8, 120, 2048])torch.Size([8, 120, 2048])
+
+cond_idxinput_ids torch.Size([8, 1024])hidden_states  torch.Size([8, 120, 2048]) torch.Size([8, 1144]) torch.Size([8, 1144, 3840])
+
+ torch.Size([8, 1144])torch.Size([8, 1024])target hidden_states input_ids
+
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])
+ cond_idxattention_mask target torch.Size([8, 1024])
+ torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+cond_idx torch.Size([8, 120, 2048])loss_mask attention_masktorch.Size([8, 120, 2048])
+
+torch.Size([8, 1144])
+ torch.Size([8, 1144])hidden_states hidden_states
+torch.Size([8, 1144, 3840]) loss_mask 
+torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+target passing base model: 
+torch.Size([8, 1144, 3840])
+ targetattention_mask torch.Size([8, 120, 2048])  torch.Size([8, 1144])
+passing base model:  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])loss_mask torch.Size([8, 120, 2048]) torch.Size([8, 1144]) input_ids
+torch.Size([8, 1144])
+torch.Size([8, 1024]) torch.Size([8, 1144])
+ attention_masktorch.Size([8, 1144]) torch.Size([8, 1024]) torch.Size([8, 1144])
+torch.Size([8, 1144])
+cond_idx passing base model: 
+torch.Size([8, 120, 2048])
+ loss_maskhidden_states torch.Size([8, 120, 2048])  torch.Size([8, 1144, 3840])
+torch.Size([8, 1024]) torch.Size([8, 1144])targettorch.Size([8, 1144]) 
+ torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) passing base model: torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned: base model returned:  base model returned:   base model returned: torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])base model returned: 
+
+base model returned:  torch.Size([8, 1144, 16384])  torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])input_ids
+ loss_mask torch.Size([8, 1024])torch.Size([8, 1144])
+
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask passing base model: torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048]) loss_masktorch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 1144])
+ torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target passing base model: torch.Size([8, 1144, 3840])
+ attention_masktorch.Size([8, 120, 2048])  torch.Size([8, 1144])
+input_idstorch.Size([8, 1024]) input_idsloss_mask  torch.Size([8, 1144]) torch.Size([8, 1144])
+ torch.Size([8, 1024])
+torch.Size([8, 1144])
+torch.Size([8, 1024])cond_idx 
+torch.Size([8, 120, 2048])
+cond_idxhidden_statespassing base model:    torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048]) 
+target torch.Size([8, 1024]) hidden_statestorch.Size([8, 1144, 3840])
+torch.Size([8, 1144]) attention_mask  torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+input_idstorch.Size([8, 1144])
+
+loss_mask  targettorch.Size([8, 1144])
+torch.Size([8, 1024]) 
+torch.Size([8, 1144, 3840])cond_idx 
+torch.Size([8, 120, 2048])attention_mask
+ hidden_states torch.Size([8, 1144])passing base model: torch.Size([8, 1144, 3840])
+ 
+loss_masktorch.Size([8, 120, 2048]) target  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])torch.Size([8, 1144]) attention_mask 
+torch.Size([8, 1144])
+torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048])passing base model:   torch.Size([8, 1024])torch.Size([8, 120, 2048])  torch.Size([8, 1144])torch.Size([8, 1024])  torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1144])
+
+base model returned: base model returned:   base model returned: base model returned: torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 3840])  base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])
+base model returned: 
+ base model returned: torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384]) 
+torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx input_idstorch.Size([8, 120, 2048])
+ hidden_statestorch.Size([8, 1024]) 
+cond_idxtorch.Size([8, 1144, 3840]) torch.Size([8, 120, 2048])
+
+targethidden_states  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+
+attention_masktarget  torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+attention_maskloss_mask  torch.Size([8, 1144])torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])
+passing base model:  input_idspassing base model:  input_idstorch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])   torch.Size([8, 1024]) input_idstorch.Size([8, 1024]) torch.Size([8, 1024])torch.Size([8, 1024])torch.Size([8, 1144])  torch.Size([8, 1144])
+
+torch.Size([8, 1144])
+torch.Size([8, 1024])
+ torch.Size([8, 1144])cond_idxcond_idxcond_idx 
+  torch.Size([8, 120, 2048])torch.Size([8, 120, 2048])
+input_idstorch.Size([8, 120, 2048])
+hidden_stateshidden_states  
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+torch.Size([8, 1024])hidden_states
+targettarget 
+cond_idx  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+ torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+attention_maskattention_mask 
+hidden_states
+ torch.Size([8, 1144])torch.Size([8, 1144])
+ target
+loss_maskloss_mask torch.Size([8, 1144, 3840])
+  torch.Size([8, 1144])torch.Size([8, 1144])
+target torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])
+
+attention_maskattention_mask torch.Size([8, 1144]) 
+torch.Size([8, 1144])loss_mask passing base model: 
+torch.Size([8, 1144]) loss_mask
+passing base model: torch.Size([8, 120, 2048])   torch.Size([8, 1024]) torch.Size([8, 1144])torch.Size([8, 120, 2048]) torch.Size([8, 1144]) 
+torch.Size([8, 1024]) torch.Size([8, 1144])
+passing base model: torch.Size([8, 1144])  torch.Size([8, 120, 2048])torch.Size([8, 1144])
+ torch.Size([8, 1024]) torch.Size([8, 1144]) passing base model: torch.Size([8, 1144])
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  base model returned: torch.Size([8, 1144, 3840]) base model returned:  base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])base model returned:  
+
+ base model returned: torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) 
+base model returned: 
+torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+targetinput_ids torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1024])attention_mask 
+torch.Size([8, 1144])cond_idx 
+torch.Size([8, 120, 2048])loss_mask
+ torch.Size([8, 1144])hidden_states 
+torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_idspassing base model:  torch.Size([8, 120, 2048])  input_idstorch.Size([8, 1024])torch.Size([8, 1024])  torch.Size([8, 1024])torch.Size([8, 1144]) 
+
+passing base model: torch.Size([8, 1144])cond_idxcond_idx  
+ torch.Size([8, 120, 2048])
+torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])hidden_statestorch.Size([8, 1024]) 
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144]) hidden_states
+torch.Size([8, 1144])
+ target torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+
+attention_maskinput_idstarget torch.Size([8, 1144])input_ids  
+loss_mask torch.Size([8, 1024])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144])torch.Size([8, 1024])cond_idx 
+
+
+cond_idxtorch.Size([8, 120, 2048])
+attention_mask hidden_states  torch.Size([8, 120, 2048])
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])hidden_states target passing base model: 
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])
+ torch.Size([8, 120, 2048])loss_masktarget attention_mask  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+ torch.Size([8, 1144])torch.Size([8, 1144])attention_mask loss_mask  
+torch.Size([8, 1144])
+torch.Size([8, 1144])
+torch.Size([8, 1144])loss_mask
+ torch.Size([8, 1144])
+passing base model: passing base model:  torch.Size([8, 120, 2048])  torch.Size([8, 1024])torch.Size([8, 120, 2048]) torch.Size([8, 1144])passing base model:   torch.Size([8, 1144]) torch.Size([8, 1024])
+torch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 1144])torch.Size([8, 1144])  torch.Size([8, 1144])torch.Size([8, 1144])
+
+base model returned: base model returned:  torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 3840])base model returned: base model returned:  torch.Size([8, 1144, 16384])  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 3840]) 
+ torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+
+base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask input_idstorch.Size([8, 1144])
+ loss_mask torch.Size([8, 1024])torch.Size([8, 1144])
+
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask passing base model: torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])loss_mask  torch.Size([8, 1024]) torch.Size([8, 1144])
+torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])passing base model: 
+ targettorch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])attention_mask  torch.Size([8, 1144])input_idstorch.Size([8, 1144])
+input_ids
+ loss_mask torch.Size([8, 1024]) torch.Size([8, 1144])
+torch.Size([8, 1024])
+cond_idx 
+torch.Size([8, 120, 2048])
+cond_idxhidden_states  passing base model: torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])input_idstarget 
+ torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+hidden_states torch.Size([8, 1144])torch.Size([8, 1024])
+attention_mask   torch.Size([8, 1144])cond_idx torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048])
+loss_mask 
+hidden_states torch.Size([8, 1144])
+targettorch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 3840])target 
+torch.Size([8, 1144, 3840])
+attention_maskattention_mask  torch.Size([8, 1144])passing base model: torch.Size([8, 1144])
+loss_mask torch.Size([8, 120, 2048])
+ torch.Size([8, 1144]) loss_mask
+torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 1144]) torch.Size([8, 1144])
+
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  base model returned: base model returned: torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+ 
+ torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 3840]) 
+ torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])input_ids
+hidden_states  torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+
+cond_idxtarget  torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+
+attention_maskhidden_states torch.Size([8, 1144]) 
+torch.Size([8, 1144, 3840])
+loss_mask targettorch.Size([8, 1144]) 
+torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])input_ids
+ torch.Size([8, 1024])
+cond_idx passing base model: torch.Size([8, 120, 2048]) 
+torch.Size([8, 120, 2048])hidden_states  passing base model: torch.Size([8, 1144, 3840])
+torch.Size([8, 1024]) target torch.Size([8, 1144])torch.Size([8, 120, 2048])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144])input_idstorch.Size([8, 1024]) 
+attention_mask
+ torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1024]) 
+
+torch.Size([8, 1144])
+loss_mask cond_idxtorch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+passing base model: loss_mask  torch.Size([8, 1144])
+torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids passing base model: torch.Size([8, 1024]) torch.Size([8, 120, 2048])
+ cond_idxtorch.Size([8, 1024])  torch.Size([8, 1144]) torch.Size([8, 120, 2048])torch.Size([8, 1144])
+
+input_idshidden_states  torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+
+cond_idx targettorch.Size([8, 120, 2048])
+ hidden_statestorch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])
+
+attention_masktarget  torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+
+loss_maskattention_mask input_ids torch.Size([8, 1144])
+ torch.Size([8, 1144])loss_mask torch.Size([8, 1024])
+torch.Size([8, 1144])
+
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_maskpassing base model: passing base model:  torch.Size([8, 1144]) torch.Size([8, 120, 2048]) 
+loss_mask torch.Size([8, 1024])torch.Size([8, 120, 2048])  torch.Size([8, 1144]) torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1024])
+
+ torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:  base model returned:  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) base model returned: base model returned:   torch.Size([8, 1144, 16384])base model returned:  base model returned: torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) 
+torch.Size([8, 1144, 3840])  
+ torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])base model returned: 
+
+  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+input_idsloss_mask  torch.Size([8, 1144])torch.Size([8, 1024])
+
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask passing base model:  input_idstorch.Size([8, 1144])
+torch.Size([8, 120, 2048])  loss_masktorch.Size([8, 1024])torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+
+ torch.Size([8, 1144])cond_idx 
+torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_maskpassing base model:  torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])loss_mask  torch.Size([8, 1144])torch.Size([8, 1024])
+ torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+input_idscond_idx passing base model: torch.Size([8, 120, 2048])
+ torch.Size([8, 120, 2048]) hidden_states torch.Size([8, 1024]) torch.Size([8, 1144, 3840])torch.Size([8, 1024]) 
+
+targettorch.Size([8, 1144]) cond_idx torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+ 
+attention_maskinput_idstorch.Size([8, 120, 2048]) torch.Size([8, 1144]) 
+
+loss_masktorch.Size([8, 1024])hidden_states torch.Size([8, 1144])
+ 
+cond_idx torch.Size([8, 1144, 3840])torch.Size([8, 120, 2048])
+
+targethidden_states  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+
+passing base model: target attention_mask torch.Size([8, 1144, 3840]) torch.Size([8, 120, 2048]) 
+torch.Size([8, 1144])torch.Size([8, 1024]) attention_mask 
+torch.Size([8, 1144]) torch.Size([8, 1144])
+loss_masktorch.Size([8, 1144])
+loss_mask  torch.Size([8, 1144])torch.Size([8, 1144])
+
+passing base model:  torch.Size([8, 120, 2048]) passing base model: torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 120, 2048]) torch.Size([8, 1144]) 
+torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) base model returned: base model returned: torch.Size([8, 1144, 16384])
+ base model returned: base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+
+
+torch.Size([8, 1144, 3840]) 
+base model returned: torch.Size([8, 1144, 16384])
+base model returned:   torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])input_ids
+loss_mask  torch.Size([8, 1024])
+torch.Size([8, 1144])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+passing base model: loss_mask  torch.Size([8, 120, 2048])torch.Size([8, 1144])
+ torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])passing base model: 
+ cond_idxtorch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 120, 2048])
+input_idstorch.Size([8, 1144]) hidden_states torch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])
+torch.Size([8, 1024])target
+ torch.Size([8, 1144, 3840])cond_idx
+ attention_mask torch.Size([8, 120, 2048])torch.Size([8, 1144])
+
+loss_mask hidden_statestorch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask passing base model: torch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])loss_mask  torch.Size([8, 1024]) input_idstorch.Size([8, 1144])torch.Size([8, 1144])  
+torch.Size([8, 1144])
+torch.Size([8, 1024])
+input_idscond_idx  torch.Size([8, 120, 2048])
+torch.Size([8, 1024])hidden_states 
+torch.Size([8, 1144, 3840])passing base model: cond_idx
+ torch.Size([8, 120, 2048]) target 
+torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+hidden_states  attention_mask torch.Size([8, 1144, 3840])torch.Size([8, 1024])torch.Size([8, 1144])
+target 
+loss_mask torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1144, 3840]) 
+
+attention_masktorch.Size([8, 1144]) torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840])base model returned: base model returned: base model returned:   torch.Size([8, 1144, 3840])base model returned:   torch.Size([8, 1144, 16384])base model returned:  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) 
+ 
+ torch.Size([8, 1144, 16384])base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 3840])base model returned:    torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx input_idstorch.Size([8, 120, 2048]) 
+hidden_statestorch.Size([8, 1024])
+passing base model:  cond_idx torch.Size([8, 1144, 3840]) torch.Size([8, 120, 2048])
+torch.Size([8, 120, 2048])
+ torch.Size([8, 1024])target hidden_states  torch.Size([8, 1144, 3840])
+input_idstorch.Size([8, 1144, 3840])
+torch.Size([8, 1144]) attention_mask input_ids targettorch.Size([8, 1144])torch.Size([8, 1144])
+ torch.Size([8, 1024])
+ torch.Size([8, 1144, 3840])
+loss_mask torch.Size([8, 1024])
+input_idscond_idx 
+attention_masktorch.Size([8, 1144])
+cond_idx torch.Size([8, 120, 2048])
+  torch.Size([8, 1144])torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1024])
+hidden_states torch.Size([8, 1144, 3840])
+
+loss_mask passing base model: torch.Size([8, 1144, 3840])
+target cond_idxtorch.Size([8, 1144])
+ torch.Size([8, 120, 2048])target torch.Size([8, 1144, 3840])
+  torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+attention_masktorch.Size([8, 120, 2048]) torch.Size([8, 1144])attention_mask torch.Size([8, 1144])
+ torch.Size([8, 1144])passing base model:  torch.Size([8, 1144])
+loss_maskhidden_states
+ 
+loss_mask torch.Size([8, 1144]) torch.Size([8, 120, 2048])  
+torch.Size([8, 1144, 3840])torch.Size([8, 1024])torch.Size([8, 1144])
+input_ids
+ torch.Size([8, 1144]) target torch.Size([8, 1144])torch.Size([8, 1024]) passing base model: 
+
+passing base model: torch.Size([8, 1144, 3840]) torch.Size([8, 120, 2048])cond_idx  torch.Size([8, 120, 2048])
+ torch.Size([8, 1024])torch.Size([8, 120, 2048])
+ torch.Size([8, 1024])attention_mask hidden_states  torch.Size([8, 1144])  torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+
+target loss_masktorch.Size([8, 1144, 3840])
+ attention_mask torch.Size([8, 1144])torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024])passing base model:   torch.Size([8, 1144])torch.Size([8, 120, 2048])  torch.Size([8, 1144])torch.Size([8, 1024]) 
+torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:  torch.Size([8, 1144, 3840])base model returned: base model returned:   base model returned:   torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) base model returned:  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+
+base model returned:   torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])base model returned:   torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  input_idstorch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 1024])torch.Size([8, 1144])
+ cond_idxtorch.Size([8, 1144]) 
+torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states input_idsinput_idstorch.Size([8, 1144, 3840])  
+torch.Size([8, 1024])torch.Size([8, 1024])target
+
+ cond_idxcond_idx torch.Size([8, 1144, 3840]) torch.Size([8, 120, 2048])
+
+torch.Size([8, 120, 2048])
+hidden_states attention_maskhidden_states torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 3840])target torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+
+target attention_mask loss_masktorch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+ attention_mask loss_mask torch.Size([8, 1144])torch.Size([8, 1144])
+torch.Size([8, 1144])
+
+loss_mask input_idstorch.Size([8, 1144]) 
+torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_statespassing base model:   torch.Size([8, 1144, 3840])
+passing base model: torch.Size([8, 120, 2048]) target  passing base model: torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])torch.Size([8, 1144]) attention_mask   torch.Size([8, 1024])torch.Size([8, 1144])torch.Size([8, 1144])
+torch.Size([8, 1024]) torch.Size([8, 1144])
+loss_mask   torch.Size([8, 1144])torch.Size([8, 1144])torch.Size([8, 1144])
+
+ torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:  base model returned: base model returned:  torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 3840]) base model returned:    torch.Size([8, 1144, 16384])base model returned:  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) 
+ torch.Size([8, 1144, 3840])
+  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+ 
+
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx passing base model: torch.Size([8, 120, 2048])
+ hidden_statestorch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])target  torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+
+attention_mask torch.Size([8, 1144])
+input_idsloss_mask input_ids torch.Size([8, 1144])torch.Size([8, 1024]) 
+
+torch.Size([8, 1024])cond_idx 
+torch.Size([8, 120, 2048])
+cond_idxhidden_states  torch.Size([8, 1144, 3840])torch.Size([8, 120, 2048])passing base model: 
+
+hidden_states target  torch.Size([8, 1144, 3840])input_idstorch.Size([8, 120, 2048]) torch.Size([8, 1144, 3840])
+
+target torch.Size([8, 1024]) attention_mask  torch.Size([8, 1144, 3840])torch.Size([8, 1024])torch.Size([8, 1144]) torch.Size([8, 1144])
+
+attention_mask
+torch.Size([8, 1144])loss_mask torch.Size([8, 1144])cond_idx
+ torch.Size([8, 1144])
+loss_mask 
+input_ids torch.Size([8, 120, 2048]) torch.Size([8, 1144])
+
+torch.Size([8, 1024])hidden_states
+ cond_idx torch.Size([8, 1144, 3840])passing base model: torch.Size([8, 120, 2048])
+
+ torch.Size([8, 120, 2048])input_idshidden_states targetpassing base model:  torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+  torch.Size([8, 120, 2048]) torch.Size([8, 1144])torch.Size([8, 1024])
+target torch.Size([8, 1144, 3840]) torch.Size([8, 1024]) torch.Size([8, 1144])cond_idxtorch.Size([8, 1144, 3840])
+
+ torch.Size([8, 1144])
+ torch.Size([8, 120, 2048])attention_mask attention_mask torch.Size([8, 1144])
+hidden_statestorch.Size([8, 1144])
+ 
+ loss_mask torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+target 
+loss_masktorch.Size([8, 1144, 3840])
+ attention_masktorch.Size([8, 1144]) 
+torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048])passing base model:   torch.Size([8, 1024])torch.Size([8, 120, 2048])  torch.Size([8, 1144])torch.Size([8, 1024])  torch.Size([8, 1144])torch.Size([8, 1144]) 
+torch.Size([8, 1144])
+base model returned: base model returned: base model returned:    base model returned: base model returned: torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])   torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])base model returned:   torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask input_idstorch.Size([8, 1144])
+ torch.Size([8, 1024])input_ids
+ cond_idx torch.Size([8, 1024])torch.Size([8, 120, 2048])
+
+hidden_statescond_idx torch.Size([8, 1144, 3840]) torch.Size([8, 120, 2048])passing base model:  input_ids
+target
+hidden_statestorch.Size([8, 120, 2048])   torch.Size([8, 1144, 3840]) torch.Size([8, 1024]) torch.Size([8, 1024])
+
+attention_masktorch.Size([8, 1144, 3840])
+torch.Size([8, 1144]) cond_idx  torch.Size([8, 1144])target torch.Size([8, 1144])
+torch.Size([8, 120, 2048])
+input_ids
+loss_masktorch.Size([8, 1144, 3840])
+hidden_states  torch.Size([8, 1144]) attention_mask torch.Size([8, 1144, 3840])
+
+torch.Size([8, 1024])torch.Size([8, 1144])
+target 
+loss_mask torch.Size([8, 1144, 3840])
+cond_idxtorch.Size([8, 1144])
+attention_mask  passing base model: torch.Size([8, 1144])
+torch.Size([8, 120, 2048]) loss_mask 
+torch.Size([8, 120, 2048]) torch.Size([8, 1144])
+hidden_statestorch.Size([8, 1024]) passing base model:  torch.Size([8, 1144])  torch.Size([8, 1144, 3840])torch.Size([8, 1144])torch.Size([8, 120, 2048]) 
+
+torch.Size([8, 1024]) targetpassing base model:  input_idstorch.Size([8, 1144])  torch.Size([8, 120, 2048])  torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])torch.Size([8, 1024]) torch.Size([8, 1024])
+
+torch.Size([8, 1144]) cond_idx attention_masktorch.Size([8, 1144])
+torch.Size([8, 120, 2048])
+ hidden_statestorch.Size([8, 1144]) torch.Size([8, 1144, 3840])
+
+loss_masktarget  torch.Size([8, 1144, 3840])
+input_idstorch.Size([8, 1144])attention_mask  
+torch.Size([8, 1144])torch.Size([8, 1024])
+
+loss_mask cond_idxtorch.Size([8, 1144])
+ torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target passing base model: torch.Size([8, 1144, 3840])
+attention_mask  torch.Size([8, 1144])passing base model: torch.Size([8, 120, 2048])
+  loss_mask torch.Size([8, 120, 2048]) torch.Size([8, 1024])torch.Size([8, 1144])
+torch.Size([8, 1024])  torch.Size([8, 1144]) torch.Size([8, 1144])torch.Size([8, 1144])
+ torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned:   torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 3840]) base model returned:  base model returned: torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])
+base model returned: torch.Size([8, 1144, 3840])  base model returned:  torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])  
+
+ base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384]) torch.Size([8, 1144, 16384])
+
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids input_idstorch.Size([8, 1024]) 
+torch.Size([8, 1024])cond_idx
+ cond_idx torch.Size([8, 120, 2048])torch.Size([8, 120, 2048])
+
+hidden_stateshidden_states  torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+input_ids
+target  targettorch.Size([8, 1144, 3840])torch.Size([8, 1024]) torch.Size([8, 1144, 3840])
+attention_mask
+
+attention_mask cond_idx torch.Size([8, 1144])torch.Size([8, 1144])
+ torch.Size([8, 120, 2048])
+loss_mask
+loss_mask hidden_states  torch.Size([8, 1144])torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])
+
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024])passing base model:   torch.Size([8, 1144])torch.Size([8, 120, 2048])  torch.Size([8, 1024]) torch.Size([8, 1144])
+passing base model: torch.Size([8, 1144])input_ids  torch.Size([8, 120, 2048]) torch.Size([8, 1144])
+ torch.Size([8, 1024]) torch.Size([8, 1144])torch.Size([8, 1024]) 
+torch.Size([8, 1144])cond_idx
+ torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+passing base model: target  torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840]) 
+attention_masktorch.Size([8, 1024]) torch.Size([8, 1144]) 
+torch.Size([8, 1144])loss_mask  torch.Size([8, 1144])input_idstorch.Size([8, 1144])
+ 
+torch.Size([8, 1024])
+cond_idx passing base model:  input_idstorch.Size([8, 120, 2048])
+torch.Size([8, 120, 2048])  hidden_states torch.Size([8, 1024]) torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+torch.Size([8, 1144]) 
+target torch.Size([8, 1144])
+cond_idxtorch.Size([8, 1144, 3840])
+ attention_masktorch.Size([8, 120, 2048]) 
+torch.Size([8, 1144])
+hidden_statesloss_mask  torch.Size([8, 1144])torch.Size([8, 1144, 3840])
+
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])passing base model: 
+ torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 3840])base model returned: base model returned:   base model returned:  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  base model returned: torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])torch.Size([8, 1144, 3840])  
+torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+base model returned: 
+ torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024])input_ids  torch.Size([8, 1144])torch.Size([8, 1024]) 
+torch.Size([8, 1144])cond_idx 
+torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+targetinput_ids torch.Size([8, 1144, 3840])input_ids 
+ torch.Size([8, 1024])attention_mask torch.Size([8, 1024])
+torch.Size([8, 1144])
+cond_idx input_ids
+cond_idx torch.Size([8, 120, 2048])
+loss_mask torch.Size([8, 120, 2048])
+ hidden_statestorch.Size([8, 1144])
+hidden_states torch.Size([8, 1024]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+
+input_ids
+target cond_idx target torch.Size([8, 1144, 3840])
+passing base model:   torch.Size([8, 1024])
+torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 120, 2048]) torch.Size([8, 120, 2048])cond_idx attention_mask torch.Size([8, 1144])
+torch.Size([8, 1024]) 
+torch.Size([8, 120, 2048])
+torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144]) hidden_stateshidden_states loss_mask torch.Size([8, 1144])
+torch.Size([8, 1144])
+ torch.Size([8, 1144, 3840])
+torch.Size([8, 1144])
+torch.Size([8, 1144, 3840])target 
+torch.Size([8, 1144, 3840])target
+attention_maskpassing base model:   torch.Size([8, 1144]) torch.Size([8, 120, 2048])torch.Size([8, 1144, 3840])
+loss_mask torch.Size([8, 1024])passing base model: 
+ torch.Size([8, 1144]) torch.Size([8, 1144]) attention_mask
+ torch.Size([8, 1144])torch.Size([8, 120, 2048])  
+torch.Size([8, 1024]) torch.Size([8, 1144])torch.Size([8, 1144])
+ loss_maskpassing base model: torch.Size([8, 1144])
+  torch.Size([8, 1144])torch.Size([8, 120, 2048]) 
+torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned: base model returned: base model returned:    base model returned: torch.Size([8, 1144, 3840]) base model returned: torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])  base model returned: torch.Size([8, 1144, 16384])
+base model returned:  torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+ torch.Size([8, 1144, 16384])base model returned:  torch.Size([8, 1144, 16384])torch.Size([8, 1144, 16384])
+
+ 
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target torch.Size([8, 1144, 3840])
+attention_mask torch.Size([8, 1144])
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+input_ids torch.Size([8, 1024])
+cond_idx torch.Size([8, 120, 2048])
+hidden_states torch.Size([8, 1144, 3840])
+target input_idstorch.Size([8, 1144, 3840])
+input_ids attention_mask torch.Size([8, 1024])
+ torch.Size([8, 1144])
+cond_idx torch.Size([8, 1024])loss_mask input_idstorch.Size([8, 120, 2048])
+
+torch.Size([8, 1144])
+ hidden_states cond_idxtorch.Size([8, 1024])torch.Size([8, 1144, 3840])
+ 
+target torch.Size([8, 120, 2048])cond_idxtorch.Size([8, 1144, 3840])
+ 
+attention_maskpassing base model: hidden_statestorch.Size([8, 120, 2048])
+ torch.Size([8, 1144])  hidden_states 
+loss_masktorch.Size([8, 120, 2048]) torch.Size([8, 1144, 3840])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144])torch.Size([8, 1024]) 
+target
+torch.Size([8, 1144]) target torch.Size([8, 1144, 3840])torch.Size([8, 1144])
+ 
+torch.Size([8, 1144, 3840])attention_mask 
+input_idstorch.Size([8, 1144])
+attention_maskpassing base model:  loss_mask   torch.Size([8, 120, 2048])torch.Size([8, 1024])
+torch.Size([8, 1144])
+torch.Size([8, 1144]) torch.Size([8, 1024])cond_idx 
+ torch.Size([8, 1144])torch.Size([8, 120, 2048])
+loss_mask torch.Size([8, 1144])hidden_states  passing base model: 
+torch.Size([8, 1144, 3840])
+torch.Size([8, 1144]) torch.Size([8, 120, 2048])target 
+ torch.Size([8, 1024])torch.Size([8, 1144, 3840])
+ torch.Size([8, 1144])attention_mask  torch.Size([8, 1144])torch.Size([8, 1144])
+
+loss_mask torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+passing base model:  torch.Size([8, 120, 2048]) torch.Size([8, 1024]) torch.Size([8, 1144]) torch.Size([8, 1144])
+base model returned:  torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])base model returned: base model returned: 
+ base model returned:  torch.Size([8, 1144, 3840])base model returned: torch.Size([8, 1144, 3840])  torch.Size([8, 1144, 3840])base model returned:  torch.Size([8, 1144, 16384]) base model returned: torch.Size([8, 1144, 16384])  torch.Size([8, 1144, 16384]) 
+torch.Size([8, 1144, 3840]) 
+base model returned: torch.Size([8, 1144, 3840])
+torch.Size([8, 1144, 3840])torch.Size([8, 1144, 16384])   torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 3840]) torch.Size([8, 1144, 16384])
+torch.Size([8, 1144, 16384])
+
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mllamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k[0m at: [34mhttps://wandb.ai/seliny2-university-of-illinois-urbana-champaign/eagle3-llamagen2/runs/tnlsijuf[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/run-20251010_172630-tnlsijuf/logs[0m

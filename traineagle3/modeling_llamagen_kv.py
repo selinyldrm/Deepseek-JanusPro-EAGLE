@@ -980,15 +980,16 @@ class LlamaModel(LlamaPreTrainedModel):
         self.num_classes = config.num_classes
         self.model_type = config.input_type
         self.cls_token_num = config.cls_token_num
+        self.training=True
 
         self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size)
-        # self.tok_dropout = nn.Dropout(config.token_dropout_p)
-        # if self.model_type == "c2i":
-        #     self.cls_embedding = LabelEmbedder(config.num_classes, config.hidden_size, config.class_dropout_p)
-        # elif self.model_type == "t2i":
-        #     self.cls_embedding = CaptionEmbedder(config.caption_dim, config.hidden_size, config.class_dropout_p)
-        # else:
-        #     raise Exception("Invalid model type")
+        self.tok_dropout = nn.Dropout(config.token_dropout_p)
+        if self.model_type == "c2i":
+            self.cls_embedding = LabelEmbedder(config.num_classes, config.hidden_size, config.class_dropout_p)
+        elif self.model_type == "t2i":
+            self.cls_embedding = CaptionEmbedder(config.caption_dim, config.hidden_size, config.class_dropout_p)
+        else:
+            raise Exception("Invalid model type")
         self.layers = nn.ModuleList([LlamaDecoderLayer(config) for _ in range(config.num_hidden_layers)])
         self.norm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
@@ -1024,21 +1025,9 @@ class LlamaModel(LlamaPreTrainedModel):
                 inputs_embeds.device
             )
             combined_attention_mask = (
-                expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask
+                expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask # 1024 vs.  1144
             )
-            
-        # [MODIFIED] add medusa mask
-        # if hasattr(self, "medusa_mask") and self.medusa_mask is not None:
-        #     medusa_mask = self.medusa_mask
-        #     medusa_mask = medusa_mask.repeat(combined_attention_mask.size(0), 1, 1, 1)
-        #     medusa_len = medusa_mask.size(-1)
-        #     combined_attention_mask[:, :, -medusa_len:, -medusa_len:][
-        #         medusa_mask == 0
-        #     ] = combined_attention_mask.min()
-        #     if hasattr(self, "medusa_mode"):
-        #         # debug mode
-        #         if self.medusa_mode == "debug":
-        #             torch.save(combined_attention_mask, "medusa_mask.pt")
+
         if hasattr(self, "tree_mask") and self.tree_mask is not None:
             tree_mask = self.tree_mask
             tree_mask = tree_mask.repeat(combined_attention_mask.size(0), 1, 1, 1)
@@ -1053,7 +1042,7 @@ class LlamaModel(LlamaPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        # cond_idx: torch.LongTensor = None,
+        cond_idx: torch.LongTensor = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
         past_key_values=None,  # [MODIFIED] past_key_value is KVCache class
@@ -1077,13 +1066,13 @@ class LlamaModel(LlamaPreTrainedModel):
             batch_size, seq_length = input_ids.shape
         elif inputs_embeds is not None:
             batch_size, seq_length, _ = inputs_embeds.shape
-        # elif cond_idx is not None:
-        #     batch_size = cond_idx.shape[0]
-        #     seq_length = 0
+        elif cond_idx is not None:
+            batch_size = cond_idx.shape[0]
+            seq_length = 0
         else:
             raise ValueError("You have to specify either input_ids or inputs_embeds")
-        # if past_key_values is None or input_ids is None:
-        #     seq_length += self.cls_token_num
+        if past_key_values is None or input_ids is None:
+            seq_length += self.cls_token_num
         
         seq_length_with_past = seq_length
         past_key_values_length = 0
@@ -1091,15 +1080,6 @@ class LlamaModel(LlamaPreTrainedModel):
         if past_key_values is not None:
             past_key_values_length = past_key_values[0][0].shape[2]
             seq_length_with_past = seq_length_with_past + past_key_values_length
-
-        # if position_ids is None:
-        #     device = input_ids.device if input_ids is not None else inputs_embeds.device
-        #     position_ids = torch.arange(
-        #         past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device
-        #     )
-        #     position_ids = position_ids.unsqueeze(0).view(-1, seq_length)
-        # else:
-        #     position_ids = position_ids.view(-1, seq_length).long()
 
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
@@ -1117,42 +1097,38 @@ class LlamaModel(LlamaPreTrainedModel):
             self.freqs_cis = self.freqs_cis.to(position_ids.device)
         freqs_cis = self.freqs_cis[position_ids].squeeze(0)
 
-        # if inputs_embeds is None and (past_key_values is None or input_ids is None):
-        #     if cond_idx.dim() == 2:
-        #         cond_idx = cond_idx.squeeze(1)
-        #     cond_embeddings = self.cls_embedding(cond_idx, train=self.training)[:, :self.cls_token_num]
-        #     if input_ids is None:
-        #         inputs_embeds = self.tok_dropout(cond_embeddings)
-        #     else:
-        #         token_embeddings = self.embed_tokens(input_ids)
-        #         token_embeddings = torch.cat([cond_embeddings, token_embeddings], dim=1)
-        #         inputs_embeds = self.tok_dropout(token_embeddings)
-        # elif inputs_embeds is None:
-        #     inputs_embeds = self.tok_dropout(self.embed_tokens(input_ids))        # embed positions
+        if inputs_embeds is None and (past_key_values is None or input_ids is None):
+            if cond_idx.dim() == 2:
+                cond_idx = cond_idx.squeeze(1)
+            cond_embeddings = self.cls_embedding(cond_idx, train=self.training)[:, :self.cls_token_num]
+            if input_ids is None:
+                inputs_embeds = self.tok_dropout(cond_embeddings)
+            else:
+                token_embeddings = self.embed_tokens(input_ids)
+                token_embeddings = torch.cat([cond_embeddings, token_embeddings], dim=1)
+                inputs_embeds = self.tok_dropout(token_embeddings)                
 
-        if inputs_embeds is None:
-            inputs_embeds = self.embed_tokens(input_ids)
-
-       # embed positions
+        elif inputs_embeds is None:
+            inputs_embeds = self.tok_dropout(self.embed_tokens(input_ids))        # embed positions
+        
         if attention_mask is None:
             attention_mask = torch.ones(
-                (batch_size, seq_length_with_past),
-                dtype=torch.bool,
-                device=inputs_embeds.device,
+                (batch_size, seq_length_with_past), dtype=torch.bool, device=inputs_embeds.device
             )
+            padding_mask = None
+        else:
+            if 0 in attention_mask:
+                padding_mask = attention_mask
+            else:
+                padding_mask = None
         attention_mask = self._prepare_decoder_attention_mask(
-            attention_mask,
-            (batch_size, seq_length),
-            inputs_embeds,
-            past_key_values_length,
+            attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
         )
-
         # [MODIFIED] 
         self.attention_mask = attention_mask
         self.position_ids = position_ids
 
         hidden_states = inputs_embeds
-
         if self.gradient_checkpointing and self.training:
             if use_cache:
                 logger.warning_once(
@@ -1277,7 +1253,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        # cond_idx: torch.LongTensor = None,
+        cond_idx: torch.LongTensor = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
         past_key_values=None,  # [MODIFIED] past_key_value is KVCache class
@@ -1323,7 +1299,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = self.model(
             input_ids=input_ids,
-            # cond_idx=cond_idx,
+            cond_idx=cond_idx,
             attention_mask=attention_mask,
             position_ids=position_ids,
             past_key_values=past_key_values,

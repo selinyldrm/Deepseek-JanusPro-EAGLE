@@ -22,7 +22,7 @@ from transformers import get_linear_schedule_with_warmup
 from models.configs.configs import EConfig
 from cnets_lumina_mgpt import Eagle3Model
 from cnets_anole import Eagle3AnoleModel
-from cnets_llamagen import Eagle3LlamaGenModel
+# from cnets_llamagen import Model
 from entrypoints.train_drafter.data_utils import (
     list_files,
     AddGaussianNoise,
@@ -62,7 +62,7 @@ def parse_args():
     parser.add_argument('--is_warmup', action='store_true', default=True)
     
     # Eagle 3 specific arguments
-    parser.add_argument('--length', type=int, default=1, help='Eagle 3 multi-step training length')
+    parser.add_argument('--length', type=int, default=7, help='Eagle 3 multi-step training length')
     parser.add_argument('--eagle3_weight_decay', type=float, default=0.8, help='Weight decay for Eagle 3 multi-step loss')
     
     parser.add_argument('--p_w', type=float, default=0.1)
@@ -134,7 +134,7 @@ def log_metrics(optimizer, plosses, vloss, acces, loss_weights, correct, total, 
     if wandb_instance:
         wandb_instance.log(logdict)
 
-def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup,  wandb_instance, train_mode=True):
+def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, accelerator, is_warmup,  wandb_instance, train_mode=True):
     """Run one epoch of Eagle 3 training"""
     model.train() if train_mode else model.eval()
     
@@ -152,12 +152,14 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 optimizer.zero_grad()
                 
             # Eagle 3 forward pass returns multiple losses and accuracies
-            # plosses, vlosses, acces = model(
-            #     input_ids=data["input_ids"], 
-            #     attention_mask=data["attention_mask"],
-            #     loss_mask=data["loss_mask"]
-            # )
-            plosses, vlosses, acces = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
+
+
+            plosses, vlosses, acces = model(
+                cond_idx=data["cond_idx"], 
+                input_ids=data["input_ids"], 
+                attention_mask=data["attention_mask"],
+                loss_mask=data["loss_mask"]
+            )
             # Compute weighted loss for Eagle 3
             weighted_loss = sum([loss_weights[i] * plosses[i] for i in range(len(plosses))])
 
@@ -204,7 +206,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
 class Eagle3TrainingConfig:
     """Configuration for Eagle 3 training"""
     def __init__(self, args):
-        self.gradient_checkpointing = True
+        self.gradient_checkpointing = False
         self.max_len = args.max_len
         self.length = args.length
 
@@ -248,43 +250,10 @@ def run_train_drafter(args):
     elif "llamagen" in args.model:
         from transformers import AutoConfig
         base_config = AutoConfig.from_pretrained(args.base_path)
-        from models.drafters.cnets_llamagen import Model
+        from traineagle3.cnets_llamagen import Model
         ModelClass = Model
     else:
         raise ValueError("Invalid model name. Supported: lumina_mgpt, anole, llamagen, llamagen2")
-
-    ### LOAD `lm_head` ########################################################################
-    head = torch.nn.Linear(base_config.hidden_size, base_config.vocab_size, bias=False)
-
-    try:
-        with open(os.path.join(args.base_path, "model.safetensors.index.json"), "r") as f:
-            index_json = json.loads(f.read())
-            head_path = index_json["weight_map"]["lm_head.weight"]
-        with safe_open(os.path.join(args.base_path, head_path),
-                    framework="pt",
-                    device="cpu") as f:
-            tensor_slice = f.get_slice("lm_head.weight")
-            _, hidden_dim = tensor_slice.get_shape()
-            tensor = tensor_slice[:, :hidden_dim].float()
-    except:
-        try:
-            head_path = "model.safetensors"
-            with safe_open(os.path.join(args.base_path, head_path),
-                        framework="pt",
-                        device="cpu") as f:
-                tensor_slice = f.get_slice("lm_head.weight")
-                vocab_size, hidden_dim = tensor_slice.get_shape()
-                tensor = tensor_slice[:, :hidden_dim].float()
-        except:
-            head_path = "pytorch_model.bin"
-            weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
-            tensor = weights["lm_head.weight"].float()
-    head.weight.data = tensor
-    head.eval()
-
-    for param in head.parameters():
-        param.requires_grad = False
-    ###########################################################################################
 
     # Data augmentation
     if args.data_noise == "uniform":
@@ -297,6 +266,12 @@ def run_train_drafter(args):
     data_path = list_files(args.data_dir)
     train_data_path = data_path[:int(len(data_path) * args.train_data_ratio)]
     test_data_path = data_path[int(len(data_path) * args.train_data_ratio):]
+
+    # [SY] Dataset difference:
+    # Eagle 2 data preprocessing saves gtp in data['target'], therefore draft training does not need base model fwd pass during training, only calls lm_head on gtp.
+    # In eagle 3 draft training, we similarly saved data['target'] as 3k- concat features. but we still use base model fwd due to some test-time paddings.
+    # Therefore, base model needs to be passed with cond_idx that customdataset automatically discards for eagle2.
+    # To fix, returning cond_idxs in customdataset's get_item call.
 
     # Create datasets
     if args.coupled:
@@ -312,6 +287,7 @@ def run_train_drafter(args):
                                 collate_fn=DataCollatorWithPaddingForCoupled(), num_workers=0, pin_memory=True)
         
     else:
+        
         train_dataset = CustomDataset(train_data_path, max_len=args.max_len, transform=aug, model=args.model)
         test_dataset = CustomDataset(test_data_path, max_len=args.max_len, model=args.model)
 
@@ -328,18 +304,19 @@ def run_train_drafter(args):
     # Create Eagle 3 model
     config = EConfig.from_pretrained(args.config_path)
     training_config = Eagle3TrainingConfig(args)
-    # model = ModelClass(
-    #     config, 
-    #     training_config,
-    #     load_emb=True, 
-    #     path=args.base_path,
-    #     embed_upscale=args.embed_upscale
-    # )
-    model = ModelClass(config, load_emb=True, path=args.base_path)
-    model.eagle_head = head
-    # ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-fixed-length1/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length1_mscoco2017train30k/state_2/model.safetensors"
+   
+    model = ModelClass(config,training_config, load_emb=True, path=args.base_path) # only drafter. no base model needs to be loaded since we have gtp saved in dataset
+    
+    # already performed in model init
+    # # model.target_model.eval()
+    # for param in model.target_model.parameters():
+    #     param.requires_grad = False
+
+    # ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-lmhead-embed-condidx/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_10/model.safetensors"
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)
+    # state_dict["embed_tokens.weight"] = model.target_model.model.embed_tokens.weight
+    # state_dict["target_model.lm_head.weight"] = model.target_model.lm_head.weight
     # model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
@@ -350,18 +327,18 @@ def run_train_drafter(args):
                                                     num_warmup_steps=args.warmup_steps_ratio * len(train_loader),
                                                     num_training_steps=args.num_epochs * len(train_loader))
 
-        model, model.eagle_head, optimizer, train_loader, test_loader, scheduler = accelerator.prepare(
-            model, model.eagle_head, optimizer, train_loader, test_loader, scheduler
+        model, optimizer, train_loader, test_loader, scheduler = accelerator.prepare(
+            model, optimizer, train_loader, test_loader, scheduler
         )
     else:
-        model, model.eagle_head, optimizer, train_loader, test_loader = accelerator.prepare(
-            model, model.eagle_head, optimizer, train_loader, test_loader
+        model,  optimizer, train_loader, test_loader = accelerator.prepare(
+            model, optimizer, train_loader, test_loader
         )
 
     # Training loop
     for epoch in range(0, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
-            args, model, train_loader, optimizer, scheduler, criterion, model.eagle_head, accelerator, args.is_warmup, wandb_instance, train_mode=True
+            args, model, train_loader, optimizer, scheduler, criterion, accelerator, args.is_warmup, wandb_instance, train_mode=True
         )
 
         if accelerator.is_main_process and wandb_instance is not None:
@@ -372,7 +349,7 @@ def run_train_drafter(args):
         
         if (epoch + 1) % args.eval_freq == 0 or (epoch + 1) == args.num_epochs:
             test_loss, test_correct, test_total, test_top3 = run_epoch(
-                args, model, test_loader, optimizer, scheduler, criterion, model.eagle_head, accelerator, args.is_warmup, wandb_instance, train_mode=False
+                args, model, test_loader, optimizer, scheduler, criterion, accelerator, args.is_warmup, wandb_instance, train_mode=False
             )
             
             if accelerator.is_main_process and wandb_instance is not None:

@@ -321,29 +321,13 @@ def run_train_drafter(args):
     ### LOAD `lm_head` ########################################################################
     head = torch.nn.Linear(base_config.hidden_size, base_config.vocab_size, bias=False)
 
-    try:
-        with open(os.path.join(args.base_path, "model.safetensors.index.json"), "r") as f:
-            index_json = json.loads(f.read())
-            head_path = index_json["weight_map"]["lm_head.weight"]
-        with safe_open(os.path.join(args.base_path, head_path),
-                    framework="pt",
-                    device="cpu") as f:
-            tensor_slice = f.get_slice("lm_head.weight")
-            _, hidden_dim = tensor_slice.get_shape()
-            tensor = tensor_slice[:, :hidden_dim].float()
-    except:
-        try:
-            head_path = "model.safetensors"
-            with safe_open(os.path.join(args.base_path, head_path),
-                        framework="pt",
-                        device="cpu") as f:
-                tensor_slice = f.get_slice("lm_head.weight")
-                vocab_size, hidden_dim = tensor_slice.get_shape()
-                tensor = tensor_slice[:, :hidden_dim].float()
-        except:
-            head_path = "pytorch_model.bin"
-            weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
-            tensor = weights["lm_head.weight"].float()
+
+
+
+    self.lm_head = nn.Linear(config.hidden_size, config.draft_vocab_size, bias=False)
+
+    for param in self.embed_tokens.parameters():
+        param.requires_grad = False
     head.weight.data = tensor
     print("LOADED BASE MODEL LM HEAD")
     head.eval()
