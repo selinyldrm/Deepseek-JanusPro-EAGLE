@@ -510,7 +510,7 @@ class LlamaDecoderLayeremb(nn.Module):
         return outputs
     
 class Model(nn.Module):
-    def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=6, top_k=10, threshold=1.0):
+    def __init__(self, config, load_emb=True, base_model=None, bias=True, total_tokens=63, depth=6, top_k=10, threshold=1.0):
         super().__init__()
 
         self.gradient_checkpointing = False
@@ -520,35 +520,15 @@ class Model(nn.Module):
 
         self.lm_head=nn.Linear(config.hidden_size,config.vocab_size,bias=False)
 
-        if not load_emb:
-            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
-        else:
-
-            from safetensors import safe_open
-            import json
-            import os
-            try:
-                with open(os.path.join(path, "model.safetensors.index.json"), "r") as f:
-                    index_json = json.loads(f.read())
-                    emb_path = index_json["weight_map"]["model.embed_tokens.weight"]
-                with safe_open(os.path.join(path, emb_path),
-                               framework="pt",
-                               device="cpu") as f:
-                    tensor_slice = f.get_slice("model.embed_tokens.weight")
-                    vocab_size, hidden_dim = tensor_slice.get_shape()
-                    tensor = tensor_slice[:, :hidden_dim].float()
-            except:
-                with open(os.path.join(path, "pytorch_model.bin.index.json"), "r") as f:
-                    index_json = json.loads(f.read())
-                    emb_path = index_json["weight_map"]["model.embed_tokens.weight"]
-                weights = torch.load(os.path.join(path, emb_path))
-                tensor = weights["model.embed_tokens.weight"].float()
-            self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx, _weight=tensor)
+        # if not load_emb:
+        #     self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
+        # else:
+        #     emb_weight = base_model.model.embed_tokens.weight.data.detach()
+        #     
+        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
 
         for param in self.embed_tokens.parameters():
             param.requires_grad = False
-
-        self.lm_head.weight = self.embed_tokens.weight # tie lm head to embed tokens since they are identical
         
         self.top_k = top_k
         self.total_tokens = total_tokens - 1
@@ -926,8 +906,6 @@ class Model(nn.Module):
         return torch.cat(new_hidden, dim=1)
     
     def sample(self,recent_logits, logits, step, logits_processor,k=1):
-        # if recent_logits is not None:
-            # print("recent_logits: ", recent_logits.shape, flush=True)
         logits = logits_processor(None, logits)
         probabilities = torch.nn.functional.softmax(logits, dim=1)
         bias = []
@@ -946,28 +924,7 @@ class Model(nn.Module):
             for r,c in zip(rows.tolist(), cols.tolist()):
                 if r != c:
                     bias.append((r,c))
-            # sns.heatmap(cosine_sim_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
-            # Compute L2 distance between each consecutive pair
-            # l2_distances = torch.norm(normalized[1:] - normalized[:-1], dim=1)  # shape: [B-1]
-            # diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
-            # l2_dist_matrix = torch.norm(diffs, dim=2).cpu().numpy()  # shape: [B, B]
-            # l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
-           
-        #     # plt.plot(cos_similarities.to(torch.float32).cpu().numpy(), marker='o')
-        #     plt.title("Cosine Similarity Between Consecutive Tokens")
-        #     plt.xlabel("Token Index (i)")
-        #     plt.ylabel("cosine_similarity(logit[i], logit[i+1])")
-        #     plt.grid()
-        #     plt.savefig(f"./relaxed-lantern++-stg2-temp1-d3-k10-cfg3.0-k2000/analysis/c-{step}.png")
-        #     plt.close()
-        #     sns.heatmap(l2_dist_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, vmin=1.0,  vmax=0)
-        #     # plt.plot(l2_distances.to(torch.float32).cpu().numpy(), marker='o')
-        #     plt.title("L2 distance Between Consecutive Tokens")
-        #     plt.xlabel("Token Index (i)")
-        #     plt.ylabel("l2_distances(logit[i], logit[i+1])")
-        #     plt.grid()
-        #     plt.savefig(f"./relaxed-lantern++-stg2-temp1-d3-k10-cfg3.0-k2000/analysis/l-{step}.png")
-        #     plt.close()
+ 
         sampled_indices = torch.multinomial(probabilities, k, replacement=False)
         sampled_probs = torch.gather(probabilities, 1, sampled_indices)
 
@@ -985,14 +942,13 @@ class Model(nn.Module):
     
     
     @torch.no_grad()
-    def topK_genrate_v1(self, step, recent_logits,per_level_node_counts, hidden_states, input_ids, head, logits_processor, cfg_scale):
+    def topK_genrate_v1(self, step, recent_logits, hidden_states, input_ids, head, logits_processor, cfg_scale):
         # test_=input_ids
         # input_ids = torch.tensor([state[1:]])
-        input_ids = input_ids[:, 1:] # [2,120] except first target token/shifted input ids ? 
+        input_ids = input_ids[:, 1:]
         input_ids = input_ids.to(hidden_states.device)
         ss_token,ss_prob,ss_op = [],[],[]
-        len_posi=input_ids.shape[1] # 120 
-        global_input_ids = []
+        len_posi=input_ids.shape[1]
         
         self.reset() # self.tree_mask reset
 
@@ -1002,59 +958,85 @@ class Model(nn.Module):
             out_hidden, past_key_values = self(hidden_states, input_ids=input_ids[:,kv_len:], position_ids=position_ids, 
                                                past_key_values=self.stable_kv,use_cache=True)
         else:
-            out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, use_cache=True) #first draft pass with hidden_states [2, 120, 3840]
+            out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, use_cache=True)
         self.stable_kv=past_key_values
-        last_hidden = out_hidden[:, -1] # [2, 121, 1280] --> [2, 120, 1280] 
-
-        last_headout = head(self.norm(last_hidden))
-        last_headout = cfg_logit_process(last_headout, cfg_scale) # first draft pass' lm_head mapping [2, 1280]
+        last_hidden = out_hidden[:, -1]
+        last_headout = self.lm_head(self.norm(last_hidden))
+        last_headout = cfg_logit_process(last_headout, cfg_scale)
+        
+        # print("last_headout: ", last_headout.shape, flush=True)
+        # print("input_ids: ", input_ids.shape, flush=True)
 
         bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
         # bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        # print("len(self.tree_buffer['tree_indices']): ", len(self.tree_buffer['tree_indices']), flush=True)
+        # print("len(self.tree_buffer['tree_indices']): ", len(self.tree_buffer['tree_indices']))
         # level count on the tree == len(self.tree_buffer['tree_indices'])
         filtered_logits = None
         logit_sim = []
+        # print("sampling level count: ", len(self.tree_buffer['tree_indices']), flush=True)
         for i in range(len(self.tree_buffer['tree_indices'])):
             if logits_processor is not None:
-                # sample from the first target pass
                 topk_index,topk_prob,op, bias, filtered_logits = self.sample(recent_logits, last_headout,step,logits_processor,k=self.top_k)
-                # bias_list[i] = bias
+                bias_list[i] = bias
             else:
                 top=torch.topk(last_headout, self.top_k, dim=-1)
                 topk_index,topk_prob = top.indices,top.values
                 op=None
 
             ss_token.append(topk_index)
+            # print("topk_index: ", topk_index.shape, flush=True)
             ss_prob.append(topk_prob)
             ss_op.append(op)
             #topk_index = torch.topk(last_headout, top_k, dim=-1).indices
             topk_index = topk_index.view(-1)
-            # print("self.tree_buffer.keys(): ", self.tree_buffer.keys())
-           
-            # select_index=topk_index[self.tree_buffer['tree_indices'][i]] # top_k[1,2,3,4,5] indices
-            select_index=topk_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] 
+            select_index=topk_index[self.tree_buffer['tree_indices'][i]]
             #len_sq=select_index.shape[0]
-            input_ids=select_index[None,:] # [1, top-5 tokens] based on level node count
-            input_ids = torch.cat([input_ids, input_ids])  # [2, top-5] tokens with batch repetition
-            global_input_ids.append(input_ids)
+            input_ids=select_index[None,:]
+            input_ids = torch.cat([input_ids, input_ids])
+            # print("sampled input_ids: ", input_ids.shape, flush=True)
             if i==0:
                 hidden_states = out_hidden[:, -1:]
             else:
                 hidden_states=out_hidden
-          
             hidden_states=self.repeat_hidden(hidden_states,self.tree_buffer["repeat_nums"][i])
+            # print("repeated hidden_states: ", hidden_states.shape, flush=True)
+            #hidden_states = hidden_states.repeat(1,len_sq,1)
             self.tree_mask=self.tree_buffer['attn_mask'][i]
-            
-            position_ids = len_posi + torch.zeros(per_level_node_counts[i+1]-per_level_node_counts[i]) # eagle 3 adaptation of pos ids
-            # position_ids=len_posi+self.tree_buffer["position_ids"][i]
+            position_ids=len_posi+self.tree_buffer["position_ids"][i]
             out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, past_key_values=past_key_values, position_ids=position_ids, use_cache=True)
             len_posi += 1
 
-            last_headout = head(self.norm(out_hidden))
+            last_headout = self.lm_head(self.norm(out_hidden))
             last_headout = cfg_logit_process(last_headout, cfg_scale)[0]
+
+            # if i > 1 and len(bias_level_list[i-1]) > 0:
+            #     prev_accept = bias_level_list[i-1]
+            #     filtered_logits = filtered_logits[prev_accept, :]
+
+            ################## comment out LEVEL BIAS here
+            # [1, 16384] --> [5, 16384]
+            # filtered_logits[filtered_logits == float('-inf')] = 0.0
+            # filtered_logits = filtered_logits.to(torch.float32)
+            # normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            # # [1, 1], [5,1]
-            # bias_list[i] = bias
+            # [5, 16384] --> [7, 16384]
+            # last_headout_modified = last_headout.clone()
+            # last_headout_modified = logits_processor(None, last_headout_modified)
+            # last_headout_modified[last_headout_modified == float('-inf')] = 0.0
+            # curr_logits = last_headout_modified.to(torch.float32)
+            # normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
+            
+            # [1,5], [5,7] etc..
+            # cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
+            # Now in [0, 1] --> combined with l2 later
+            # cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
+
+            # logit_sim.append(cosine_sim_matrix)
+            
+            # [1, 1], [5,1]
+            bias_list[i] = bias
+            # bias_level_list[i].append(cosine_sim_matrix)
 
         if logits_processor is not None:
             topk_index,topk_prob,op, bias, _ = self.sample(recent_logits, last_headout,step, logits_processor,k=self.top_k)
@@ -1066,22 +1048,131 @@ class Model(nn.Module):
         # print("topk_index: ", topk_index.shape, flush=True)
         ss_prob.append(topk_prob)
         ss_op.append(op)
-
-        topk_index = topk_index.view(-1)
-            # print("self.tree_buffer.keys(): ", self.tree_buffer.keys())
-        i+=1    
-        # select_index=topk_index[self.tree_buffer['tree_indices'][i]] # top_k[1,2,3,4,5] indices
-        select_index=topk_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] 
-        #len_sq=select_index.shape[0]
-        input_ids=select_index[None,:] # [1, top-5 tokens] based on level node count
-        input_ids = torch.cat([input_ids, input_ids])  # [2, top-5] tokens with batch repetition
-        global_input_ids.append(input_ids)
-        
-        # bias_list[len(self.tree_buffer['tree_indices'])] = bias
+        bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
         # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
-        # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
-        return torch.cat(global_input_ids, dim=-1) # eagle 3 adaptation
+        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
+
+
+# # test_=input_ids
+        # # input_ids = torch.tensor([state[1:]])
+        # input_ids = input_ids[:, 1:] # [2,120] except first target token/shifted input ids ? 
+        # input_ids = input_ids.to(hidden_states.device)
+        # ss_token,ss_prob,ss_op = [],[],[]
+        # len_posi=input_ids.shape[1] # 120 
+        # global_input_ids = []
+        # global_logits = []
+        # global_probs = []
+        # global_op = []
+        
+        # self.reset() # self.tree_mask reset
+
+        # if hasattr(self, "stable_kv") and self.stable_kv is not None:
+        #     kv_len=self.stable_kv[0][0].shape[2]
+        #     position_ids = torch.arange(kv_len, input_ids.shape[1], device=hidden_states.device).unsqueeze(0)
+        #     out_hidden, past_key_values = self(hidden_states, input_ids=input_ids[:,kv_len:], position_ids=position_ids, 
+        #                                        past_key_values=self.stable_kv,use_cache=True)
+        # else:
+        #     out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, use_cache=True) #first draft pass with hidden_states [2, 120, 3840]
+        # self.stable_kv=past_key_values
+        # last_hidden = out_hidden[:, -1] # [2, 121, 1280] --> [2, 120, 1280] 
+
+        # last_headout = head(self.norm(last_hidden))
+        # last_headout = cfg_logit_process(last_headout, cfg_scale) # first draft pass' lm_head mapping [2, 1280]
+        # global_logits.append(last_headout[0,:])
+
+        # bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        # # bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        # # level count on the tree == len(self.tree_buffer['tree_indices'])
+        # filtered_logits = None
+        # logit_sim = []
+        # for i in range(len(self.tree_buffer['tree_indices'])):
+        #     if logits_processor is not None:
+        #         # sample from the first target pass
+        #         topk_index,topk_prob,op, bias, filtered_logits = self.sample(recent_logits, last_headout,step,logits_processor,k=self.top_k)
+        #         # bias_list[i] = bias
+        #     else:
+        #         top=torch.topk(last_headout, self.top_k, dim=-1)
+        #         topk_index,topk_prob = top.indices,top.values
+        #         op=None
+
+        #     ss_token.append(topk_index)
+        #     ss_prob.append(topk_prob)
+        #     ss_op.append(op)
+        #     #topk_index = torch.topk(last_headout, top_k, dim=-1).indices
+        #     topk_index = topk_index.view(-1)
+        #     print("op.shape: ", op.shape, flush=True)
+        #     topk_prob_index = topk_prob.view(-1)
+        #     topk_op_index = op.view(-1)
+        #     print("topk_op_index.shape: ", topk_op_index.shape, flush=True)
+        #     # print("self.tree_buffer.keys(): ", self.tree_buffer.keys())
+           
+        #     # select_index=topk_index[self.tree_buffer['tree_indices'][i]] # top_k[1,2,3,4,5] indices
+        #     select_index=topk_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] 
+        #     select_prob_index=topk_prob_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] 
+        #     global_logits[i] = global_logits[i].repeat((per_level_node_counts[i+1]-per_level_node_counts[i]),1)
+        #     #len_sq=select_index.shape[0]
+        #     input_ids=select_index[None,:] # [1, top-5 tokens] based on level node count
+        #     input_ids = torch.cat([input_ids, input_ids])  # [2, top-5] tokens with batch repetition
+        #     global_input_ids.append(input_ids)
+        #     global_probs.append(select_prob_index)
+        #     global_op.append(topk_op_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] )
+        #     print("topk_op_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] : ", topk_op_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] , flush=True)
+
+        
+        #     if i==0:
+        #         hidden_states = out_hidden[:, -1:]
+        #     else:
+        #         hidden_states=out_hidden
+          
+        #     hidden_states=self.repeat_hidden(hidden_states,self.tree_buffer["repeat_nums"][i])
+        #     self.tree_mask=self.tree_buffer['attn_mask'][i]
+            
+        #     position_ids = len_posi + torch.zeros(per_level_node_counts[i+1]-per_level_node_counts[i]) # eagle 3 adaptation of pos ids
+        #     # position_ids=len_posi+self.tree_buffer["position_ids"][i]
+        #     out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, past_key_values=past_key_values, position_ids=position_ids, use_cache=True)
+        #     len_posi += 1
+
+        #     last_headout = head(self.norm(out_hidden))
+        #     last_headout = cfg_logit_process(last_headout, cfg_scale)[0]
+        #     global_logits.append(last_headout[0,:])
+            
+        #     # # [1, 1], [5,1]
+        #     # bias_list[i] = bias
+
+        # if logits_processor is not None:
+        #     topk_index,topk_prob,op, bias, _ = self.sample(recent_logits, last_headout,step, logits_processor,k=self.top_k)
+        # else:
+        #     top = torch.topk(last_headout, self.top_k, dim=-1)
+        #     topk_index, topk_prob = top.indices, top.values
+        #     op=None
+        # ss_token.append(topk_index)
+        # # print("topk_index: ", topk_index.shape, flush=True)
+        # ss_prob.append(topk_prob)
+        # ss_op.append(op)
+
+        # topk_index = topk_index.view(-1)
+        # topk_prob_index = topk_prob.view(-1)
+        # topk_op_index = op.view(-1)
+        #     # print("self.tree_buffer.keys(): ", self.tree_buffer.keys())
+        # i+=1    
+        # # select_index=topk_index[self.tree_buffer['tree_indices'][i]] # top_k[1,2,3,4,5] indices
+        # select_index=topk_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] 
+        # global_logits[i] = global_logits[i].repeat((per_level_node_counts[i+1]-per_level_node_counts[i]),1)
+        # #len_sq=select_index.shape[0]
+        # input_ids=select_index[None,:] # [1, top-5 tokens] based on level node count
+        # input_ids = torch.cat([input_ids, input_ids])  # [2, top-5] tokens with batch repetition
+        # global_input_ids.append(input_ids)
+        # global_op.append(topk_op_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] )
+
+        # select_prob_index=topk_prob_index[range(per_level_node_counts[i+1]-per_level_node_counts[i])] 
+        # global_probs.append(select_prob_index)
+
+        # # bias_list[len(self.tree_buffer['tree_indices'])] = bias
+
+        # # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
+        # # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
+        # return torch.cat(global_input_ids, dim=-1), torch.cat(global_logits, dim=0), torch.cat(global_probs, dim=-1), torch.cat(global_op, dim=-1) # eagle 3 adaptation
 
     @torch.no_grad()
     def acc(self, data, head, max_length=5):

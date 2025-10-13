@@ -312,7 +312,7 @@ def run_train_drafter(args):
     # for param in model.target_model.parameters():
     #     param.requires_grad = False
 
-    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-lmheadtrained-embed-condidx-attnfixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_8/model.safetensors"
+    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-lmheadtrained-embed-condidx-attnfixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_16/model.safetensors"
     from safetensors.torch import load_file
     state_dict = load_file(ckpt_path)
     state_dict["embed_tokens.weight"] = model.target_model.model.embed_tokens.weight
@@ -336,7 +336,7 @@ def run_train_drafter(args):
         )
 
     # Training loop
-    for epoch in range(8, args.num_epochs):
+    for epoch in range(16, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
             args, model, train_loader, optimizer, scheduler, criterion, accelerator, args.is_warmup, wandb_instance, train_mode=True
         )

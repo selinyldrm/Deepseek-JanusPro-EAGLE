@@ -2,7 +2,6 @@ import torch
 
 # typing
 from typing import List
-from collections import defaultdict
 
 TOPK = 10  # topk for sparse tree
 
@@ -86,12 +85,6 @@ class Tree:
             if not item.is_leaf():
                 ns.append(item)
         return ns
-    def get_all_nodes(self):
-        ns=[]
-        ns.append(self.root)
-        for item in self.node_dic.values():
-            ns.append(item)
-        return ns
 
     def indexnode(self):
         cur_index=0
@@ -102,20 +95,7 @@ class Tree:
                 cur_index+=1
 
 
-def count_children_per_level(tree):
-    """
-    Returns a dict mapping each depth level to a list of child counts 
-    for all nodes at that level, including leaves (which have 0 children).
-    """
-    level_children = defaultdict(list)
 
-    for nd in tree.get_all_nodes():
-        # Ensure every node at every level contributes an entry,
-        # even if it has 0 children.
-        if len(nd.children):
-            level_children[nd.depth].append(len(nd.children))
-
-    return dict(level_children)
 
 def generate_tree_buffers(tree_choices, device="cuda"):
     tree=Tree(tree_choices)
@@ -128,7 +108,6 @@ def generate_tree_buffers(tree_choices, device="cuda"):
     # print("max_depth: ", max_depth)
     # print("tree_len: ", tree_len)
     nodes_wc=tree.get_node_wchild() # all nodes with child
-    nodes_all = tree.get_all_nodes()
 
     depth_counts=[0 for _ in range(max_depth-1)]
     # print("depth_counts: ", depth_counts)
@@ -158,28 +137,27 @@ def generate_tree_buffers(tree_choices, device="cuda"):
     repeat_nums=[[] for _ in depth_counts]
     start = 0
     bias = 0
-    # for i in range(len(depth_counts)):
-    #     bias = 0
-    #     repeat_j=0
-    #     for j in range(depth_counts[i]):
-    #         cur_node = nodes_wc[start + j]
-    #         cur_parent = cur_node.parent
+    for i in range(len(depth_counts)):
+        bias = 0
+        repeat_j=0
+        for j in range(depth_counts[i]):
+            cur_node = nodes_wc[start + j]
+            cur_parent = cur_node.parent
 
-    #         if j != 0:
-    #             if cur_parent != parent:
-    #                 bias += 1
-    #                 parent = cur_parent
-    #                 repeat_nums[i].append(j-repeat_j)
-    #                 repeat_j=j
-    #         else:
-    #             parent = cur_parent 
-    #         tree_indices_list[i][j] = cur_node.value + TOPK * (bias)
-    #     repeat_nums[i].append(j - repeat_j+1)
-    #     start += depth_counts[i]
+            if j != 0:
+                if cur_parent != parent:
+                    bias += 1
+                    parent = cur_parent
+                    repeat_nums[i].append(j-repeat_j)
+                    repeat_j=j
+            else:
+                parent = cur_parent
+            tree_indices_list[i][j] = cur_node.value + TOPK * (bias)
+        repeat_nums[i].append(j - repeat_j+1)
+        start += depth_counts[i]
 
-    repeat_nums_dict = count_children_per_level(tree) # eagle 3 adaptation
-    repeat_nums = [repeat_nums_dict[level] for level in sorted(repeat_nums_dict.keys())]
     position_ids = [torch.zeros(ml, dtype=torch.long) for ml in depth_counts]
+
     # start = 0
     # for i in range(len(depth_counts)):
     #     position_ids[start: start + depth_counts[i]] = i

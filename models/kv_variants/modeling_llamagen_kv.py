@@ -1027,25 +1027,24 @@ class LlamaModel(LlamaPreTrainedModel):
     # Copied from transformers.models.bart.modeling_bart.BartDecoder._prepare_decoder_attention_mask
     def _prepare_decoder_attention_mask(self, attention_mask, input_shape, inputs_embeds, past_key_values_length):
         # create causal mask
-        # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
+        # [bsz, seq_len (120)] -> [bsz, 1, seq_len (120), seq_len (120)]
         combined_attention_mask = None
         if input_shape[-1] > 1:
             combined_attention_mask = _make_causal_mask(
-                input_shape,
+                input_shape, # 120 --> 58
                 torch.float32,
                 device=inputs_embeds.device,
-                past_key_values_length=past_key_values_length,
-            )
+                past_key_values_length=past_key_values_length, # 0 --> 120
+            ) # input shape (58 causal for new draft tokens) + cached tokens
 
         if attention_mask is not None:
-            # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
+            # [bsz, seq_len (120)] -> [bsz, 1, 120, 120]
             expanded_attn_mask = _expand_mask(attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]).to(
-                inputs_embeds.device
+                inputs_embeds.device 
             )
             combined_attention_mask = (
                 expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask
             )
-            
         # [MODIFIED] add medusa mask
         # if hasattr(self, "medusa_mask") and self.medusa_mask is not None:
         #     medusa_mask = self.medusa_mask
@@ -1110,6 +1109,7 @@ class LlamaModel(LlamaPreTrainedModel):
         if past_key_values is not None:
             past_key_values_length = past_key_values[0][0].shape[2]
             seq_length_with_past = seq_length_with_past + past_key_values_length
+        
         if position_ids is None:
             device = input_ids.device if input_ids is not None else cond_idx.device
             position_ids = torch.arange(
@@ -1135,6 +1135,7 @@ class LlamaModel(LlamaPreTrainedModel):
                 inputs_embeds = self.tok_dropout(token_embeddings)
         elif inputs_embeds is None:
             inputs_embeds = self.tok_dropout(self.embed_tokens(input_ids))        # embed positions
+        
         if attention_mask is None:
             attention_mask = torch.ones(
                 (batch_size, seq_length_with_past), dtype=torch.bool, device=inputs_embeds.device
@@ -1145,9 +1146,11 @@ class LlamaModel(LlamaPreTrainedModel):
                 padding_mask = attention_mask
             else:
                 padding_mask = None
+        
         attention_mask = self._prepare_decoder_attention_mask(
             attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
         )
+
         # [MODIFIED] 
         self.attention_mask = attention_mask
         self.position_ids = position_ids
