@@ -307,17 +307,13 @@ def run_train_drafter(args):
    
     model = ModelClass(config,training_config, load_emb=True, path=args.base_path) # only drafter. no base model needs to be loaded since we have gtp saved in dataset
     
-    # already performed in model init
-    # # model.target_model.eval()
-    # for param in model.target_model.parameters():
-    #     param.requires_grad = False
 
-    ckpt_path = "/work1/deming/shared/llamagen/llamagen2-eagle3-lmheadtrained-embed-condidx-attnfixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_16/model.safetensors"
-    from safetensors.torch import load_file
-    state_dict = load_file(ckpt_path)
-    state_dict["embed_tokens.weight"] = model.target_model.model.embed_tokens.weight
-    # state_dict["target_model.lm_head.weight"] = model.target_model.lm_head.weight
-    model.load_state_dict(state_dict, strict=True)
+    # ckpt_path = "/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-lmheadtrained-embed-condidx-attnfixed/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_20/model.safetensors"
+    # from safetensors.torch import load_file
+    # state_dict = load_file(ckpt_path)
+    # state_dict["embed_tokens.weight"] = model.target_model.model.embed_tokens.weight
+    # # state_dict["target_model.lm_head.weight"] = model.target_model.lm_head.weight
+    # model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))
@@ -336,7 +332,7 @@ def run_train_drafter(args):
         )
 
     # Training loop
-    for epoch in range(16, args.num_epochs):
+    for epoch in range(0, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
             args, model, train_loader, optimizer, scheduler, criterion, accelerator, args.is_warmup, wandb_instance, train_mode=True
         )

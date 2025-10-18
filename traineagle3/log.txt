@@ -14,9 +14,4 @@ loaded embed weights
 dataprepare done
 midlayer inputs_embeds shape torch.Size([8, 1144, 1280])
 midlayer forward
-midlayer pre attn
-midlayer pre attn
-self attn
-self attn_weights shape:  torch.Size([8, 20, 1144, 1144])
-attention_mask shape:  torch.Size([8, 1, 1144, 1144])
-masked self attn_weights shape:  torch.Size([8, 20, 1144, 1144])
+midlayer hidden_states.shape:  torch.Size([8, 1144, 1280])

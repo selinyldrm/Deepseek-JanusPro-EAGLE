@@ -151,6 +151,12 @@ def load_model(args):
             # dtype = torch.float32
             model = EaModel.from_pretrained(base_model_path=args.model_path, ea_model_path=args.drafter_path).to(dtype=dtype, device='cuda')
             model.eval()
+        elif args.model_type == 'eagle2':
+            from models.ea2_model_llamagen import EaModel
+            dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+            # dtype = torch.float32
+            model = EaModel.from_pretrained(base_model_path=args.model_path, ea_model_path=args.drafter_path).to(dtype=dtype, device='cuda')
+            model.eval()
         else:
             raise ValueError(f"Model type {args.model_type} is not supported for model {args.model}")
     else:
@@ -160,16 +166,16 @@ def load_model(args):
 
 def load_prompts(args):
     prompts = []
-    # if args.prompt == "PartiPrompts":
-    #     with open('data/prompts/PartiPrompts.tsv', 'r') as f:
-    #         tsv_reader = csv.DictReader(f, delimiter='\t')
-    #         for row in tsv_reader:
-    #             prompts.append(row['Prompt'])
-    # elif args.prompt == "MSCOCO2017Val":
-    #     with open('data/prompts/captions_val2017_longest.json', 'r') as f:
-    #         captions = json.load(f)
-    #         for caption in captions:
-    #             prompts.append(caption)
+    if args.prompt == "PartiPrompts":
+        with open('data/prompts/PartiPrompts.tsv', 'r') as f:
+            tsv_reader = csv.DictReader(f, delimiter='\t')
+            for row in tsv_reader:
+                prompts.append(row['Prompt'])
+    elif args.prompt == "MSCOCO2017Val":
+        with open('data/prompts/captions_val2017_longest.json', 'r') as f:
+            captions = json.load(f)
+            for caption in captions:
+                prompts.append(caption)
     
 
     # if args.slice is not None:
@@ -253,7 +259,7 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         generated_tokens, latency, acceptance_list, analysis_p, analysis_p_p, analysis_r, overhead_list, logit_list, sim_list  = model.generate(**generate_params)
     else: 
         generated_tokens, latency = model.generate(**generate_params)
-        print(f"generate time={latency} seconds")
+        print(f"generate time={latency} seconds\n", flush=True)
     _, generated_image = model.decode_ids(generated_tokens)
         
     def sanitize_filename(text, max_len=100):

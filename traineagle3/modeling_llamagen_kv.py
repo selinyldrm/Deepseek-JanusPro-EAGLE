@@ -1144,7 +1144,7 @@ class LlamaModel(LlamaPreTrainedModel):
 
         last_attn_weights = None
         for idx, decoder_layer in enumerate(self.layers):
-            if idx==len(self.layers)-3 or idx==len(self.layers)//2 or idx==2:
+            if idx==35 or idx==17 or idx==1:
                 all_hidden_states += (hidden_states,)
 
             past_key_value = (

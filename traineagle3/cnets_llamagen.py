@@ -414,6 +414,7 @@ class LlamaAttention(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
+
         # Avoid modify hidden cache inplace which will cause in-place modification error when enable gradient checkpoint. 
         # Return the updated hidden cache instead.
         if cache_hidden is None:
@@ -437,6 +438,7 @@ class LlamaAttention(nn.Module):
 
 
         attn_weights = attn_weights + attention_mask
+        
 
         for i in range(1, lck):
             ki = cache_k[i]
@@ -450,7 +452,7 @@ class LlamaAttention(nn.Module):
         # upcast attention to fp32
         attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
         attn_weights0 = attn_weights[..., :q_len]
-
+        
         attn_output = torch.matmul(attn_weights0, v0)
 
         for i in range(1, lck):
@@ -461,6 +463,7 @@ class LlamaAttention(nn.Module):
 
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
+
 
         attn_output = self.o_proj(attn_output)
 
@@ -547,6 +550,7 @@ class LlamaDecoderLayeremb(nn.Module):
 
         # cache_hidden.append(hidden_states)
 
+
         # Self Attention
         hidden_states, latest_hidden_cache = self.self_attn(
             cache_hidden=cache_hidden,
@@ -631,7 +635,7 @@ class Model(nn.Module):
 
         # Load target model for multi-layer feature extraction
         if path is not None:
-            # [SY]: fix this 
+            # [SY]: fix base model import 
             # self.target_model = LlamaForCausalLM.from_pretrained(path, torch_dtype=torch.float16, output_hidden_states=True)
             self.target_model = KVLlamaForCausalLM.from_pretrained(
                 path
@@ -655,9 +659,9 @@ class Model(nn.Module):
             for param in self.embed_tokens.parameters():
                 param.requires_grad = False
 
-            # self.lm_head.weight = self.target_model.lm_head.weight # wrong: tie lm head to embed tokens since they are identical. for llamagen they are separate !!!
-            # for param in self.lm_head.parameters():
-            #     param.requires_grad = False
+            self.lm_head.weight = self.target_model.lm_head.weight 
+            for param in self.lm_head.parameters():
+                param.requires_grad = False
 
         else:
             self.target_model = None
@@ -681,24 +685,23 @@ class Model(nn.Module):
         self.logsoftmax = nn.LogSoftmax(dim=-1)
         
         # LlamaGen specific configurations
-        if hasattr(config, 'input_type'):
-            if config.input_type == "c2i":
-                config.block_size = 576
-                config.rope_base = 10000
-                config.cls_token_num = 0
-            elif config.input_type == "t2i":
-                config.block_size = 256
-                config.rope_base = 10000
-                config.cls_token_num = 119
-            elif config.input_type == "t2i2":
-                config.block_size = 1024
-                config.rope_base = 10000
-                config.cls_token_num = 119
-        else:
-            # Default values
-            config.block_size = 256
-            config.rope_base = 10000
-            config.cls_token_num = 119
+        config.block_size = 1024
+        config.rope_base = 10000
+        config.cls_token_num = 119
+    
+        # if hasattr(config, 'input_type'):
+        #     if config.input_type == "c2i":
+        #         config.block_size = 576
+        #         config.rope_base = 10000
+        #         config.cls_token_num = 0
+        #     elif config.input_type == "t2i":
+        #         config.block_size = 256
+        #         config.rope_base = 10000
+        #         config.cls_token_num = 119
+        #     elif config.input_type == "t2i2":
+        #         config.block_size = 1024
+        #         config.rope_base = 10000
+        #         config.cls_token_num = 119
             
         grid_size = int(config.block_size ** 0.5)
         assert grid_size ** 2 == config.block_size, "block_size must be a perfect square"
@@ -758,7 +761,7 @@ class Model(nn.Module):
         if attention_mask is not None:
             # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
             seq_length_with_past = input_shape[-1] + past_key_values_length
-            if attention_mask.shape[1] < seq_length_with_past:
+            if attention_mask.shape[1] < seq_length_with_past: # this part won't be needed.
                 attention_mask = F.pad(attention_mask, (0, seq_length_with_past - attention_mask.shape[1]), "constant", True)
             
             expanded_attn_mask = _expand_mask(attention_mask, torch.float32, tgt_len=input_shape[-1]).to(
@@ -826,7 +829,7 @@ class Model(nn.Module):
         attention_mask = self._prepare_decoder_attention_mask(
             attention_mask, (batch_size, seq_length), hidden_states, past_key_values_length
         )
-
+      
         # Eagle 3: Multi-step iterative training
         plosses = []
         vlosses = []
@@ -877,9 +880,24 @@ class Model(nn.Module):
                 position_mask = target_mask * loss_mask
                 # target_head = target_head[..., self.t2d]
                 # target_head = target_head.float()
+
+                # [SY]: Loss scaling for merging at inference
+                n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
+                cosine_sim_matrix = torch.bmm(n_target_logits, n_target_logits.transpose(1, 2))
+                B, L, _ = cosine_sim_matrix.shape
+                thresh = 0.625
+                # build upper-triangular mask (i < j)
+                upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
+                upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
+
+                 # combine with threshold condition
+                logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
+                token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
+
+                weight = 2.0
+
                 target_p = nn.Softmax(dim=2)(target_head)
                 target_p = target_p.detach()
-
 
 
             hidden_states = hidden_states_out
@@ -890,7 +908,12 @@ class Model(nn.Module):
             logits = logits.float()
             out_logp = nn.LogSoftmax(dim=2)(logits)
             plogp = target_p * out_logp
-            loss = -torch.sum(position_mask * plogp, 2).mean()
+
+            weighted_mask = position_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
+            # [SY]: new loss for loss-scaling
+            # loss = -torch.sum(position_mask * plogp, 2).mean() # original loss of eagle3 drafter
+            loss = -torch.sum(weighted_mask * plogp, 2).mean()
+
             plosses.append(loss)
             with torch.no_grad():
                 acces.append(((logits.argmax(-1) == target_p.argmax(-1)) * position_mask.squeeze(-1)).sum().item() / (

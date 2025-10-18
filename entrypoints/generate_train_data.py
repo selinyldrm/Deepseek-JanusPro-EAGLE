@@ -152,8 +152,8 @@ def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=N
         return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_hidden_states,
                 "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_hidden_states}
     elif model_type == "anole":
-        prompt_token_ids = data["prompt_token_ids"] # input ids (tokenized caption)
-        out_token_ids = data["out_token_ids"] # tokenized images (codebook tokens for images)
+        prompt_token_ids = data["prompt_token_ids"]
+        out_token_ids = data["out_token_ids"]
 
         cond_input_ids = torch.cat([prompt_token_ids, torch.tensor([[8710, 8197]]), out_token_ids], dim=-1)
         cond_outputs = model(input_ids=cond_input_ids.cuda(), output_hidden_states=True)
@@ -192,7 +192,7 @@ def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=N
         outs_big = model(cond_idx=cond_idx.cuda(), input_ids=input_ids.cuda(),attention_mask=attention_mask.cuda(), output_hidden_states=True)
         
         if eagle3:
-            max_layers = len(outs_big.hidden_states)    
+            max_layers = len(outs_big['hidden_states'])    
             # Eagle3: Extract hidden states from specified layers and concatenate
             if feature_layer_indices is None:
                 feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
@@ -202,7 +202,7 @@ def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=N
                 if idx >= max_layers or idx < 0:
                     raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
             
-            layer_states = [outs_big.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+            layer_states = [outs_big['hidden_states'][idx].cpu()[0] for idx in feature_layer_indices]
             hidden_state_big = torch.cat(layer_states, dim=-1)
         else:
             # Original: Use only final hidden state
@@ -269,7 +269,7 @@ def run_generate_data(args):
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
     elif args.model == "llamagen2":
         from models.kv_variants.modeling_llamagen_kv import LlamaForCausalLM
-        model = LlamaForCausalLM.from_pretrained('/work1/deming/shared/llamagen/LlamaGen-T2I-2').to(dtype=dtype, device='cuda')
+        model = LlamaForCausalLM.from_pretrained('/work1/deming/shared/llamagen/LlamaGen-T2I-2', config="/work1/deming/shared/llamagen/LlamaGen-T2I-2/config.json").to(dtype=dtype, device='cuda')
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
     else:
         raise NotImplementedError(f"Model {args.model} not supported")
@@ -278,7 +278,7 @@ def run_generate_data(args):
     ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
     ds = ds.shuffle(seed=42)
     # ds = ds.select(range(min(args.num_samples, len(ds))))
-    ds = ds.select(range(60031,args.num_samples))
+    ds = ds.select(range(42229, len(ds)))
     
     # Update output directory for Eagle3 mode
     if args.eagle3:

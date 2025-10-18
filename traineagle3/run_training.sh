@@ -11,7 +11,7 @@ echo "🚀 Starting Eagle 3 Training for Image Generation Models"
 MODEL="llamagen2"
 BASE_PATH="/work1/deming/shared/llamagen/LlamaGen-T2I-2"
 DATA_DIR="/work1/deming/shared/llamagen/training-data-eagle3_eagle3"
-SAVE_DIR="/work1/deming/shared/llamagen/llamagen2-eagle3-lmheadtrained-embed-condidx-attnfixed"
+SAVE_DIR="/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-lossscaled"
 CONFIG_DIR="/work1/deming/seliny2/LANTERN/data/configs/llamagen_t2i2_config.json"
 
 # Training parameters
@@ -51,7 +51,9 @@ fi
 echo "🔥 Starting Eagle 3 Training..."
 
 export HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+# export HIP_VISIBLE_DEVICES=0
 
+# python3 -m pdb main.py \
 accelerate launch -m main \
     --model $MODEL \
     --base_path $BASE_PATH \

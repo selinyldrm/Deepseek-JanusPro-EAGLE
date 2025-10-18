@@ -49,8 +49,6 @@ from models.configs.configuration_anole import ChameleonConfig, ChameleonVQVAECo
 from models.base_models.anole.chameleon.chameleon import TokenManager
 from models.drafters.kv_cache import initialize_past_key_values
 
-import matplotlib.pyplot as plt
-import os 
 
 if is_flash_attn_2_available():
     from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
@@ -1807,9 +1805,7 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
         input_mask = input_mask.to(self.device)
         input_position_ids = torch.cat([cond_position_ids, uncond_position_ids], dim=0)
         input_position_ids = input_position_ids.to(self.device)
-        logit_list = []
-
-        st = time.time()
+        
         if hasattr(self.model, "past_key_values"):
             past_key_values = self.model.past_key_values
             past_key_values_data = self.model.past_key_values_data
@@ -1825,20 +1821,11 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
             self.model.past_key_values_data = past_key_values_data
             self.model.current_length_data = current_length_data
         generated_tokens = []
-
+        st = time.time()
         for i in range(max_length):
             output = self.forward(input_ids=input_tokens, attention_mask=input_mask, past_key_values=past_key_values, position_ids=input_position_ids)
             logits = output.logits
-            # print("output.logits shape: ", output.logits.shape)   
             cfg_logits = cfg_logit_process(logits, cfg)
-            # print("cfg_logits shape: ", cfg_logits.shape)   
-
-            raw_logits = cfg_logits[:, -1, :].squeeze(0).detach().cpu().clone()   # keep raw unmasked values
-            # raw_logits = logits[1, -1, :].squeeze(0).detach().cpu()
-            # print("raw_logits shape: ", raw_logits.shape)
-            logit_list.append(raw_logits)
-
-            # then mask only for sampling
             cfg_logits[:, :, self.non_image_tokens] = torch.finfo(cfg_logits.dtype).min
             next_token, _ = sample(cfg_logits, temperature, top_k, top_p)
             generated_tokens.append(next_token)
@@ -1847,32 +1834,6 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
             input_position_ids = input_position_ids[:, -1].unsqueeze(1) + 1
             # input_position_ids = torch.cat([input_position_ids, input_position_ids[:, -1].unsqueeze(1) + 1], dim=1)
         et = time.time()
-
-        masked_logits = torch.stack(logit_list, dim=0) 
-        # print("masked_logits shape: ", masked_logits.shape)
-        # masked_logits[masked_logits == float('-inf')] = 0.0
-        masked_logits = masked_logits.to(torch.float32)
-        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
-        cosine_sim_matrix = torch.matmul(normalized, normalized.T)
-        for row in range(32):
-            plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm')
-            plt.colorbar()
-            plt.title("Cosine Similarity Between Token Features")
-            plt.xlabel("Token Index (i)")
-            plt.ylabel("cosine_similarity")
-            plt.grid()
-            os.makedirs(f"./anole/base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/", exist_ok=True)
-            plt.savefig(f"./anole/base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/row-{row}.png")
-            plt.close()
-        plt.imshow(cosine_sim_matrix, cmap='coolwarm')
-        plt.colorbar()
-        plt.title("Cosine Similarity Between Token Features")
-        plt.xlabel("Token Index (i)")
-        plt.ylabel("cosine_similarity")
-        plt.grid()
-        os.makedirs(f"./anole/base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/", exist_ok=True)
-        plt.savefig(f"./anole/base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/full.png")
-        plt.close()
         return torch.stack(generated_tokens, dim=1), et-st
     
     @torch.no_grad()
