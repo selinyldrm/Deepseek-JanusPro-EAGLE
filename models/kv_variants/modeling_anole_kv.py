@@ -1603,9 +1603,9 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
         self.model = ChameleonModel(config)
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-        self.tokenizer = TokenManager('/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/text_tokenizer.json',
-                                      '/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.yaml',
-                                      '/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt',
+        self.tokenizer = TokenManager('/work1/deming/shared/anole/Chameleon_7B_mGPT/original_tokenizers/text_tokenizer.json',
+                                      '/work1/deming/shared/anole/Chameleon_7B_mGPT/original_tokenizers/vqgan.yaml',
+                                      '/work1/deming/shared/anole/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt',
                                       device='cuda')
         # Initialize weights and apply final processing
         self.non_image_tokens = [i for i in range(0, 4)] + [i for i in range(8196, 65536)]
@@ -1821,6 +1821,7 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
             self.model.past_key_values_data = past_key_values_data
             self.model.current_length_data = current_length_data
         generated_tokens = []
+        accept_list = []
         st = time.time()
         for i in range(max_length):
             output = self.forward(input_ids=input_tokens, attention_mask=input_mask, past_key_values=past_key_values, position_ids=input_position_ids)
@@ -1829,12 +1830,13 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
             cfg_logits[:, :, self.non_image_tokens] = torch.finfo(cfg_logits.dtype).min
             next_token, _ = sample(cfg_logits, temperature, top_k, top_p)
             generated_tokens.append(next_token)
+            accept_list.append(1)
             input_tokens = torch.cat([next_token, next_token], dim=0)
             input_mask = torch.cat([input_mask, torch.tensor([[1]]).to(self.device).repeat(input_mask.shape[0], 1)], dim=1)
             input_position_ids = input_position_ids[:, -1].unsqueeze(1) + 1
             # input_position_ids = torch.cat([input_position_ids, input_position_ids[:, -1].unsqueeze(1) + 1], dim=1)
         et = time.time()
-        return torch.stack(generated_tokens, dim=1), et-st
+        return torch.stack(generated_tokens, dim=1), et-st, accept_list
     
     @torch.no_grad()
     def decode_ids(self, ids):

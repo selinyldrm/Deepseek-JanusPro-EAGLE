@@ -23,6 +23,8 @@ def parse_args():
                         default="data/laion_coco")
     parser.add_argument('--output_dir', type=str, default='data/extracted_code/llamagen')
     parser.add_argument('--num_samples', type=int, default=1000000)
+    parser.add_argument('--start', type=int, default=0)
+    parser.add_argument('--end', type=int, default=500000)
 
     return parser
 
@@ -123,11 +125,11 @@ def generate_data_anole(vq_model, tokenizer, data, device):
         "out_token_ids": indices
     }
     
-def writedata(name, data_point):
+def writedata(name, data_point, idx):
     if not os.path.exists(name):
         os.makedirs(name)
-    current_length=len(os.listdir(os.path.join(name, "codes")))
-    idx=current_length
+    # current_length=len(os.listdir(os.path.join(name, "codes")))
+    # idx=current_length
     # if idx == 0 :
     #     print("data_point['caption_emb']: ", data_point['caption_emb'])
     #     print("data_point['codes']: ", data_point['codes'])
@@ -149,8 +151,11 @@ def run_extract_code(args):
     ])
     
     ds = SupervisedDataset(args.data_path, transform)
+    # ds = ds.select(range(min(len(ds), args.num_samples)))
+    index_start = args.start
+    index_end = args.end
+    ds = ds.select(range(index_start, index_end))
     ds = ds.shuffle(seed=42)
-    ds = ds.select(range(min(len(ds), args.num_samples)))
     if "llamagen" in args.model:
         vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
         vq_model.to(device)
@@ -172,10 +177,10 @@ def run_extract_code(args):
             os.makedirs(args.output_dir)
             os.makedirs(os.path.join(args.output_dir, 'codes'))
             os.makedirs(os.path.join(args.output_dir, 'text_features'))
-        for data in tqdm(ds):
+        for idx, data in enumerate(ds):
             outdata = generate_data_llamagen(vq_model, t5_model, data)
             if outdata is not None:
-                writedata(args.output_dir, outdata)
+                writedata(args.output_dir, outdata, idx + index_start)
     elif args.model == "anole":
         from models.base_models.anole.chameleon_vae_ori.vqgan import VQModel
         from transformers import AutoTokenizer

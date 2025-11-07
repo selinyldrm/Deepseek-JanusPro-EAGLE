@@ -579,7 +579,7 @@ class LlamaDecoderLayeremb(nn.Module):
 @torch.no_grad()
 def padding(tensor, left=True):
     """Helper function for padding tensors"""
-    zeropadding = torch.zeros_like(tensor[:, -1:])
+    zeropadding = torch.zeros_like(tensor[:, -1:]) # (batch_size, 1)
     if left:
         tensor = torch.cat((zeropadding, tensor[:, :-1]), dim=1)
     else:
@@ -736,7 +736,7 @@ class Model(nn.Module):
         hidden_states = torch.cat((hidden_states0, hidden_states1, hidden_states2), dim=-1)
 
         target = outs["logits"]
-        target = padding(target, left=False)
+        target = padding(target, left=False) # pad by one token for 119
         input_ids = padding(input_ids, left=False)
 
         if target is not None:

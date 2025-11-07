@@ -116,4 +116,3 @@ class TokenManager:
 
     def decode_image(self, ids: torch.LongTensor) -> list[PIL.Image]:
         return None, [self.pil_from_bpe_tokens(sample) for sample in ids]
-

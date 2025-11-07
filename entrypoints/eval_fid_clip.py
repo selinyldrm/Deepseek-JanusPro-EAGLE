@@ -29,8 +29,8 @@ resizer_collection = {"nearest": InterpolationMode.NEAREST,
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--fake_dir", required=True, default="/home/GigaGAN_images/", help="location of fake images for evaluation")
-    parser.add_argument("--ref_dir",  required=True, default="/home/COCO/val2017", help="location of the reference images for evaluation")
-    parser.add_argument("--caption_path", default='data/prompts/captions_val2017_longest.json')
+    parser.add_argument("--ref_dir", default="/work1/deming/shared/llamagen/val2017-5k/", help="location of the reference images for evaluation")
+    parser.add_argument("--caption_path", default='/work1/deming/seliny2/LANTERN/data/prompts/captions_val2017_longest.json')
 
     parser.add_argument("--how_many", default=5000, type=int)
     parser.add_argument("--clip_model4eval", default="ViT-B/32", type=str, help="[WO, ViT-B/32, ViT-G/14]")

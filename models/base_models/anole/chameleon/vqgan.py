@@ -619,6 +619,7 @@ class VQModel(nn.Module):
                     print("Deleting key {} from state_dict.".format(k))
                     del sd[k]
         self.load_state_dict(sd, strict=False)
+        
         print(f"VQModel loaded from {path}")
 
     def encode(self, x):

@@ -10,15 +10,15 @@ echo "🚀 Starting Eagle 3 Training for Image Generation Models"
 # Default configuration
 MODEL="llamagen2"
 BASE_PATH="/work1/deming/shared/llamagen/LlamaGen-T2I-2"
-DATA_DIR="/work1/deming/shared/llamagen/training-data-eagle3_eagle3"
-SAVE_DIR="/work1/deming/shared/llamagen/llamagen2-eagle3-lmheadtrained-embed-condidx-attnfixed-7ablated"
+DATA_DIR="/work1/deming/shared/llamagen/training-data-eagle3-selin"
+SAVE_DIR="/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-mscoso-lossscaled"
 CONFIG_DIR="/work1/deming/seliny2/LANTERN/data/configs/llamagen_t2i2_config.json"
 
 # Training parameters
 NUM_EPOCHS=20
 BATCH_SIZE=8 # for MI300s !!!!!
 LEARNING_RATE=1e-4
-LENGTH=1 # Eagle 3 multi-step length
+LENGTH=7 # Eagle 3 multi-step length
 
 # Create save directory if it doesn't exist
 mkdir -p $SAVE_DIR
@@ -52,7 +52,7 @@ echo "🔥 Starting Eagle 3 Training..."
 
 export HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
-accelerate launch -m main_mi300 \
+accelerate launch -m main_fromscratch \
     --model $MODEL \
     --base_path $BASE_PATH \
     --config_path $CONFIG_DIR \

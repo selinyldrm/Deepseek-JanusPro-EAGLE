@@ -10,9 +10,11 @@ echo "🚀 Starting Eagle 3 Training for Image Generation Models"
 # Default configuration
 MODEL="llamagen2"
 BASE_PATH="/work1/deming/shared/llamagen/LlamaGen-T2I-2"
-DATA_DIR="/work1/deming/shared/llamagen/training-data-eagle3_eagle3"
-SAVE_DIR="/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-lossscaled"
+DATA_DIR="/work1/deming/shared/relaion-coco-training-data_eagle3/"
+SAVE_DIR="/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-relaion-lossscaled-2.5million"
 CONFIG_DIR="/work1/deming/seliny2/LANTERN/data/configs/llamagen_t2i2_config.json"
+START_IDX=0
+END_IDX=600000
 
 # Training parameters
 NUM_EPOCHS=20
@@ -56,6 +58,8 @@ export HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 # python3 -m pdb main.py \
 accelerate launch -m main \
     --model $MODEL \
+    --start_idx $START_IDX \
+    --end_idx $END_IDX \
     --base_path $BASE_PATH \
     --config_path $CONFIG_DIR \
     --data_dir $DATA_DIR \
@@ -73,7 +77,7 @@ accelerate launch -m main \
     --grad_clip 0.5 \
     --max_len 4096 \
     --eval_freq 1 \
-    --save_freq 2 \
+    --save_freq 1 \
     --data_noise uniform \
     --std 0.2 \
     --train_data_ratio 0.95 \

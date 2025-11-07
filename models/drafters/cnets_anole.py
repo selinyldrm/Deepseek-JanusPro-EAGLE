@@ -1056,6 +1056,24 @@ class Model(nn.Module):
     def sample(self,logits, logits_processor,k=1):
         logits = logits_processor(None, logits)
         probabilities = torch.nn.functional.softmax(logits, dim=1)
+        
+        bias = []
+        masked_logits = logits
+        masked_logits[masked_logits == float('-inf')] = 0.0
+        masked_logits = masked_logits.to(torch.float32)
+        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+        if normalized.shape[0] > 1 :
+            # Compute cosine similarity matrix: [B, B]
+            cosine_sim_matrix = torch.matmul(normalized, normalized.T)
+            # Keep scores where similarity > threshold
+            high_sim_mask = cosine_sim_matrix > 0.5  # shape [B, B]
+            # Get indices
+            rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+            for r,c in zip(rows.tolist(), cols.tolist()):
+                if r != c:
+                    bias.append((r,c))
+
+
         sampled_indices = torch.multinomial(probabilities, k, replacement=False)
         sampled_probs = torch.gather(probabilities, 1, sampled_indices)
 
@@ -1069,7 +1087,7 @@ class Model(nn.Module):
 
         sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
 
-        return sampled_indices, sampled_probs,probabilities
+        return sampled_indices, sampled_probs,probabilities, bias
     
     @torch.no_grad()
     def topK_genrate_v1(self, hidden_states, input_ids, head, logits_processor, cfg_scale, input_position_diff, attention_mask= None):
@@ -1111,9 +1129,12 @@ class Model(nn.Module):
         last_headout = cfg_logit_process(last_headout, cfg_scale)
         last_headout[:, self.non_image_tokens] = torch.finfo(last_headout.dtype).min
 
+        bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+
         for i in range(len(self.tree_buffer['tree_indices'])):
             if logits_processor is not None:
-                topk_index,topk_prob,op=self.sample(last_headout,logits_processor,k=self.top_k)
+                topk_index,topk_prob,op, bias=self.sample(last_headout,logits_processor,k=self.top_k)
+                bias_list[i] = bias
             else:
                 top=torch.topk(last_headout, self.top_k, dim=-1)
                 topk_index,topk_prob = top.indices,top.values
@@ -1159,7 +1180,7 @@ class Model(nn.Module):
             #print(select_index)
 
         if logits_processor is not None:
-            topk_index,topk_prob,op=self.sample(last_headout,logits_processor,k=self.top_k)
+            topk_index,topk_prob,op, bias=self.sample(last_headout,logits_processor,k=self.top_k)
         else:
             top = torch.topk(last_headout, self.top_k, dim=-1)
             topk_index, topk_prob = top.indices, top.values
@@ -1167,8 +1188,9 @@ class Model(nn.Module):
         ss_token.append(topk_index)
         ss_prob.append(topk_prob)
         ss_op.append(op)
+        bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
-        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op)
+        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list
 
 class Vhead(nn.Module):
     def __init__(self, ins=6566, outs=32000):

@@ -25,6 +25,8 @@ def parse_args():
     parser.add_argument('--eagle3_config', type=str, help="Path to Eagle3 config file (required when --eagle3 is used)")
     parser.add_argument('--feature_layer_indices', type=int, nargs='+', default=[0, 1, 2], 
                         help="Hidden layer indices to extract for Eagle3 mode (default: [0, 1, 2])")
+    parser.add_argument('--start', type=int, default=0)
+    parser.add_argument('--end', type=int, default=500000)
 
     return parser
 
@@ -67,7 +69,9 @@ class SupervisedDataset(Dataset):
             return {"prompt_token_ids" : torch.tensor(self.dataset[i]["prompt_token_ids"]).long().unsqueeze(0),
                     "out_token_ids": torch.tensor(self.dataset[i]["out_token_ids"]).long().unsqueeze(0)}
         elif "llamagen" in self.model:
+            
             assert os.path.basename(self.code_data[i]) == os.path.basename(self.text_data[i])
+            
             input_ids = np.load(os.path.join(self.code_base_path, self.code_data[i]))
             input_ids = torch.from_numpy(input_ids).long()
             cond_idx = np.load(os.path.join(self.text_base_path, self.text_data[i]))
@@ -97,6 +101,8 @@ class SupervisedDataset(Dataset):
             perm = np.random.permutation(len(self.dataset))
             self.dataset = [self.dataset[i] for i in perm]
         elif "llamagen" in self.model:
+            print("len: self.code_data", len(self.code_data))
+            print("len: self.text_data", len(self.text_data))
             perm = np.random.permutation(len(self.code_data))
             self.code_data = [self.code_data[i] for i in perm]
             self.text_data = [self.text_data[i] for i in perm]
@@ -108,6 +114,8 @@ class SupervisedDataset(Dataset):
         if self.model == "lumina_mgpt" or self.model == "anole":
             self.dataset = [self.dataset[i] for i in indices]
         elif "llamagen" in self.model:
+            print("len: self.code_data", len(self.code_data))
+            print("len: self.text_data", len(self.text_data))
             self.code_data = [self.code_data[i] for i in indices]
             self.text_data = [self.text_data[i] for i in indices]
         return self
@@ -189,34 +197,35 @@ def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=N
         cond_idx=data["cond_idx"].to(model.dtype)
         loss_mask=data["loss_mask"]
         attention_mask = data["attention_mask"]
-        outs_big = model(cond_idx=cond_idx.cuda(), input_ids=input_ids.cuda(),attention_mask=attention_mask.cuda(), output_hidden_states=True)
+        # outs_big = model(cond_idx=cond_idx.cuda(), input_ids=input_ids.cuda(),attention_mask=attention_mask.cuda(), output_hidden_states=True)
         
-        if eagle3:
-            max_layers = len(outs_big['hidden_states'])    
-            # Eagle3: Extract hidden states from specified layers and concatenate
-            if feature_layer_indices is None:
-                feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
+        # if eagle3:
+        #     max_layers = len(outs_big['hidden_states'])    
+        #     # Eagle3: Extract hidden states from specified layers and concatenate
+        #     if feature_layer_indices is None:
+        #         feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
             
-            # Validate layer indices
-            for idx in feature_layer_indices:
-                if idx >= max_layers or idx < 0:
-                    raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
+        #     # Validate layer indices
+        #     for idx in feature_layer_indices:
+        #         if idx >= max_layers or idx < 0:
+        #             raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
             
-            layer_states = [outs_big['hidden_states'][idx].cpu()[0] for idx in feature_layer_indices]
-            hidden_state_big = torch.cat(layer_states, dim=-1)
-        else:
-            # Original: Use only final hidden state
-            hidden_state_big = outs_big.hidden_states[-1].cpu()[0]
+        #     layer_states = [outs_big['hidden_states'][idx].cpu()[0] for idx in feature_layer_indices]
+        #     hidden_state_big = torch.cat(layer_states, dim=-1)
+        # else:
+        #     # Original: Use only final hidden state
+        #     hidden_state_big = outs_big.hidden_states[-1].cpu()[0]
             
-        return {"cond_idx":cond_idx, "input_ids":input_ids.cpu()[0],"hidden_state":hidden_state_big,
-                "loss_mask":loss_mask.cpu()[0],'attention_mask':attention_mask[0]}
+        # return {"cond_idx":cond_idx, "input_ids":input_ids.cpu()[0],"hidden_state":hidden_state_big,
+        #         "loss_mask":loss_mask.cpu()[0],'attention_mask':attention_mask[0]}
+        return { "cond_idx":cond_idx, "input_ids":input_ids.cpu()[0], "loss_mask":loss_mask.cpu()[0],'attention_mask':attention_mask[0]}
     else:
         raise NotImplementedError(f"Model {model_type} not supported")
-def writedata(name, data_point):
+def writedata(name, data_point, idx):
     if not os.path.exists(name):
         os.makedirs(name)
-    current_length=len(os.listdir(name))
-    idx=current_length
+    # current_length=len(os.listdir(name))
+    # idx=current_length
     torch.save(data_point, f'{name}/data_{idx}.ckpt')
 
 def load_eagle3_config(config_path):
@@ -276,9 +285,12 @@ def run_generate_data(args):
     model.eval()
     
     ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
-    ds = ds.shuffle(seed=42)
     # ds = ds.select(range(min(args.num_samples, len(ds))))
-    ds = ds.select(range(42229, len(ds)))
+    index_start = args.start
+    index_end = args.end
+    ds = ds.select(range(index_start, index_end))
+    ds = ds.shuffle(seed=42)
+
     
     # Update output directory for Eagle3 mode
     if args.eagle3:
@@ -294,10 +306,10 @@ def run_generate_data(args):
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    for data in tqdm(ds):
+    for idx,data in enumerate(ds):
         outdata = generate_data(model, data, args.model, args.eagle3, feature_layer_indices)
         if outdata is not None:
-            writedata(args.output_dir, outdata)
+            writedata(args.output_dir, outdata, idx + index_start)
 
 if __name__ == '__main__':
     parser = parse_args()

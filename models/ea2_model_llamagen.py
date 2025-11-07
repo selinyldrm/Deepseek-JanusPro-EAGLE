@@ -638,14 +638,10 @@ class EaModel(nn.Module):
                 m_bias_list = None
                 level_sim = None
                 past_nodes = l_node_counts[i]
-                prev_past_nodes = l_node_counts[i-1]
-                if i < len(bias_list) and len(bias_list[i]):
-                    m_bias_list = copy.deepcopy(bias_list[i])
-                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
-                # if i <= len(level_bias_list) and len(level_bias_list[i-1]):
-                #     sim_list = level_bias_list[i-1]
-                #     if len(sim_list) :
-                #         level_sim = sim_list[0]
+                # prev_past_nodes = l_node_counts[i-1]
+                # if i < len(bias_list) and len(bias_list[i]):
+                #     m_bias_list = copy.deepcopy(bias_list[i])
+                #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
                 # fi = list(IDs of only TRUE branches)
@@ -684,48 +680,25 @@ class EaModel(nn.Module):
                         # lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
                         # # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                         # # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        # if lev_sim_score > 0.75 :
-                        #     px +=  r * lev_sim_score 
-                            # print("lev_sim_score: ", lev_sim_score, " r * combined_score: ", r * combined_score )
+                        # # if lev_sim_score > 0.625 :
+                        # #     px +=  r * lev_sim_score 
 
-                        curr_tree_node_idx = retrieve_indices[j,i]
-                        # if level_sim is not None:
-                            ## OLD CODE BASED ON DRAFTER BELOW
-                            # if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
-                            #     lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                                
-                            #     inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
-                            #     combined_score = (lev_sim_score + inv_l2_d) / 2
-                            #     px +=  r * combined_score
-                                                        
+                        # p = F.log_softmax(normalized_curr, dim=-1)
+                        # gtp_kl = F.softmax(gt_logits, dim=0) 
+
+                        # kl = F.kl_div(p, gtp_kl, reduction='batchmean')  # computes KL(P || Q)
+                        # if lev_sim_score > 0.625 and kl < 4.0 :
+                        #     px +=  r * lev_sim_score 
+
+                        # curr_tree_node_idx = retrieve_indices[j,i]
+
                         # if m_bias_list is not None:
-                        #     indices_l_lantern = [[] for _ in range(len(m_bias_list))]  
                         #     for bias_idx, tpl in enumerate(m_bias_list) :
                         #         id1,id2 = tpl
                         #         if id1 == curr_tree_node_idx:
                         #             similar_xi = tree_candidates[0][id2]
                         #             px += r * gtp[similar_xi]
-
-                                    # if lantern:
-                                    #     # [10, 1]
-                                    #     nearest_probs = gtp[self.nearest_latents[similar_xi, :lantern_k]].reshape(lantern_k, 1)
-                                    #     # [10, 1]
-                                    #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
-                                    #     if lantern_delta > 1.0:
-                                    #         indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
-                                    #     else:
-                                    #         indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
-                                    #     if indices.numel() == 0:
-                                    #         indices = -1
-                                    #     else:
-                                    #         indices = indices[-1]
-                                    #     if indices == -1:
-                                    #         px = px
-                                    #     else:
-                                    #         # pick one index from cumsum
-                                    #         # print(f"indices: {indices}, adding cumsum_nearest_probs: {cumsum_nearest_probs[indices]}")
-                                    #         px = px + cumsum_nearest_probs[indices]
-                                    #     indices_l_lantern[bias_idx] = indices
+                                    # print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
                            
                             
                         if testing:
@@ -1191,7 +1164,7 @@ class EaModel(nn.Module):
         
         c_indices = new_caption_embs * new_emb_masks[:,:, None]
         c_emb_masks = new_emb_masks
-        st = time.time()
+        
         if hasattr(self.base_model, "past_key_values"):
             past_key_values = self.base_model.past_key_values
             past_key_values_data = self.base_model.past_key_values_data
@@ -1306,9 +1279,9 @@ class EaModel(nn.Module):
             
         self.reset_tree_mode()
         sim_list= []
-
+        accept_list = []
         if testing:
-            accept_list = []
+            
             analysis_p =[]
             analysis_p_p=[]
             analysis_r=[]
@@ -1357,6 +1330,7 @@ class EaModel(nn.Module):
 
         # print("input ids shape: ", input_ids.shape, flush=True)
         st = time.time()
+    
         for idx in range(max_steps):
             
             if static_tree:
@@ -1381,7 +1355,7 @@ class EaModel(nn.Module):
                     best_candidate, accept_length, sample_p, p, pp, r, overhead = self.evaluate_posterior_v1(
                         idx, relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                     )
-                    accept_list.append(accept_length)
+                    # accept_list.append(accept_length)
                     analysis_p.append(p)
                     analysis_p_p.append(pp)
                     analysis_r.append(r)
@@ -1392,6 +1366,7 @@ class EaModel(nn.Module):
                     best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
                     idx, relaxed, testing, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                 )
+                accept_list.append(accept_length)
                 # [1, 16384] --> [1, 2000]
                 # recent_acc_logits = logits_processor(None, logits[best_candidate, accept_length:accept_length + 1])
                 # recent_acc_logits[recent_acc_logits == float('-inf')] = 0.0
@@ -1528,7 +1503,7 @@ class EaModel(nn.Module):
             r = [i for r in analysis_r for i in r]
 
             return input_ids[:, 120:120+max_length], time.time()-st, accept_list, p , pp, r , overhead_list, accepted_logits, img_sim_list
-        return input_ids[:, 120:120+max_length], time.time()-st
+        return input_ids[:, 120:120+max_length], time.time()-st, accept_list
     
     @torch.no_grad()
     def decode_ids(self, ids):

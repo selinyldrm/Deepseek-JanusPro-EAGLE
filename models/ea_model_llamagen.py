@@ -763,6 +763,10 @@ class EaModel(nn.Module):
                         r = random.random()
                         px = gtp[xi]
 
+                        qx = cart_candidates_prob[j, i]
+                        if qx <= 0:
+                            continue
+
                         accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
                         accept_length_fake =  accept_length + 1
                         is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
@@ -777,7 +781,14 @@ class EaModel(nn.Module):
                         lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
                         # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                         # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        if lev_sim_score > 0.9 :
+                        # if lev_sim_score > 0.0 :
+                        #     px +=  r * lev_sim_score 
+
+                        p = F.log_softmax(normalized_curr, dim=-1)
+                        gtp_kl = F.softmax(gt_logits, dim=0) 
+
+                        kl = F.kl_div(p, gtp_kl, reduction='batchmean')  # computes KL(P || Q)
+                        if lev_sim_score > 0.0 and kl < 3.0 :
                             px +=  r * lev_sim_score 
 
                         curr_tree_node_idx = retrieve_indices[j,i]
@@ -789,7 +800,7 @@ class EaModel(nn.Module):
                                 if id1 == curr_tree_node_idx:
                                     similar_xi = tree_candidates[0][id2]
                                     px += r * gtp[similar_xi]
-                                    # print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
+                                    print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
 
                            
                             
@@ -813,9 +824,7 @@ class EaModel(nn.Module):
                         #     else:
                         #         # pick one index from cumsum
                         #         px = px + cumsum_nearest_probs[indices]
-                        qx = cart_candidates_prob[j, i]
-                        if qx <= 0:
-                            continue
+                        
                         acp = px / qx
                         if testing and (px_prior/ qx) < acp:
                             analysis_p.append(px_prior/ qx)
@@ -1377,6 +1386,7 @@ class EaModel(nn.Module):
 
         bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
         level_bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices']))]
+        accept_list = []
         if static_tree:
             tree_logits, logits, sample_token, init_bias_list, sim_list = self.initialize_tree_v1(
                 -1, cond_combined, tree_buffers['tree_attn_mask'], past_key_values, logits_processor, cfg, attention_mask, tree_choices
@@ -1469,6 +1479,7 @@ class EaModel(nn.Module):
                 best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
                     idx, relaxed, testing, tree_logits, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                 )
+                accept_list.append(accept_length)
 
                 input_ids, tree_logits, new_token, hidden_state, sample_token, new_bias_list, sim_list = self.update_inference_inputs(
                     idx,
@@ -1529,7 +1540,7 @@ class EaModel(nn.Module):
             r = [i for r in analysis_r for i in r]
 
             return input_ids[:, 120:120+max_length], time.time()-st, accept_list, p , pp, r , overhead_list, accepted_logits, img_sim_list
-        return input_ids[:, 120:120+max_length], time.time()-st
+        return input_ids[:, 120:120+max_length], time.time()-st, accept_list
     
     @torch.no_grad()
     def decode_ids(self, ids):

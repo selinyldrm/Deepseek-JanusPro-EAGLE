@@ -17,6 +17,7 @@ import seaborn as sns
 import torch.nn.functional as F
 from tqdm import tqdm
 
+world_size = 8
 USE_EXPERIMENTAL_FEATURES = os.getenv("USE_EXPERIMENTAL_FEATURES", "0") == "1"
 
 def parse_args():
@@ -194,15 +195,15 @@ def load_prompts(args):
     #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
     #     pass
 
-    if args.multigpu:
-        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
-            data = json.load(f)
-    else:
-        with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
-            data = json.load(f)
+    # if args.multigpu:
+    #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
+    #         data = json.load(f)
+    # else:
+    #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+    #         data = json.load(f)
         
-    # # Extract prompt fields 
-    prompts = [entry["prompt"] for entry in data.values()]
+    # # # Extract prompt fields 
+    # prompts = [entry["prompt"] for entry in data.values()]
     
     # if args.multigpu :
     #     return prompts[:100]
@@ -258,7 +259,7 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
     if test:
         generated_tokens, latency, acceptance_list, analysis_p, analysis_p_p, analysis_r, overhead_list, logit_list, sim_list  = model.generate(**generate_params)
     else: 
-        generated_tokens, latency = model.generate(**generate_params)
+        generated_tokens, latency, accpt = model.generate(**generate_params)
         print(f"generate time={latency} seconds\n", flush=True)
     _, generated_image = model.decode_ids(generated_tokens)
         
@@ -275,7 +276,7 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         save_image(generated_image, f"{output_dir}/{filename}.png", normalize=True, value_range=(-1, 1))
     if test:
         return latency, acceptance_list, analysis_p, analysis_p_p, analysis_r, overhead_list, logit_list, sim_list
-    return latency
+    return latency, accpt
 
 def run_generate_image(args):
     assert args.model_type != "vllm", "VLLM model is not supported for single image generation"
@@ -297,16 +298,18 @@ def run_generate_image(args):
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
+
     if args.multigpu:
-        batch_sz = int((len(prompts)-args.start_idx) / 8.0 + 0.5) 
-        batch_start = [args.start_idx + (b_idx)*batch_sz for b_idx in range(8)]
+        batch_sz = int((len(prompts)-args.start_idx) / world_size + 0.5) 
+        batch_sz = int((len(prompts)-args.start_idx) / world_size + 0.5) 
+        batch_start = [args.start_idx + (b_idx)*batch_sz for b_idx in range(world_size)]
         batch_end = [bs_idx + batch_sz for bs_idx in batch_start]
         if batch_end[-1] > len(prompts):
             batch_end[-1] = len(prompts)
         import torch.multiprocessing as mp
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+        # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
-        mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=8, join=True)
+        mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=world_size, join=True)
     else:
         worker(0, 0,len(prompts),args,prompts, len(prompts))    # 
 
@@ -332,8 +335,9 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
         logits = []
         overheads = []
         global_sim = torch.zeros(32, 32).to(torch.float32)
+    global_acceptance = []
     for idx, prompt in tqdm(enumerate(prompts), total=len(prompts)):
-        if idx < start_idx or idx >= end_idx:
+        if idx < start_idx   or idx >= end_idx:
             continue
         if args.model == "lumina_mgpt":
             q1 = f"Generate an image of 768x768 according to the following prompt:\n{prompt}"
@@ -367,6 +371,8 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
         
         generate_image_kwargs["test"] = args.test
         generate_image_kwargs["relaxed"] = args.relaxed
+
+        
         
         if args.test :
             latency, acceptance_list, analysis_p, analysis_p_p, analysis_r, overhead_list, logit_list, img_sim_list = generate_and_save_image(args.output_dir, **generate_image_kwargs)
@@ -422,7 +428,8 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             # plt.close()
             
         else:
-            latency = generate_and_save_image(args.output_dir, **generate_image_kwargs)
+            latency, accpt = generate_and_save_image(args.output_dir, **generate_image_kwargs)
+        global_acceptance.append(accpt)
 
         latencies.append(latency)
 
@@ -445,26 +452,33 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
     # plt.savefig(f"{args.output_dir}/avg-logit-similarity-rank{rank}.png")
     # plt.close()
 
-
     if args.multigpu:
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '12355'
-        torch.distributed.init_process_group("gloo", rank=rank, world_size=8)
+        torch.distributed.init_process_group("gloo", rank=rank, world_size=world_size)
         # Send lengths first (in case they differ)
         local_tensor = torch.tensor(latencies)
         if local_tensor.numel() < 13:
             pad_len = 13 - local_tensor.numel()
             local_tensor = torch.cat([local_tensor, torch.full((pad_len,), -1.0)])  # use -1.0 as dummy
         # Gather from all workers
-        all_gathered = [torch.zeros_like(local_tensor) for _ in range(8)]
+        all_gathered = [torch.zeros_like(local_tensor) for _ in range(world_size)]
         
         torch.distributed.all_gather(all_gathered, local_tensor)
+
+        local_acc = [sum(row) / len(row) for row in global_acceptance]
+        local_tensor_acc = torch.tensor(local_acc)
+        # if global_acceptance.numel() < 13:
+        #     pad_len = 13 - x.numel()
+        #     local_tensor_acc[x] = torch.cat([local_tensor_acc[x], torch.full((pad_len,), -1.0)])  # use -1.0 as dummy
+        # Gather from all workers
+        all_gathered_acceptance = [torch.zeros_like(local_tensor_acc) for _ in range(world_size)]
+        
+        torch.distributed.all_gather(all_gathered_acceptance, local_tensor_acc)
 
         # Reduce at rank 0
         if rank == 0:
             global_latencies = torch.cat(all_gathered)
-            print(f"Global acceptance.shape: {global_latencies.shape}")
-
             global_latencies = global_latencies[global_latencies >= 0]
             latencies = np.array(global_latencies.cpu())
             avg_latency = np.mean(latencies, axis=0)
@@ -476,6 +490,19 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             plt.grid(True)
             plt.tight_layout()
             plt.savefig(f"{args.output_dir}/avg-latency.png")
+            plt.close()
+
+            global_acceptance = torch.cat(all_gathered_acceptance)
+            global_acceptance = global_acceptance[global_acceptance >= 0]
+            avg_acceptance = global_acceptance.sum().item()/5000.0
+            print(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
+            plt.scatter(range(len(global_acceptance)), global_acceptance, marker='o', label=f"Acceptance of {total_prompt_count} Images with avg={avg_acceptance:.2f}")
+            plt.xlabel("Generation Index")
+            plt.ylabel("Acceptance Length (tokens)")
+            plt.legend()
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig(f"{args.output_dir}/avg-accept.png")
             plt.close()
 
 
@@ -613,33 +640,34 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
                 plt.savefig(f"{args.output_dir}/avg-accept-length.png")
                 plt.close()
 
-                # p
-                global_p = torch.cat(all_gathered_p)[:total_prompt_count, :1000]             
-                # print(f"Rank {rank} global_p.shape: {global_p.shape}")
-                # pp
-                global_pp = torch.cat(all_gathered_pp)[:total_prompt_count, :1000]             
-            
-                # print(f"Rank {rank} global_pp.shape: {global_pp.shape}")
-                # r
-                global_r = torch.cat(all_gathered_r)[:total_prompt_count , :1000]        
-                # print(f"Rank {rank} global_r.shape: {global_r.shape}")
+                if test:
+                    # p
+                    global_p = torch.cat(all_gathered_p)[:total_prompt_count, :1000]             
+                    # print(f"Rank {rank} global_p.shape: {global_p.shape}")
+                    # pp
+                    global_pp = torch.cat(all_gathered_pp)[:total_prompt_count, :1000]             
+                
+                    # print(f"Rank {rank} global_pp.shape: {global_pp.shape}")
+                    # r
+                    global_r = torch.cat(all_gathered_r)[:total_prompt_count , :1000]        
+                    # print(f"Rank {rank} global_r.shape: {global_r.shape}")
 
-                avg_p = np.mean(global_p.cpu().numpy(), axis=0)
-                avg_pp = np.mean(global_pp.cpu().numpy(), axis=0)
-                avg_r = np.mean(global_r.cpu().numpy(), axis=0)
+                    avg_p = np.mean(global_p.cpu().numpy(), axis=0)
+                    avg_pp = np.mean(global_pp.cpu().numpy(), axis=0)
+                    avg_r = np.mean(global_r.cpu().numpy(), axis=0)
 
-                plt.scatter(range(len(avg_p)), avg_p, label="Original Confidence Score",  marker='o', alpha=0.5)
-                plt.scatter(range(len(avg_pp)), avg_pp, label="LANTERN Confidence Score",  marker='s', alpha=0.5)
-                plt.scatter(range(len(avg_r)), avg_r, label="Confidence Threshold", marker='^', alpha=0.5)
-                plt.xlabel("Generation Index")
-                plt.ylabel("Confidence Scores")
-                plt.title("Avg Confidence Scores over 100 Images")
-                plt.legend()
-                plt.grid(True)
-                plt.tight_layout()
-                plt.show()
-                plt.savefig(f"{args.output_dir}/avg-confidence-scores.png")
-                plt.close()
+                    plt.scatter(range(len(avg_p)), avg_p, label="Original Confidence Score",  marker='o', alpha=0.5)
+                    plt.scatter(range(len(avg_pp)), avg_pp, label="LANTERN Confidence Score",  marker='s', alpha=0.5)
+                    plt.scatter(range(len(avg_r)), avg_r, label="Confidence Threshold", marker='^', alpha=0.5)
+                    plt.xlabel("Generation Index")
+                    plt.ylabel("Confidence Scores")
+                    plt.title("Avg Confidence Scores over 100 Images")
+                    plt.legend()
+                    plt.grid(True)
+                    plt.tight_layout()
+                    plt.show()
+                    plt.savefig(f"{args.output_dir}/avg-confidence-scores.png")
+                    plt.close()
 
                 max_accpt = np.max(global_acceptance, axis=0)
                 plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 100 Images")
@@ -666,6 +694,24 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
         plt.tight_layout()
         plt.savefig(f"{args.output_dir}/5imgs-avg-latency.png")
         plt.close()
+
+
+        avg_list = []
+        for x in global_acceptance:
+            acc_list = torch.tensor(x)
+            acc_list = np.array(acc_list.cpu())
+            avg_acc_list = np.mean(acc_list, axis=0)
+            avg_list.append(avg_acc_list)
+        avg_list = np.array(avg_list)
+        plt.scatter(range(len(avg_list)), avg_list, marker='o', label=f"avg acceptance of {total_prompt_count} Images with avg={np.mean(avg_list, axis=0):.2f}")
+        plt.xlabel("Generation Index")
+        plt.ylabel("Accept Length (Token)")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(f"{args.output_dir}/5imgs-avg-accept.png")
+        plt.close()
+
 
 
         if args.test:

@@ -64,9 +64,11 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         data = torch.load(self.data[index], weights_only=True)
+       
         # print("self.data[index]: ", self.data[index])
         # data = np.load(self.data[index])
-        # print("loaded data: ", data)
+        # print("Available keys:", data.files)
+        # print("loaded data: ", data.keys())
         if self.model == "lumina_mgpt" or self.model == "anole":
 
             if random.random() < 0.9:
@@ -95,14 +97,14 @@ class CustomDataset(Dataset):
             input_ids_target = torch.cat((input_ids_target, zeropadding), dim=1)
 
         elif "llamagen" in self.model:
-            hidden_states = data['hidden_state'][:self.max_len][None, :]
+            # hidden_states = data['hidden_state'][:self.max_len][None, :]
             input_ids = data['input_ids'][:self.max_len][None, :]
             # [SY] input id will be separate from cond_idx for eagle3. that's why, don't pad
             # input_ids_padding = torch.zeros_like(input_ids)[:, :119]
             # input_ids = torch.cat((input_ids_padding, input_ids), dim=1) 
             loss_mask = data["loss_mask"][:self.max_len][None, :]
 
-            length = hidden_states.shape[1]
+            length = input_ids.shape[1]
             attention_mask = [1] * length
           
             
@@ -114,20 +116,20 @@ class CustomDataset(Dataset):
         loss_mask = loss_mask[0].tolist()
         loss_mask[-1] = 0
         
-        target = hidden_states[:, 1:, :]
-        zeropadding = torch.zeros(1, 1, target.shape[2])
-        target = torch.cat((target, zeropadding), dim=1)
+        # target = hidden_states[:, 1:, :]
+        # zeropadding = torch.zeros(1, 1, target.shape[2])
+        # target = torch.cat((target, zeropadding), dim=1)
         item = {
             "input_ids": input_ids_target,
             "cond_idx": data['cond_idx'],
-            "hidden_states": hidden_states,
-            "target": target,
+            # "hidden_states": hidden_states,
+            # "target": target,
             "attention_mask": attention_mask,
             "loss_mask": loss_mask,
         }
 
-        if self.transform:
-            item = self.transform(item)
+        # if self.transform:
+        #     item = self.transform(item)
 
         return item
 
@@ -146,11 +148,13 @@ class DataCollatorWithPadding:
         return outtensors
 
     def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, Any]:
-        max_length = max(item['hidden_states'].shape[1] for item in features)
+        # max_length = max(item['hidden_states'].shape[1] for item in features)
+        max_length = max(item['input_ids'].shape[1] + 120 for item in features) # [SY] Eagle3 training adaptation for not saving hidden states !!!!!!
+        
         batch_input_ids = torch.cat([item['input_ids'] for item in features]) # [SY] remove padding since cond_idx introduced
         batch_cond_idx = torch.cat([item['cond_idx'].to(batch_input_ids.device) for item in features]) # [SY]
-        batch_hidden_states = torch.cat([self.paddingtensor(item['hidden_states'], max_length) for item in features])
-        batch_target = torch.cat([self.paddingtensor(item['target'], max_length) for item in features])
+        # batch_hidden_states = torch.cat([self.paddingtensor(item['hidden_states'], max_length) for item in features])
+        # batch_target = torch.cat([self.paddingtensor(item['target'], max_length) for item in features])
         batch_loss_mask = torch.tensor(
             [item['loss_mask'] + [0] * (max_length - len(item['loss_mask'])) for item in features])
         batch_attention_mask = torch.tensor(
@@ -158,8 +162,8 @@ class DataCollatorWithPadding:
         batch = {
             "input_ids": batch_input_ids,
             "cond_idx": batch_cond_idx,
-            "hidden_states": batch_hidden_states,
-            "target": batch_target,
+            # "hidden_states": batch_hidden_states,
+            # "target": batch_target,
             "attention_mask": batch_attention_mask,
             "loss_mask": batch_loss_mask,
         }

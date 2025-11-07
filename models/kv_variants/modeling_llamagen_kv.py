@@ -1440,7 +1440,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         logit_list = []
         feature_list = []
 
-        st = time.time()
+        
         if hasattr(self.model, "past_key_values"):
             past_key_values = self.model.past_key_values
             past_key_values_data = self.model.past_key_values_data
@@ -1473,18 +1473,20 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         seq = torch.empty((max_batch_size, max_length), dtype=torch.long, device=c_indices.device)
         output = self.forward(cond_idx=cond_combined, attention_mask=attention_mask, past_key_values=past_key_values,output_hidden_states=True)
         combined_logits = output.logits
-        features = output.hidden_states[-1]
-        guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
-        features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
+        # features = output.hidden_states[-1]
+        # guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
+        # features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
         logits = cfg_logit_process(combined_logits, cfg)
         
-        logit_list.append(logits[:, -1, :].squeeze(0))
-        feature_list.append(features[:, -1, :].squeeze(0))
+        # logit_list.append(logits[:, -1, :].squeeze(0))
+        # feature_list.append(features[:, -1, :].squeeze(0))
 
         next_token, _ = sample(logits, temperature, top_k, top_p)
         seq[:, 0] = next_token.squeeze(1)
         # seq_emb_list = []
         # emb_tokens  = self.get_input_embeddings()
+        acc_list = []
+        st = time.time()
 
         for i in range(1, max_length):
             attention_mask = torch.cat([attention_mask, torch.ones_like(attention_mask)[:, :1]], dim=-1)
@@ -1493,29 +1495,30 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
             
             output = self.forward(input_ids=input_ids, past_key_values=past_key_values, attention_mask=attention_mask,output_hidden_states=True)
             combined_logits = output.logits
-            features = output.hidden_states[-1]
-            guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
-            features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
+            # features = output.hidden_states[-1]
+            # guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
+            # features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
             
             logits = cfg_logit_process(combined_logits, cfg)
-            logit_list.append(logits[:, -1, :].squeeze(0))
-            feature_list.append(features[:, -1, :].squeeze(0))
+            # logit_list.append(logits[:, -1, :].squeeze(0))
+            # feature_list.append(features[:, -1, :].squeeze(0))
             
             next_token, _ = sample(logits, temperature, top_k, top_p)
             seq[:, i] = next_token.squeeze(1)
+            acc_list.append(1)
             # token_emb = emb_tokens(next_token)               # [1, 1, D]
             # token_emb_vector = token_emb.squeeze(0).squeeze(0)    # [D]
             # seq_emb_list.append(token_emb_vector)
         
-        masked_logits = torch.stack(logit_list, dim=0)
-        masked_logits[masked_logits == float('-inf')] = 0.0
-        masked_logits = masked_logits.to(torch.float32)
-        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+        # masked_logits = torch.stack(logit_list, dim=0)
+        # masked_logits[masked_logits == float('-inf')] = 0.0
+        # masked_logits = masked_logits.to(torch.float32)
+        # normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
 
-        masked_ftrs = torch.stack(feature_list, dim=0)
-        masked_ftrs[masked_ftrs == float('-inf')] = 0.0
-        masked_ftrs = masked_ftrs.to(torch.float32)
-        normalized_ftrs = F.normalize(masked_ftrs, dim=1, eps=1e-6).to(torch.float32)
+        # masked_ftrs = torch.stack(feature_list, dim=0)
+        # masked_ftrs[masked_ftrs == float('-inf')] = 0.0
+        # masked_ftrs = masked_ftrs.to(torch.float32)
+        # normalized_ftrs = F.normalize(masked_ftrs, dim=1, eps=1e-6).to(torch.float32)
         # print("normalized shape: ", normalized.shape)
 
         # image_embeddings = torch.stack(seq_emb_list, dim=0)
@@ -1523,15 +1526,15 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # token_sim_matrix = torch.matmul(image_embeddings, image_embeddings.T).cpu().numpy() # shape: [N, N]
         
         # # probabilities = torch.nn.functional.softmax(logits, dim=1)
-        cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
-        cosine_sim_matrix_ftrs = torch.matmul(normalized_ftrs, normalized_ftrs.T).cpu().numpy()
+        # cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
+        # cosine_sim_matrix_ftrs = torch.matmul(normalized_ftrs, normalized_ftrs.T).cpu().numpy()
 
         # diffs = masked_logits.unsqueeze(1) - masked_logits.unsqueeze(0)  # shape: [B, B, D]
         # l2_dist_matrix = torch.norm(diffs, dim=2)  # shape: [B, B]
         # l2_dist_matrix = (l2_dist_matrix - l2_dist_matrix.min()) / (l2_dist_matrix.max() - l2_dist_matrix.min() + 1e-8)
         # l2_dist_matrix = l2_dist_matrix.cpu().numpy()
 
-        for row in range(32):
+        # for row in range(32):
 
         #     plt.imshow(token_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
         #     plt.colorbar()
@@ -1543,26 +1546,26 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         #     plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/tokens/row-{row}.png")
         #     plt.close()
 
-            plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
-            plt.colorbar()
-            plt.title("Cosine Similarity Between Token Features")
-            plt.xlabel("Token Index (i)")
-            plt.ylabel("cosine_similarity")
-            plt.grid()
-            os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/", exist_ok=True)
-            plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/row-{row}.png")
-            plt.close()
+            # plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+            # plt.colorbar()
+            # plt.title("Cosine Similarity Between Token Features")
+            # plt.xlabel("Token Index (i)")
+            # plt.ylabel("cosine_similarity")
+            # plt.grid()
+            # os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/", exist_ok=True)
+            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/row-{row}.png")
+            # plt.close()
 
-            plt.imshow(cosine_sim_matrix_ftrs[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
-            plt.colorbar()
-            plt.title("Cosine Similarity Between Token Features")
-            plt.xlabel("Token Index (i)")
-            plt.ylabel("cosine_similarity")
-            plt.grid()
-            os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/features/{prompt}/", exist_ok=True)
-            plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/features/{prompt}/row-{row}.png")
-            plt.close()
-        return seq, time.time() - st
+            # plt.imshow(cosine_sim_matrix_ftrs[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+            # plt.colorbar()
+            # plt.title("Cosine Similarity Between Token Features")
+            # plt.xlabel("Token Index (i)")
+            # plt.ylabel("cosine_similarity")
+            # plt.grid()
+            # os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/features/{prompt}/", exist_ok=True)
+            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/features/{prompt}/row-{row}.png")
+            # plt.close()
+        return seq, time.time() - st, acc_list
     
     @torch.no_grad()
     def decode_ids(self, ids):

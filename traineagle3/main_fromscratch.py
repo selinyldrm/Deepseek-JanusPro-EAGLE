@@ -44,9 +44,6 @@ def parse_args():
     parser.add_argument('--config_path', type=str, default='data/configs/lumina_mgpt_config.json')
     parser.add_argument('--data_dir', type=str, default='/home/server44/sihwan_workspace/ssd/lumina_mgpt_eagle_mscoco2017train')
     parser.add_argument('--save_dir', type=str, default='ckpts/lumina_mgpt/trained_drafters_eagle3')
-    parser.add_argument('--start_idx', type=int, default=0)
-    parser.add_argument('--end_idx', type=int, default=600000)
-    
     
     # dataset arguments
     parser.add_argument('--coupled', action='store_true', default=False)
@@ -266,7 +263,6 @@ def run_train_drafter(args):
     else:
         aug = None
 
-    # data_path = list_files(args.data_dir)[args.start_idx:args.end_idx]
     data_path = list_files(args.data_dir)
     train_data_path = data_path[:int(len(data_path) * args.train_data_ratio)]
     test_data_path = data_path[int(len(data_path) * args.train_data_ratio):]
@@ -312,11 +308,11 @@ def run_train_drafter(args):
     model = ModelClass(config,training_config, load_emb=True, path=args.base_path) # only drafter. no base model needs to be loaded since we have gtp saved in dataset
     
 
-    # ckpt_path = "/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-relaion-lossscaled/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs40_length7_mscoco2017train30k/state_22/model.safetensors"
+    # ckpt_path = "/work1/deming/shared/llamagen/eagle3-drafters/llamagen2-eagle3-lossscaled/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_length7_mscoco2017train30k/state_8/model.safetensors"
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)
     # state_dict["embed_tokens.weight"] = model.target_model.model.embed_tokens.weight
-    # state_dict["target_model.lm_head.weight"] = model.target_model.lm_head.weight
+    # # state_dict["target_model.lm_head.weight"] = model.target_model.lm_head.weight
     # model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
@@ -336,7 +332,6 @@ def run_train_drafter(args):
         )
 
     # Training loop
-    # dataset 0-500000
     for epoch in range(0, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3 = run_epoch(
             args, model, train_loader, optimizer, scheduler, criterion, accelerator, args.is_warmup, wandb_instance, train_mode=True
