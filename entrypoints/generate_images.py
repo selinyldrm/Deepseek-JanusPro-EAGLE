@@ -213,7 +213,7 @@ def load_prompts(args):
     #     data = json.load(f)
     # prompts = [entry["prompt"] for entry in data.values()]
     
-    return prompts[]
+    return prompts
 
 def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path, test, relaxed, **kwargs):
     # print(f"Generating image for prompt: {prompt}")
