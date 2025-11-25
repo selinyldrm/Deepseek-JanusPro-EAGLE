@@ -507,7 +507,7 @@ class EaModel(nn.Module):
         return tree_buffers, sorted_tree_choices
     
     @torch.no_grad()
-    def initialize_tree(self, tree_attn_mask, tree_node_counts, cond_combined, past_key_values, logits_processor, cfg_scale, attention_mask = None, tree_choices=mc_sim_7b_63):
+    def initialize_tree(self, cond_combined, past_key_values, logits_processor, cfg_scale, attention_mask = None):
         outputs, orig, hidden_states = self(
             cond_idx=cond_combined, past_key_values=past_key_values, output_orig=True, attention_mask=attention_mask
         )
@@ -523,21 +523,9 @@ class EaModel(nn.Module):
         token = torch.cat([token, token], dim=0)
         zero_padding = torch.zeros((token.shape[0], 120), dtype=torch.long, device=token.device)
         input_ids = torch.cat((zero_padding, token.to(cond_combined.device)), dim=1)
-
-        self.ea_layer.init_tree_v1(tree_choices)
-
-        ea_device = self.ea_layer.lm_head.weight.device
-        if outputs["hidden_states"][0].device != ea_device:
-            outputs["hidden_states"] = [x.to(ea_device) for x in outputs["hidden_states"]]
-        hidden_states=torch.cat(outputs["hidden_states"],dim=-1)
-
-        draft_tokens, draft_logits, draft_probs, draft_ops = self.ea_layer.topK_genrate_v1(None, None, tree_node_counts, hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
-        # print("draft tokens: ", draft_tokens.shape)
-        new_draft_tokens = torch.cat((token, draft_tokens), dim=-1)
-        draft_logits = torch.cat((logits, draft_logits), dim=-2)
-        # print("draft draft_logits: ", draft_logits.shape)
-        self.base_model.model.tree_mask = tree_attn_mask
-        return new_draft_tokens, orig, hidden_states, token, input_ids, draft_logits, draft_probs, draft_ops
+        
+        draft_tokens, retrieve_indices,tree_mask,tree_position_ids = self.ea_layer.topK_genrate(hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
+        return draft_tokens, retrieve_indices,tree_mask,tree_position_ids, orig, hidden_states, token
     
     @torch.no_grad()
     def initialize_tree_v1(self, step, cond_combined, tree_attn_mask, past_key_values, logits_processor, cfg_scale, attention_mask = None, tree_choices=mc_sim_7b_63):
@@ -733,11 +721,11 @@ class EaModel(nn.Module):
                 # print("verifying at depth: ", i, " curr accept_length: ", accept_length)
                 m_bias_list = None
                 level_sim = None
-                past_nodes = l_node_counts[i]
-                prev_past_nodes = l_node_counts[i-1]
-                if i < len(bias_list) and len(bias_list[i]):
-                    m_bias_list = copy.deepcopy(bias_list[i])
-                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+                # past_nodes = l_node_counts[i]
+                # prev_past_nodes = l_node_counts[i-1]
+                # if i < len(bias_list) and len(bias_list[i]):
+                #     m_bias_list = copy.deepcopy(bias_list[i])
+                #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
@@ -781,26 +769,33 @@ class EaModel(nn.Module):
                         lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
                         # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                         # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        # if lev_sim_score > 0.0 :
-                        #     px +=  r * lev_sim_score 
-
-                        p = F.log_softmax(normalized_curr, dim=-1)
-                        gtp_kl = F.softmax(gt_logits, dim=0) 
-
-                        kl = F.kl_div(p, gtp_kl, reduction='batchmean')  # computes KL(P || Q)
-                        if lev_sim_score > 0.0 and kl < 3.0 :
+                        if lev_sim_score > 0.25 :
                             px +=  r * lev_sim_score 
 
-                        curr_tree_node_idx = retrieve_indices[j,i]
-                                                        
-                        if m_bias_list is not None:
-                            indices_l_lantern = [[] for _ in range(len(m_bias_list))]  
-                            for bias_idx, tpl in enumerate(m_bias_list) :
-                                id1,id2 = tpl
-                                if id1 == curr_tree_node_idx:
-                                    similar_xi = tree_candidates[0][id2]
-                                    px += r * gtp[similar_xi]
-                                    print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
+                        # p = F.log_softmax(normalized_curr, dim=-1)
+
+                        # kl = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
+                        # if lev_sim_score > 0.5 and kl < 5.0 :
+                        #     px +=  r * lev_sim_score 
+
+                        # curr_tree_node_idx = retrieve_indices[j,i]
+                        
+                        # # add KL divergence of draft and target
+                        # curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
+                        # if curr_draft_logits.shape[0] != 1 :
+                        #     curr_draft_logits = curr_draft_logits[0]
+                        # if curr_draft_logits.dim == 1 :
+                        #     curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                        # kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
+                                                   
+                        # if m_bias_list is not None:
+                        #     if kl_draft < 3.0 :
+                        #         for bias_idx, tpl in enumerate(m_bias_list) :
+                        #             id1,id2 = tpl
+                        #             if id1 == curr_tree_node_idx:
+                        #                 similar_xi = tree_candidates[0][id2]
+                        #                 px += r * gtp[similar_xi]
+                        #                 # print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
 
                            
                             
@@ -953,7 +948,6 @@ class EaModel(nn.Module):
                         candidates_set.append(xi)
 
                         px = gtp[xi]
-                        px_prev = px
                         if lantern:
                             nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
                             cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
@@ -962,7 +956,6 @@ class EaModel(nn.Module):
                                 indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
                             else:
                                 indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
-
                             if indices.numel() == 0:
                                 indices = -1
                             else:
@@ -972,13 +965,9 @@ class EaModel(nn.Module):
                             else:
                                 px = px + cumsum_nearest_probs[indices]
                         
-                        if px_prev != px: 
-                            print("lantern increased by: ", px-px_prev)
                         qx = 1.0
+                        acp = px / qx
                         r = random.random()
-                        acp = px / qx 
-                        print("px: ", px)
-                        print("r: ", r)
 
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
@@ -1004,7 +993,7 @@ class EaModel(nn.Module):
                 gt_logits = logits[best_candidate, accept_length-1][None]
                 gt_logits = logits_processor(None, gt_logits)[0]
                 sample_p = torch.softmax(gt_logits, dim=0)
-            return torch.tensor(best_candidate), accept_length-1, sample_p, gt_logits
+            return torch.tensor(best_candidate), accept_length-1, sample_p
         
         else:
             device = logits.device
@@ -1310,7 +1299,7 @@ class EaModel(nn.Module):
                 attention_mask = c_emb_masks
         cond_combined = cond_combined.to(self.base_model.dtype)
         # padding = (torch.zeros(1,1,dtype=torch.long)-1).to(cond_combined.device)
-        padding = (torch.zeros(1,dtype=torch.long)-1).to(cond_combined.device)
+        padding = (torch.zeros(1,dtype=torch.long)-1).to(cond_combined.device) # [SY] use this for DYNAMIC TREE
         self.ea_layer.reset_kv()
         
         if temperature > 1e-5:
@@ -1514,10 +1503,13 @@ class EaModel(nn.Module):
                 candidates = draft_tokens[0, retrieve_indices]
 
                 best_candidate, accept_length, sample_p = self.evaluate_posterior(logits, candidates,  logits_processor, lantern=lantern, lantern_k=lantern_k, lantern_delta=lantern_delta)
-                if testing:
-                    accept_list.append(accept_length)
+                accept_list.append(accept_length)
                 input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, hidden_state, sample_token = self.update_inference_inputs(
                     idx,
+                    False,
+                    None,
+                    None,
+                    recent_acc_logits,
                     input_ids,
                     candidates,
                     best_candidate,
@@ -1530,6 +1522,7 @@ class EaModel(nn.Module):
                     hidden_state_new,
                     sample_p,
                     cfg,
+                    static_tree=static_tree
                 )
 
             if new_token > max_length:

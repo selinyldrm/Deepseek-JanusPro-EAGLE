@@ -199,7 +199,7 @@ def load_prompts(args):
     #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
     #         data = json.load(f)
     # else:
-    #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_5.json", "r") as f:
+    #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_0_5.json", "r") as f:
     #         data = json.load(f)
         
     # # # Extract prompt fields 
@@ -213,7 +213,7 @@ def load_prompts(args):
     #     data = json.load(f)
     # prompts = [entry["prompt"] for entry in data.values()]
     
-    return prompts
+    return prompts[:1000]
 
 def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path, test, relaxed, **kwargs):
     # print(f"Generating image for prompt: {prompt}")
@@ -221,7 +221,7 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         generate_params = {
             "images": [],
             "qas": [[prompt, None]],
-            "max_gen_len": 2354,
+            "max_gen_len": 2356,
             "temperature": kwargs["temperature"],
             "top_k": kwargs["top_k"],
             "cfg_scale": kwargs["cfg"],
@@ -262,14 +262,24 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         generated_tokens, latency, accpt = model.generate(**generate_params)
         print(f"generate time={latency} seconds\n", flush=True)
     _, generated_image = model.decode_ids(generated_tokens)
-        
-    def sanitize_filename(text, max_len=100):
+
+    def sanitize_filename(text, max_len=256):
         # Remove unsafe characters and trim long prompts
+        # Remove prefix: "Generate an image of 768x768 according to the following prompt"
+        text = re.sub(
+            r'^\s*generate\s+an?\s+image\s+of\s+\d+x\d+\s+(according\s+to\s+the\s+following\s+prompt[:,]?\s*)?',
+            '',
+            text,
+            flags=re.IGNORECASE
+        )
+    
         text = re.sub(r'[\/:*?"<>|]', '', text).strip().replace(' ', '_')
         return text[:max_len]
 
     if model_name in ["lumina_mgpt", "anole"]:
-        generated_image[0].save(img_save_path, "png")
+        os.makedirs(f"{output_dir}", exist_ok=True)
+        filename = sanitize_filename(prompt)
+        generated_image[0].save( f"{output_dir}/{filename}.png", "png")
     elif "llamagen" in model_name:
         os.makedirs(f"{output_dir}", exist_ok=True)
         filename = sanitize_filename(prompt)
@@ -455,7 +465,9 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
     if args.multigpu:
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '12355'
-        torch.distributed.init_process_group("gloo", rank=rank, world_size=world_size)
+        torch.distributed.init_process_group("gloo",
+            init_method=f"tcp://{os.environ['MASTER_ADDR']}:{os.environ['MASTER_PORT']}",
+            rank=rank, world_size=world_size)
         # Send lengths first (in case they differ)
         local_tensor = torch.tensor(latencies)
         if local_tensor.numel() < 13:
@@ -494,7 +506,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
 
             global_acceptance = torch.cat(all_gathered_acceptance)
             global_acceptance = global_acceptance[global_acceptance >= 0]
-            avg_acceptance = global_acceptance.sum().item()/5000.0
+            avg_acceptance = global_acceptance.sum().item()/1000.0
             print(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
             plt.scatter(range(len(global_acceptance)), global_acceptance, marker='o', label=f"Acceptance of {total_prompt_count} Images with avg={avg_acceptance:.2f}")
             plt.xlabel("Generation Index")

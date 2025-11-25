@@ -10,9 +10,12 @@ from PIL import Image
 import torch
 
 from .conversation import Conversation
-from.chameleon_vae_ori import (
-    VocabInfo, VocabTranslation, ImageTokenizer
-)
+from models.base_models.lumina_mgpt.chameleon_vae_ori.vocab import *
+from models.base_models.lumina_mgpt.chameleon_vae_ori.image_tokenizer import * 
+from models.base_models.lumina_mgpt.chameleon_vae_ori.vqgan import *
+# (
+#     VocabInfo, VocabTranslation, ImageTokenizer
+# )
 from xllmx.data.data_reader import read_general
 from xllmx.data.item_processor import MMConvItemProcessor
 
@@ -91,12 +94,16 @@ class FlexARItemProcessor(MMConvItemProcessor):
         #  currently still use the original image tokenizer provided by Meta rather than transformers
         #  because the transformers implementation does not contain the vae decoder
         self.chameleon_ori_vocab = VocabInfo(
-            json.load(open(os.path.join(base_path, "chameleon/tokenizer/text_tokenizer.json"), encoding="utf8"))["model"]["vocab"]
+            json.load(open(os.path.join(base_path, "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/text_tokenizer.json"), encoding="utf8"))["model"]["vocab"]
         )
+        # ckpt_path = "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt"
+        # ckpt = torch.load(ckpt_path, map_location="cpu")
+        # print(ckpt["state_dict"])
+        
         self.chameleon_ori_translation = VocabTranslation(self.chameleon_ori_vocab, device="cuda")
         self.chameleon_ori_image_tokenizer = ImageTokenizer(
-            cfg_path=os.path.join(base_path, "chameleon/tokenizer/vqgan.yaml"),
-            ckpt_path=os.path.join(base_path, "chameleon/tokenizer/vqgan.ckpt"),
+            cfg_path=os.path.join(base_path, "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.yaml"),
+            ckpt_path=os.path.join(base_path, "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt"),
             device="cuda",
         )
 
@@ -181,7 +188,7 @@ class FlexARItemProcessor(MMConvItemProcessor):
             tokens = tokens[1:]
         if tokens[-1] == self.token2id(self.image_end_token):
             tokens = tokens[:-1]
-
+      
         h_grids, w_grids = tokens[0] - 8804, tokens[1] - 8804
         tokens = tokens[2:]
         h, w = h_grids * self.patch_size, w_grids * self.patch_size
@@ -190,10 +197,8 @@ class FlexARItemProcessor(MMConvItemProcessor):
         for i in range(len(tokens)):
             if (i + 1) % (w_latent_dim + 1) != 0:
                 tokens[i] = self.chameleon_ori_translation.bpe2img[tokens[i]]
-
+     
         assert len(tokens) == h_latent_dim * (w_latent_dim + 1)
         tokens = torch.tensor(tokens, dtype=torch.int64).cuda()
-
         tokens = tokens.view(h_latent_dim, w_latent_dim + 1)[:, :-1].flatten()
-
         return self.chameleon_ori_image_tokenizer.pil_from_img_toks(tokens, h_latent_dim, w_latent_dim)

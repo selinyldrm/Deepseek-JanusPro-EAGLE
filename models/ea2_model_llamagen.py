@@ -638,10 +638,10 @@ class EaModel(nn.Module):
                 m_bias_list = None
                 level_sim = None
                 past_nodes = l_node_counts[i]
-                # prev_past_nodes = l_node_counts[i-1]
-                # if i < len(bias_list) and len(bias_list[i]):
-                #     m_bias_list = copy.deepcopy(bias_list[i])
-                #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+                prev_past_nodes = l_node_counts[i-1]
+                if i < len(bias_list) and len(bias_list[i]):
+                    m_bias_list = copy.deepcopy(bias_list[i])
+                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
                 # fi = list(IDs of only TRUE branches)
@@ -666,38 +666,39 @@ class EaModel(nn.Module):
                         r = random.random()
                         px = gtp[xi]
 
-                        # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
-                        # accept_length_fake =  accept_length + 1
-                        # is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                        # # fi = list(IDs of only TRUE branches)
-                        # fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                        # # print("fi_fake: ", fi_fake)
-                        # # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                        # gt_logits_fake = logits[fi_fake, i][None]
-                        # # print("gt_logits_fake.shape: ", gt_logits_fake.shape)
-                        # normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
-                        # normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
-                        # lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
-                        # # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
-                        # # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        # # if lev_sim_score > 0.625 :
-                        # #     px +=  r * lev_sim_score 
-
-                        # p = F.log_softmax(normalized_curr, dim=-1)
-                        # gtp_kl = F.softmax(gt_logits, dim=0) 
-
-                        # kl = F.kl_div(p, gtp_kl, reduction='batchmean')  # computes KL(P || Q)
-                        # if lev_sim_score > 0.625 and kl < 4.0 :
+                        accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
+                        accept_length_fake =  accept_length + 1
+                        is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
+                        ## fi = list(IDs of only TRUE branches)
+                        fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
+                        # print("fi_fake: ", fi_fake)
+                        # target logits of the nodes on the candidate sequences returned True by fi and current depth
+                        gt_logits_fake = logits[fi_fake, i][None]
+                        # print("gt_logits_fake.shape: ", gt_logits_fake.shape)
+                        normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
+                        normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
+                        lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                        # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
+                        # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
+                        # if lev_sim_score > 0.625 :
                         #     px +=  r * lev_sim_score 
+                        # print(normalized_curr.shape)
+                        # print(gt_logits.shape)
+                        p = F.log_softmax(normalized_curr, dim=-1)
 
-                        # curr_tree_node_idx = retrieve_indices[j,i]
+                        kl = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
+                        # print(kl)
+                        if lev_sim_score > 0.625 and kl < 4.0 :
+                            px +=  r * lev_sim_score 
 
-                        # if m_bias_list is not None:
-                        #     for bias_idx, tpl in enumerate(m_bias_list) :
-                        #         id1,id2 = tpl
-                        #         if id1 == curr_tree_node_idx:
-                        #             similar_xi = tree_candidates[0][id2]
-                        #             px += r * gtp[similar_xi]
+                        curr_tree_node_idx = retrieve_indices[j,i]
+
+                        if m_bias_list is not None:
+                            for bias_idx, tpl in enumerate(m_bias_list) :
+                                id1,id2 = tpl
+                                if id1 == curr_tree_node_idx:
+                                    similar_xi = tree_candidates[0][id2]
+                                    px += r * gtp[similar_xi]
                                     # print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
                            
                             
@@ -1132,7 +1133,7 @@ class EaModel(nn.Module):
                                                     head=self.base_model.lm_head,logits_processor=logits_processor,
                                                     cfg_scale=cfg_scale)
             new_token += accept_length + 1
-            return input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, None, token
+            return  input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, None, token
 
     @torch.no_grad()
     def generate(
@@ -1289,8 +1290,8 @@ class EaModel(nn.Module):
             overhead_list = []
             img_sim_list = []
 
-        bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
-        level_bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices']))]
+        # bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
+        # level_bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices']))]
         if static_tree:
             tree_logits, logits, sample_token, init_bias_list, sim_list = self.initialize_tree_v1(
                 -1, cond_combined, tree_buffers['tree_attn_mask'], past_key_values, logits_processor, cfg, attention_mask, tree_choices
@@ -1466,10 +1467,13 @@ class EaModel(nn.Module):
                 candidates = draft_tokens[0, retrieve_indices]
 
                 best_candidate, accept_length, sample_p = self.evaluate_posterior(logits, candidates,  logits_processor, lantern=lantern, lantern_k=lantern_k, lantern_delta=lantern_delta)
-                if testing:
-                    accept_list.append(accept_length)
+                accept_list.append(accept_length)
                 input_ids, draft_tokens, retrieve_indices,tree_mask,tree_position_ids, new_token, hidden_state, sample_token = self.update_inference_inputs(
                     idx,
+                    False,
+                    None,
+                    None,
+                    recent_acc_logits,
                     input_ids,
                     candidates,
                     best_candidate,
@@ -1482,6 +1486,7 @@ class EaModel(nn.Module):
                     hidden_state_new,
                     sample_p,
                     cfg,
+                    static_tree=static_tree
                 )
             # if torch.is_tensor(accept_length):
             #     accept_length_list.append(accept_length.item()+1)

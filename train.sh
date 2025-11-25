@@ -6,6 +6,7 @@
 #SBATCH --time=12:00:00                # Max runtime (HH:MM:SS)
 #SBATCH --partition=mi3008x_long           # Partition to submit to
 #SBATCH --nodes=1                      # Number of nodes
+#SBATCH --nodelist=k002-002                   
 #SBATCH --ntasks-per-node=8
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-type=BEGIN,END,FAIL

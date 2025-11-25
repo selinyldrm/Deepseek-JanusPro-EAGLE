@@ -318,7 +318,7 @@ class EaLumina_mGPT(nn.Module):
                                 threshold=threshold
                         )
 
-        self.nearest_latents = np.load("ckpts/lumina_mgpt/vq_distances/top_8191_indices.npy")
+        self.nearest_latents = np.load("/work1/deming/seliny2/LANTERN/entrypoints/top_8191_indices.npy")
         self.image_token_offset = 4 # image token offset; image tokens are from 4 to 8195
         self.image_tokens = torch.arange(4, 8196, device="cuda")
         self.image_syntax_tokens = torch.tensor([8196, 8197, 8803, 8828], device="cuda")
@@ -907,6 +907,7 @@ class EaLumina_mGPT(nn.Module):
         uncond_attn_mask = torch.cat((zero_padding, torch.ones((num_image_tokens), dtype=torch.bool, device=input_ids.device)), dim=-1)
         attn_mask = torch.stack([cond_attn_mask, uncond_attn_mask], dim=0)
 
+        accept_list = []
         if self.cfg_mode == "parallel":
             input_ids = input_ids.repeat(2, 1)
         
@@ -933,6 +934,8 @@ class EaLumina_mGPT(nn.Module):
 
         new_token = 0
         pbar = tqdm(total=max_new_tokens)
+        import time
+        st = time.time()
         while new_token < max_new_tokens:
             if self.eagle_version == 1:
                 candidates, cart_candidates_prob, tree_candidates = self.generate_candidates(
@@ -980,6 +983,7 @@ class EaLumina_mGPT(nn.Module):
                 lantern_k=lantern_k,
                 lantern_delta=lantern_delta,
             )
+            accept_list.append(accept_length)
 
             input_ids, output, new_token, sample_token = self.update_inference_inputs(
                 input_ids=input_ids,
@@ -1004,7 +1008,7 @@ class EaLumina_mGPT(nn.Module):
                 if self.cfg_mode == "parallel":
                     tree_mask = tree_mask.repeat(2, 1, 1, 1)
             
-            accept_length_list.append(accept_length+1)
+            # accept_length_list.append(accept_length+1)
             pbar.update(accept_length+1)
 
             if eos_token_ids is not None:
@@ -1014,5 +1018,6 @@ class EaLumina_mGPT(nn.Module):
             if input_ids.shape[1] > max_length:
                 break
         pbar.close()
+        end = time.time()
         
-        return input_ids, accept_length_list
+        return input_ids, end-st, accept_length_list

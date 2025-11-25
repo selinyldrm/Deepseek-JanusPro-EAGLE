@@ -150,18 +150,18 @@ class MultiModalLogitsProcessor(LogitsProcessor):
                     )
                     # print(f"h_grids: {h_grids}, w_grids: {w_grids}")
                     self.h_latent_dim, self.w_latent_dim = h_grids * 2, w_grids * 2
-                    print(f"h_latent_dim: {self.h_latent_dim}, w_latent_dim: {self.w_latent_dim}")
+                    # print(f"h_latent_dim: {self.h_latent_dim}, w_latent_dim: {self.w_latent_dim}")
 
                 tokens = input_ids[0][self.image_start_token_id_index + 3 :]
                 if (len(tokens) + 1) % (self.w_latent_dim + 1) == 0:
                     new_line_constrained_scores = torch.full_like(scores, -math.inf)
                     new_line_constrained_scores[self.image_next_line_token_id] = 0
-                    print(f"new line: {len(tokens)+1}")
+                    # print(f"new line: {len(tokens)+1}")
                     return new_line_constrained_scores
                 elif (len(tokens) + 1) == (self.w_latent_dim + 1) * self.h_latent_dim + 1:
                     eos_image_constrained_scores = torch.full_like(scores, -math.inf)
                     eos_image_constrained_scores[self.image_end_token_id] = 0
-                    print(f"eos image: {len(tokens)+1}")
+                    # print(f"eos image: {len(tokens)+1}")
                     return eos_image_constrained_scores
                 elif (len(tokens) + 1) % (self.w_latent_dim + 1) != 0:
                     # force to generate image tokens only

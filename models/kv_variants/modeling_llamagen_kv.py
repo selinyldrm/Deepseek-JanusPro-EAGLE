@@ -1473,13 +1473,13 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         seq = torch.empty((max_batch_size, max_length), dtype=torch.long, device=c_indices.device)
         output = self.forward(cond_idx=cond_combined, attention_mask=attention_mask, past_key_values=past_key_values,output_hidden_states=True)
         combined_logits = output.logits
-        # features = output.hidden_states[-1]
-        # guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
-        # features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
+        features = output.hidden_states[-1]
+        guided = features[1] + 3.0 * (features[0] - features[1])  # [hidden_dim]
+        features = guided.unsqueeze(0)               # [1, hidden_dim] keep batch=1
         logits = cfg_logit_process(combined_logits, cfg)
         
-        # logit_list.append(logits[:, -1, :].squeeze(0))
-        # feature_list.append(features[:, -1, :].squeeze(0))
+        logit_list.append(logits[:, -1, :].squeeze(0))
+        feature_list.append(features[:, -1, :].squeeze(0))
 
         next_token, _ = sample(logits, temperature, top_k, top_p)
         seq[:, 0] = next_token.squeeze(1)
@@ -1521,11 +1521,11 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # normalized_ftrs = F.normalize(masked_ftrs, dim=1, eps=1e-6).to(torch.float32)
         # print("normalized shape: ", normalized.shape)
 
-        # image_embeddings = torch.stack(seq_emb_list, dim=0)
-        # image_embeddings = F.normalize(image_embeddings, dim=1)
+        # image_embeddings = torch.stack(seq_emb_list, dim=0).to(torch.float32)
+        # image_embeddings = F.normalize(image_embeddings, dim=1).to(torch.float32)
         # token_sim_matrix = torch.matmul(image_embeddings, image_embeddings.T).cpu().numpy() # shape: [N, N]
         
-        # # probabilities = torch.nn.functional.softmax(logits, dim=1)
+        # probabilities = torch.nn.functional.softmax(logits, dim=1)
         # cosine_sim_matrix = torch.matmul(normalized, normalized.T).cpu().numpy()
         # cosine_sim_matrix_ftrs = torch.matmul(normalized_ftrs, normalized_ftrs.T).cpu().numpy()
 
@@ -1536,35 +1536,65 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
 
         # for row in range(32):
 
-        #     plt.imshow(token_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
-        #     plt.colorbar()
-        #     plt.title("Cosine Similarity Between Tokens")
-        #     plt.xlabel("Token Index (i)")
-        #     plt.ylabel("cosine_similarity")
-        #     plt.grid()
-        #     os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/tokens/", exist_ok=True)
-        #     plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/{prompt}/tokens/row-{row}.png")
-        #     plt.close()
-
-            # plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+            # plt.imshow(token_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
             # plt.colorbar()
-            # plt.title("Cosine Similarity Between Token Features")
+            # plt.title("Cosine Similarity Between Tokens")
             # plt.xlabel("Token Index (i)")
             # plt.ylabel("cosine_similarity")
             # plt.grid()
-            # os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/", exist_ok=True)
-            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/logits/{prompt}/row-{row}.png")
+            # os.makedirs(f"/work1/deming/shared/similarity-analysis/{prompt}/tokens/", exist_ok=True)
+            # plt.savefig(f"/work1/deming/shared/similarity-analysis/{prompt}/tokens/row-{row}.png")
+            # plt.close()
+
+            # plt.imshow(cosine_sim_matrix[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
+            # plt.colorbar()
+            # plt.title("Cosine Similarity Between Logits")
+            # plt.xlabel("Token Index (i)")
+            # plt.ylabel("cosine_similarity")
+            # plt.grid()
+            # os.makedirs(f"/work1/deming/shared/llamagen/similarity-analysis/logits/{prompt}/", exist_ok=True)
+            # plt.savefig(f"/work1/deming/shared/llamagen/similarity-analysis/logits/{prompt}/row-{row}.png")
             # plt.close()
 
             # plt.imshow(cosine_sim_matrix_ftrs[32*row:32*row+32, 32*row:32*row+32], cmap='coolwarm', vmin=0, vmax=1.0)
             # plt.colorbar()
-            # plt.title("Cosine Similarity Between Token Features")
+            # plt.title("Cosine Similarity Between Features")
             # plt.xlabel("Token Index (i)")
             # plt.ylabel("cosine_similarity")
             # plt.grid()
-            # os.makedirs(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/features/{prompt}/", exist_ok=True)
-            # plt.savefig(f"./base-stg2-temp1-k10-cfg3.0/analysis-32x32/features/{prompt}/row-{row}.png")
+            # os.makedirs(f"/work1/deming/shared/llamagen/similarity-analysis/features/{prompt}/", exist_ok=True)
+            # plt.savefig(f"/work1/deming/shared/llamagen/similarity-analysis/features/{prompt}/row-{row}.png")
             # plt.close()
+            
+        # plt.imshow(token_sim_matrix, cmap='coolwarm', vmin=0, vmax=1.0)
+        # plt.colorbar()
+        # plt.title("Cosine Similarity Between Tokens")
+        # plt.xlabel("Token Index (i)")
+        # plt.ylabel("cosine_similarity")
+        # plt.grid()
+        # os.makedirs(f"/work1/deming/shared/similarity-analysis/{prompt}/tokens/", exist_ok=True)
+        # plt.savefig(f"/work1/deming/shared/similarity-analysis/{prompt}/tokens/full.png")
+        # plt.close()
+
+        # plt.imshow(cosine_sim_matrix, cmap='coolwarm', vmin=0, vmax=1.0)
+        # plt.colorbar()
+        # plt.title("Cosine Similarity Between Logits")
+        # plt.xlabel("Token Index (i)")
+        # plt.ylabel("cosine_similarity")
+        # plt.grid()
+        # os.makedirs(f"/work1/deming/shared/llamagen/similarity-analysis/logits/{prompt}/", exist_ok=True)
+        # plt.savefig(f"/work1/deming/shared/llamagen/similarity-analysis/logits/{prompt}/full.png")
+        # plt.close()
+
+        # plt.imshow(cosine_sim_matrix_ftrs, cmap='coolwarm', vmin=0, vmax=1.0)
+        # plt.colorbar()
+        # plt.title("Cosine Similarity Between Features")
+        # plt.xlabel("Token Index (i)")
+        # plt.ylabel("cosine_similarity")
+        # plt.grid()
+        # os.makedirs(f"/work1/deming/shared/llamagen/similarity-analysis/features/{prompt}/", exist_ok=True)
+        # plt.savefig(f"/work1/deming/shared/llamagen/similarity-analysis/features/{prompt}/full.png")
+        # plt.close()
         return seq, time.time() - st, acc_list
     
     @torch.no_grad()

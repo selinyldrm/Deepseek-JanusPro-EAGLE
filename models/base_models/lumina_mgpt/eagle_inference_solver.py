@@ -150,7 +150,7 @@ class MultiModalLogitsProcessor(LogitsProcessor):
         elif self.num_image_start_tokens == self.num_image_end_tokens + 1:
             if self.image_start_token_id_index is None:
                 self.image_start_token_id_index = torch.where(input_ids[0] == self.image_start_token_id)[0]
-                print(self.image_start_token_id_index)
+                # print(self.image_start_token_id_index)
                 self.image_start_token_id_index = torch.where(input_ids[0] == self.image_start_token_id)[0][-1].item()
 
             new_token_num = len(input_ids[0][self.image_start_token_id_index + 1 :])
@@ -163,18 +163,18 @@ class MultiModalLogitsProcessor(LogitsProcessor):
                     )
                     # print(f"h_grids: {h_grids}, w_grids: {w_grids}")
                     self.h_latent_dim, self.w_latent_dim = h_grids * 2, w_grids * 2
-                    print(f"h_latent_dim: {self.h_latent_dim}, w_latent_dim: {self.w_latent_dim}")
+                    # print(f"h_latent_dim: {self.h_latent_dim}, w_latent_dim: {self.w_latent_dim}")
 
                 tokens = input_ids[0][self.image_start_token_id_index + 3 :]
                 if (len(tokens) + 1) % (self.w_latent_dim + 1) == 0:
                     new_line_constrained_scores = torch.full_like(scores, -math.inf)
                     new_line_constrained_scores[:, self.image_next_line_token_id] = 0
-                    print(f"new line: {len(tokens)+1}")
+                    # print(f"new line: {len(tokens)+1}")
                     return new_line_constrained_scores
                 elif (len(tokens) + 1) == (self.w_latent_dim + 1) * self.h_latent_dim + 1:
                     eos_image_constrained_scores = torch.full_like(scores, -math.inf)
                     eos_image_constrained_scores[:, self.image_end_token_id] = 0
-                    print(f"eos image: {len(tokens)+1}")
+                    # print(f"eos image: {len(tokens)+1}")
                     return eos_image_constrained_scores
                 elif (len(tokens) + 1) % (self.w_latent_dim + 1) != 0:
                     image_constrained_scores = torch.where(self.suppress_token_mask, -float("inf"), scores)
@@ -301,10 +301,11 @@ class FlexARInferenceSolver:
 
         if logits_processor is None:
             logits_processor = self.create_logits_processor()
+            
+        accept_list = []
 
         with torch.amp.autocast('cuda', dtype=self.dtype):
-            start = time.time()
-            generation_result, accept_length_list = self.model.generate(
+            generation_result, latency, accept_list = self.model.generate(
                 prompt,
                 do_sample=True if temperature > 0 else False,
                 max_new_tokens=max_gen_len,
@@ -312,17 +313,15 @@ class FlexARInferenceSolver:
                 eos_token_id=[8710, 8196],
                 **kwargs,
             )
-            end = time.time()
             
-            step_compression = torch.tensor(accept_length_list, dtype=torch.float32).mean().item()
-            latency = end - start
-            print(f"Mean accept length: {step_compression:.4f} / Latency: {latency:.2f}s")
+            # step_compression = torch.tensor(accept_length_list, dtype=torch.float32).mean().item()
+            # print(f"Mean accept length: {step_compression:.4f} / Latency: {latency:.2f}s")
 
             generation_result = generation_result[0][prompt_len:].tolist()
             if len(generation_result) > 0 and generation_result[-1] == 8710:
                 generation_result = generation_result[:-1]
 
-        return generation_result, step_compression, latency
+        return generation_result, latency, accept_list
 
     def decode_ids(self, tokens: List[int]):
         generated_images = []

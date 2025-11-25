@@ -945,21 +945,21 @@ class Model(nn.Module):
         logits = logits_processor(None, logits)
         probabilities = torch.nn.functional.softmax(logits, dim=1)
         bias = []
-        # masked_logits = logits
-        # masked_logits[masked_logits == float('-inf')] = 0.0
-        # masked_logits = masked_logits.to(torch.float32)
-        # normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+        masked_logits = logits
+        masked_logits[masked_logits == float('-inf')] = 0.0
+        masked_logits = masked_logits.to(torch.float32)
+        normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
         
-        # if normalized.shape[0] > 1 :
-        #     # Compute cosine similarity matrix: [B, B]
-        #     cosine_sim_matrix = torch.matmul(normalized, normalized.T)
-        #     # Keep scores where similarity > threshold
-        #     high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
-        #     # Get indices
-        #     rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
-        #     for r,c in zip(rows.tolist(), cols.tolist()):
-        #         if r != c:
-        #             bias.append((r,c))
+        if normalized.shape[0] > 1 :
+            # Compute cosine similarity matrix: [B, B]
+            cosine_sim_matrix = torch.matmul(normalized, normalized.T)
+            # Keep scores where similarity > threshold
+            high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
+            # Get indices
+            rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+            for r,c in zip(rows.tolist(), cols.tolist()):
+                if r != c:
+                    bias.append((r,c))
             # sns.heatmap(cosine_sim_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, vmin=0,  vmax=1.0)
             # Compute L2 distance between each consecutive pair
             # l2_distances = torch.norm(normalized[1:] - normalized[:-1], dim=1)  # shape: [B-1]

@@ -274,7 +274,7 @@ class MultiModalLogitsProcessor(LogitsProcessor):
         elif self.num_image_start_tokens == self.num_image_end_tokens + 1:
             if self.image_start_token_id_index is None:
                 self.image_start_token_id_index = torch.where(input_ids[0] == self.image_start_token_id)[0]
-                print(self.image_start_token_id_index)
+                # print(self.image_start_token_id_index)
                 self.image_start_token_id_index = torch.where(input_ids[0] == self.image_start_token_id)[0][-1].item()
 
             new_token_num = len(input_ids[0][self.image_start_token_id_index + 1 :])
@@ -287,18 +287,18 @@ class MultiModalLogitsProcessor(LogitsProcessor):
                     )
                     # print(f"h_grids: {h_grids}, w_grids: {w_grids}")
                     self.h_latent_dim, self.w_latent_dim = h_grids * 2, w_grids * 2
-                    print(f"h_latent_dim: {self.h_latent_dim}, w_latent_dim: {self.w_latent_dim}")
+                    # print(f"h_latent_dim: {self.h_latent_dim}, w_latent_dim: {self.w_latent_dim}")
 
                 tokens = input_ids[0][self.image_start_token_id_index + 3 :]
                 if (len(tokens) + 1) % (self.w_latent_dim + 1) == 0:
                     new_line_constrained_scores = torch.full_like(scores, -math.inf)
                     new_line_constrained_scores[:, self.image_next_line_token_id] = 0
-                    print(f"new line: {len(tokens)+1}")
+                    # print(f"new line: {len(tokens)+1}")
                     return new_line_constrained_scores
                 elif (len(tokens) + 1) == (self.w_latent_dim + 1) * self.h_latent_dim + 1:
                     eos_image_constrained_scores = torch.full_like(scores, -math.inf)
                     eos_image_constrained_scores[:, self.image_end_token_id] = 0
-                    print(f"eos image: {len(tokens)+1}")
+                    # print(f"eos image: {len(tokens)+1}")
                     return eos_image_constrained_scores
                 elif (len(tokens) + 1) % (self.w_latent_dim + 1) != 0:
                     image_constrained_scores = torch.where(self.suppress_token_mask, -float("inf"), scores)
@@ -460,7 +460,7 @@ class FlexARInferenceSolver:
 
             step_compression = 1.0 
             latency = end - start
-            print(f"Latency: {latency:.2f}s")
+            # print(f"Latency: {latency:.2f}s")
 
             generation_result = generation_result[0][prompt_len:].tolist()
             if len(generation_result) > 0 and generation_result[-1] == 8710:
@@ -469,38 +469,67 @@ class FlexARInferenceSolver:
         if tqdm_loggers is not None:
             tqdm_loggers[0].close()
 
-        return generation_result, step_compression, latency
+        return generation_result, latency, torch.tensor([step_compression] * max_gen_len) 
+
+    # def decode_ids(self, tokens: List[int]):
+    #     generated_images = []
+    #     generation_result_processed = []
+        
+    #     image_start_token_id = self.item_processor.token2id(self.item_processor.image_start_token)
+    #     image_end_token_id = self.item_processor.token2id(self.item_processor.image_end_token)
+    #     tokens[-1]= image_end_token_id
+
+    #     i = 0
+    #     while i < len(tokens):
+    #         token_id = tokens[i]
+    #         if token_id == image_start_token_id:
+    #             cache = []
+    #             for j in range(i + 1, len(tokens)):
+    #                 if tokens[j] != image_end_token_id:
+    #                     cache.append(tokens[j])
+    #                     i = j + 1
+    #                 else:
+    #                     image = self.decode_image(cache)
+    #                     generated_images.append(image)
+    #                     generation_result_processed.append(self.item_processor.token2id("<|image|>"))
+    #                     i = j + 1
+    #                     break
+    #         else:
+    #             generation_result_processed.append(token_id)
+    #             i += 1
+        
+    #     generated = self.item_processor.tokenizer.decode(generation_result_processed)
+
+    #     return generated, generated_images
 
     def decode_ids(self, tokens: List[int]):
         generated_images = []
         generation_result_processed = []
-        
-        image_start_token_id = self.item_processor.token2id(self.item_processor.image_start_token)
-        image_end_token_id = self.item_processor.token2id(self.item_processor.image_end_token)
-
         i = 0
+        
+        # tokens.append(self.item_processor.token2id(self.item_processor.image_end_token))
         while i < len(tokens):
             token_id = tokens[i]
-            if token_id == image_start_token_id:
-                cache = []
-                for j in range(i + 1, len(tokens)):
-                    if tokens[j] != image_end_token_id:
-                        cache.append(tokens[j])
-                        i = j + 1
-                    else:
-                        image = self.decode_image(cache)
-                        generated_images.append(image)
-                        generation_result_processed.append(self.item_processor.token2id("<|image|>"))
-                        i = j + 1
-                        break
+            if token_id == self.item_processor.token2id(self.item_processor.image_start_token):
+                # image_start_token 이후의 index를 찾음
+                start_idx = i + 1
+                try:
+                    end_idx = tokens.index(self.item_processor.token2id(self.item_processor.image_end_token), start_idx)
+                    cache = tokens[start_idx:end_idx]  # O(1) slicing
+                    image = self.decode_image(cache)
+                    generated_images.append(image)
+                    generation_result_processed.append(self.item_processor.token2id("<|image|>"))
+                    i = end_idx + 1  # image_end_token 다음 위치로 이동
+                except ValueError:
+                    break  # image_end_token이 없으면 종료
             else:
                 generation_result_processed.append(token_id)
                 i += 1
-        
+
         generated = self.item_processor.tokenizer.decode(generation_result_processed)
-
+        
         return generated, generated_images
-
+    
     def decode_image(self, tokens: List[int]):
         return self.item_processor.decode_image(tokens)
 
