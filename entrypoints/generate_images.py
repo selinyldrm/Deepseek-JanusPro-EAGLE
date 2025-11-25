@@ -213,7 +213,7 @@ def load_prompts(args):
     #     data = json.load(f)
     # prompts = [entry["prompt"] for entry in data.values()]
     
-    return prompts[:1000]
+    return prompts[]
 
 def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path, test, relaxed, **kwargs):
     # print(f"Generating image for prompt: {prompt}")
@@ -506,7 +506,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
 
             global_acceptance = torch.cat(all_gathered_acceptance)
             global_acceptance = global_acceptance[global_acceptance >= 0]
-            avg_acceptance = global_acceptance.sum().item()/1000.0
+            avg_acceptance = global_acceptance.sum().item()/5000.0
             print(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
             plt.scatter(range(len(global_acceptance)), global_acceptance, marker='o', label=f"Acceptance of {total_prompt_count} Images with avg={avg_acceptance:.2f}")
             plt.xlabel("Generation Index")
