@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--feature_layer_indices', type=int, nargs='+', default=[0, 1, 2], 
                         help="Hidden layer indices to extract for Eagle3 mode (default: [0, 1, 2])")
     parser.add_argument('--start', type=int, default=0)
-    parser.add_argument('--end', type=int, default=500000)
+    parser.add_argument('--end', type=int, default=100000)
 
     return parser
 
@@ -43,8 +43,24 @@ class SupervisedDataset(Dataset):
                     ...
                 ]
             """
-            with open(data_path, 'r') as f:
-                self.dataset = json.load(f)
+            # with open(data_path, 'r') as f:
+            #     self.dataset = json.load(f)
+            # [SY]: Lumina adjustment
+            self.dataset = []
+            files = sorted([f for f in os.listdir(data_path) if f.endswith('.npz')])
+            for fname in files:
+                path = os.path.join(data_path, fname)
+                with np.load(path, allow_pickle=True) as npz:
+                    prompt = npz["prompt"].copy()
+                    output = npz["output"].copy()
+
+                    # now npz is closed, but arrays are in RAM
+                    self.dataset.append({
+                        "prompt_token_ids": prompt,
+                        "out_token_ids": output
+                    })
+                
+                
         elif "llamagen" in self.model:
             self.code_data = sorted(os.listdir(os.path.join(data_path, "codes")))
             self.text_data = sorted(os.listdir(os.path.join(data_path, "text_features")))
@@ -66,6 +82,7 @@ class SupervisedDataset(Dataset):
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
         if self.model == "lumina_mgpt" or self.model == "anole":
+           
             return {"prompt_token_ids" : torch.tensor(self.dataset[i]["prompt_token_ids"]).long().unsqueeze(0),
                     "out_token_ids": torch.tensor(self.dataset[i]["out_token_ids"]).long().unsqueeze(0)}
         elif "llamagen" in self.model:
@@ -127,8 +144,13 @@ def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=N
             print(data['out_token_ids'][0][:3])
             return None
 
-        prompt_token_ids = data["prompt_token_ids"]
-        out_token_ids = data["out_token_ids"]
+        prompt_token_ids = data["prompt_token_ids"][0][0]
+        
+        out_token_ids = data["out_token_ids"][0]
+        print("prompt_token_ids: ", prompt_token_ids.shape)
+        print("out_token_ids: ", out_token_ids.shape)
+        print("prompt_token_ids: ", prompt_token_ids)
+        print("out_token_ids: ", out_token_ids)
 
         cond_input_ids = torch.cat([prompt_token_ids, out_token_ids], dim=-1)
         cond_outputs = model(input_ids=cond_input_ids.cuda(), output_hidden_states=True)

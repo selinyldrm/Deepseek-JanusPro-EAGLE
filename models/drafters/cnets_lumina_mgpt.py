@@ -936,8 +936,25 @@ def repeat_hidden(hidden_states, num_repeat):
 def sample(logits, k=1):
     # logits : logits after logit processors
     # k : number of samples to be sampled
-
     probabilities = torch.nn.functional.softmax(logits, dim=-1)
+    
+    bias = []
+    masked_logits = logits
+    masked_logits[masked_logits == float('-inf')] = 0.0
+    masked_logits = masked_logits.to(torch.float32)
+    normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+    
+    if normalized.shape[0] > 1 :
+        # Compute cosine similarity matrix: [B, B]
+        cosine_sim_matrix = torch.matmul(normalized, normalized.T)
+        # Keep scores where similarity > threshold
+        high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
+        # Get indices
+        rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+        for r,c in zip(rows.tolist(), cols.tolist()):
+            if r != c:
+                bias.append((r,c))
+        
     sampled_indices = torch.multinomial(probabilities, k, replacement=False)
     sampled_probs = torch.gather(probabilities, -1, sampled_indices)
 
@@ -952,7 +969,7 @@ def sample(logits, k=1):
 
     sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
 
-    return sampled_indices, sampled_probs, probabilities
+    return sampled_indices, sampled_probs, probabilities, bias
 
 class Model(nn.Module):
     def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=5, top_k=8, threshold=1.0, embed_upscale=1.0):
@@ -1157,6 +1174,7 @@ class Model(nn.Module):
         
         # Initalize the corresponding variables for each tree type
         input_ids = input_ids[:, 1:].to(hidden_states.device) # [1, 45] -> [2, 45]
+        bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
         if tree_type == "static":
             ss_token, ss_prob, ss_original_prob = [], [], []
         else:
@@ -1244,7 +1262,9 @@ class Model(nn.Module):
         
         for i in range(num_iterations):
             if tree_type == "static":
-                topk_index, topk_prob, original_prob = sample(last_headout, k=self.top_k)
+                topk_index, topk_prob, original_prob, bias = sample(last_headout, k=self.top_k)
+                bias_list[i] = bias
+                 
                 ss_token.append(topk_index)
                 ss_prob.append(topk_prob)
                 ss_original_prob.append(original_prob)
@@ -1320,12 +1340,13 @@ class Model(nn.Module):
                 tree_mask = torch.cat((tree_mask[:, :, out_ids], self.tree_mask_init), dim=-1)
 
         if tree_type == "static":
-            topk_index, topk_prob, original_prob = sample(last_headout, k=self.top_k)
+            topk_index, topk_prob, original_prob, bias = sample(last_headout, k=self.top_k) 
+            bias_list[len(range(num_iterations))] = bias
             ss_token.append(topk_index)
             ss_prob.append(topk_prob)
             ss_original_prob.append(original_prob)
 
-            return (torch.cat(ss_token), torch.cat(ss_prob), ss_original_prob)
+            return (torch.cat(ss_token), torch.cat(ss_prob), ss_original_prob), bias_list # [SY]
         else:
             scores_list = torch.cat(scores_list, dim=0).view(-1)
             ss_token_list = torch.cat(ss_token, dim=0).view(-1)
@@ -1390,4 +1411,4 @@ class Model(nn.Module):
             del mask_index, mask_index_list, noleaf_index, noleaf_num, leaf_num, max_depth, rid
             tree_position_ids = tree_position_ids.to(hidden_states.device)
 
-            return draft_tokens, retrieve_indices, tree_mask, tree_position_ids
+            return draft_tokens, retrieve_indices, tree_mask, tree_position_ids, bias_list

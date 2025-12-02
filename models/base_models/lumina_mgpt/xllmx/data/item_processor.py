@@ -194,7 +194,7 @@ class MMConvItemProcessor(ItemProcessorBase):
     def process_item(self, data_item: dict, training_mode=False) -> Tuple[List, List]:
         data_item = self.preprocess_item(data_item)
 
-        d_media = self.collect_and_process_media(data_item)
+        d_media = self.collect_and_process_media(data_item) # fetches the image path
 
         source = data_item["conversations"]
 

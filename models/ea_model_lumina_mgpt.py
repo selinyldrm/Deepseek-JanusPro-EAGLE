@@ -12,6 +12,7 @@ import numpy as np
 import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from transformers.generation.logits_process import LogitsProcessor, LogitsWarper
+import torch.nn.functional as F
 
 from .kv_variants.modeling_lumina_mgpt_kv import ChameleonForConditionalGeneration as KVChameleonForConditionalGeneration
 from .drafters.cnets_lumina_mgpt import Model
@@ -257,6 +258,10 @@ def generate_tree_buffers(tree_choices, device="cuda"):
                     iblist.append(b)
         b_indices_new.append(iblist)
 
+    # [SY]
+    levels = torch.unique(tree_position_ids)
+    per_level_node_counts = {int(level.item()): int((tree_position_ids == level).nonzero(as_tuple=True)[0][0]) for level in levels}
+    
     # Aggregate the generated buffers into a dictionary
     tree_buffers = {
         "tree_attn_mask": tree_attn_mask.unsqueeze(0).unsqueeze(0),
@@ -272,6 +277,7 @@ def generate_tree_buffers(tree_choices, device="cuda"):
         else torch.tensor(v, device=device)
         for k, v in tree_buffers.items()
     }
+    tree_buffers["per_level_node_counts"] = per_level_node_counts # [SY]
     tree_buffers["p_indices"] = p_indices_new
     tree_buffers["b_indices"] = b_indices_new
     return tree_buffers
@@ -506,7 +512,7 @@ class EaLumina_mGPT(nn.Module):
             self.ea_layer.init_tree()
         
         # use internal logits processors for drafter
-        output = self.ea_layer.topK_generate(
+        output, bias_list = self.ea_layer.topK_generate(
             hidden_states=hidden_states,
             uncond_hidden_states=uncond_hidden_states,
             input_ids=input_ids,
@@ -517,9 +523,9 @@ class EaLumina_mGPT(nn.Module):
         )
 
         if self.eagle_version == 1:
-            return output, token
+            return output, token, bias_list
         else:
-            return output
+            return output, bias_list
 
     # Only for EAGLE v1
     def generate_candidates(self, tree_logits, tree_indices, retrieve_indices, sample_token):
@@ -607,7 +613,8 @@ class EaLumina_mGPT(nn.Module):
         logits = cfg_tree_logits[retrieve_indices]
         return logits, hidden_states, uncond_hidden_states
 
-    def evaluate_posterior(self, logits, candidates, cart_candidates_prob=None, original_prob=None,
+    def evaluate_posterior(self, bias_list, l_node_counts,logits, tree_logits, retrieve_indices, 
+                            candidates, cart_candidates_prob=None, original_prob=None,
                             p_indices=None, tree_candidates=None, b_indices=None,
                             do_sample=True, lantern=False, lantern_k=1000, lantern_delta=0.1):
         if do_sample:
@@ -637,6 +644,12 @@ class EaLumina_mGPT(nn.Module):
                 gtp = torch.softmax(gt_logits, dim=0)
                 
                 candidates_set = []
+                
+                m_bias_list = None
+                past_nodes = l_node_counts[i]
+                if i < len(bias_list) and len(bias_list[i]):
+                    m_bias_list = copy.deepcopy(bias_list[i])
+                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
 
                 # for-loop within a level
                 for j in range(candidates.shape[0]):
@@ -658,23 +671,53 @@ class EaLumina_mGPT(nn.Module):
                             # reject immediately
                             px = 0.0
                         else:
-                            if lantern:
-                                nearest_probs = gtp[self.nearest_latents[xi - self.image_token_offset, :lantern_k]+self.image_token_offset].reshape(lantern_k, 1)
-                                cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
+                            accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
+                            accept_length_fake =  accept_length + 1
+                            is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
+                            # fi = list(IDs of only TRUE branches)
+                            fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
+                            # print("fi_fake: ", fi_fake)
+                            # target logits of the nodes on the candidate sequences returned True by fi and current depth
+                            gt_logits_fake = logits[fi_fake, i][None]
+                            normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
+                            normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
+                            lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                            if lev_sim_score > 0.625 :
+                                px +=  r * lev_sim_score 
+                            
+                            # curr_tree_node_idx = retrieve_indices[j,i]
+                            # # add KL divergence of draft and target
+                            # curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
+                            # if curr_draft_logits.shape[0] != 1 :
+                            #     curr_draft_logits = curr_draft_logits[0]
+                            # if curr_draft_logits.dim == 1 :
+                            #     curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                            # kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
+                        
+                            # if m_bias_list is not None:
+                            #     if kl_draft < 2.0 :
+                            #         for bias_idx, tpl in enumerate(m_bias_list) :
+                            #             id1,id2 = tpl
+                            #             if id1 == curr_tree_node_idx:
+                            #                 similar_xi = tree_candidates[0][id2]
+                            #                 px += r * gtp[similar_xi]
+                            # if lantern:
+                            #     nearest_probs = gtp[self.nearest_latents[xi - self.image_token_offset, :lantern_k]+self.image_token_offset].reshape(lantern_k, 1)
+                            #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
 
-                                if lantern_delta > 1.0:
-                                    indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
-                                else:
-                                    indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
+                            #     if lantern_delta > 1.0:
+                            #         indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
+                            #     else:
+                            #         indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
                                 
-                                if indices.numel() == 0:
-                                    indices = -1
-                                else:
-                                    indices = indices[-1]
-                                if indices == -1:
-                                    px = px
-                                else:
-                                    px = px + cumsum_nearest_probs[indices]
+                            #     if indices.numel() == 0:
+                            #         indices = -1
+                            #     else:
+                            #         indices = indices[-1]
+                            #     if indices == -1:
+                            #         px = px
+                            #     else:
+                            #         px = px + cumsum_nearest_probs[indices]
                         
                         if self.eagle_version == 1:
                             qx = cart_candidates_prob[j, i]
@@ -701,9 +744,9 @@ class EaLumina_mGPT(nn.Module):
                                     q[mask] = 0
                                     q = q / q.sum()
                             
-                            if lantern and (xi in self.image_tokens):
-                                if (indices != -1):
-                                    gtp[self.nearest_latents[xi-self.image_token_offset, :lantern_k+1]+self.image_token_offset] = 0
+                            # if lantern and (xi in self.image_tokens):
+                                # if (indices != -1):
+                                #     gtp[self.nearest_latents[xi-self.image_token_offset, :lantern_k+1]+self.image_token_offset] = 0
                             
                             if self.eagle_version == 1:
                                 gtp = gtp - q
@@ -784,7 +827,7 @@ class EaLumina_mGPT(nn.Module):
             token = torch.argmax(prob)
             token = token[None, None]
         
-        output = self.ea_layer.topK_generate(
+        output, bias_list = self.ea_layer.topK_generate(
             hidden_states=accept_hidden_states_new,
             uncond_hidden_states=accept_uncond_hidden_states_new,
             input_ids=torch.cat((input_ids, token.to(input_ids.device)), dim=-1),
@@ -796,7 +839,7 @@ class EaLumina_mGPT(nn.Module):
 
         new_token += accept_length + 1
 
-        return input_ids, output, new_token, token
+        return input_ids, output, new_token, token, bias_list
 
     @torch.no_grad()
     def generate(
@@ -910,9 +953,10 @@ class EaLumina_mGPT(nn.Module):
         accept_list = []
         if self.cfg_mode == "parallel":
             input_ids = input_ids.repeat(2, 1)
-        
+            
+        bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
         if self.eagle_version == 1:
-            tree_logits, sample_token = self.initialize_tree(
+            tree_logits, sample_token, init_bias_list = self.initialize_tree(
                 input_ids=input_ids,
                 attention_mask=attn_mask,
                 tree_attn_mask=tree_buffers["tree_attn_mask"],
@@ -921,6 +965,7 @@ class EaLumina_mGPT(nn.Module):
             )
             tree_position_ids = tree_buffers["tree_position_ids"]
             retrieve_indices = tree_buffers["retrieve_indices_head"]
+            bias_list = init_bias_list
 
         else:
             tree_candidates, retrieve_indices, tree_mask, tree_position_ids = self.initialize_tree(
@@ -971,7 +1016,11 @@ class EaLumina_mGPT(nn.Module):
                 b_indices = None
 
             best_candidate, accept_length, sample_p = self.evaluate_posterior(
-                logits=logits,
+                bias_list,
+                tree_buffers["per_level_node_counts"],
+                logits,
+                tree_logits,
+                tree_buffers["retrieve_indices"],
                 candidates=candidates,
                 cart_candidates_prob=cart_candidates_prob,
                 original_prob=original_prob,
@@ -985,7 +1034,7 @@ class EaLumina_mGPT(nn.Module):
             )
             accept_list.append(accept_length)
 
-            input_ids, output, new_token, sample_token = self.update_inference_inputs(
+            input_ids, output, new_token, sample_token, new_bias_list = self.update_inference_inputs(
                 input_ids=input_ids,
                 attention_mask=attn_mask,
                 candidates=candidates,
@@ -1000,13 +1049,13 @@ class EaLumina_mGPT(nn.Module):
                 uncond_hidden_states_new=uncond_hidden_states_new,
                 sample_p=sample_p
             )
-
             if self.eagle_version == 1:
                 tree_logits = output
             else:
                 tree_candidates, retrieve_indices, tree_mask, tree_position_ids = output
                 if self.cfg_mode == "parallel":
                     tree_mask = tree_mask.repeat(2, 1, 1, 1)
+            bias_list = new_bias_list
             
             # accept_length_list.append(accept_length+1)
             pbar.update(accept_length+1)

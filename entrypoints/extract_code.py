@@ -66,8 +66,26 @@ def center_crop_arr(pil_image, image_size):
 class SupervisedDataset(Dataset):
     def __init__(self, data_path, transform=None):
         super(SupervisedDataset, self).__init__()
-        self.images = sorted([d for d in os.listdir(data_path) if d.endswith(".jpg")])
-        self.captions = sorted([d for d in os.listdir(data_path) if d.endswith(".txt")])
+        # [SY] for lumina
+        with open(data_path, "r", encoding="utf-8") as f:
+            data_list = json.load(f)
+        # extract captions and image paths
+        self.captions = []
+        self.images = []
+
+        for entry in data_list:
+            # the human message text
+            human_msgs = [c["value"] for c in entry["conversations"] if c["from"] == "human"]
+            # for single-turn datasets, there is usually only one human message
+            caption = human_msgs[0] if human_msgs else ""
+            self.captions.append(caption)
+
+            # image paths (list) — keep as is
+            img_paths = entry.get("image", [])
+            # for single image per entry, pick first one
+            self.images.append(img_paths[0] if img_paths else None)
+        # self.images = sorted([d for d in os.listdir(data_path) if d.endswith(".jpg")])
+        # self.captions = sorted([d for d in os.listdir(data_path) if d.endswith(".txt")])
         self.base_path = data_path
         self.transform = transform
         
@@ -75,12 +93,14 @@ class SupervisedDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
-        assert self.images[i].split(".")[0] == self.captions[i].split(".")[0]
-        img = Image.open(os.path.join(self.base_path, self.images[i])).convert("RGB")
-        caption = open(os.path.join(self.base_path, self.captions[i])).read().strip()
-        if self.transform is not None:
-            img = self.transform(img)
-        return {"image": img, "caption": caption}
+        # assert self.images[i].split(".")[0] == self.captions[i].split(".")[0]
+        # img = Image.open(os.path.join(self.base_path, self.images[i])).convert("RGB")
+        # img = open(os.path.join(self.base_path, self.images[i])).read().strip() # [SY] images are path in lumina gpt dataset !
+        # caption = open(os.path.join(self.base_path, self.captions[i])).read().strip()
+        # if self.transform is not None: 
+        #     img = self.transform(img)
+        # [SY]
+        return {"image": self.images[i], "caption": self.captions[i]}
         
 
     def shuffle(self, seed: Optional[int] = None):
@@ -125,18 +145,25 @@ def generate_data_anole(vq_model, tokenizer, data, device):
         "out_token_ids": indices
     }
     
-def writedata(name, data_point, idx):
-    if not os.path.exists(name):
-        os.makedirs(name)
+def writedata(pathname, data_point, idx):
+    if not os.path.exists(pathname):
+        os.makedirs(pathname)
     # current_length=len(os.listdir(os.path.join(name, "codes")))
     # idx=current_length
     # if idx == 0 :
     #     print("data_point['caption_emb']: ", data_point['caption_emb'])
     #     print("data_point['codes']: ", data_point['codes'])
-    np.save(os.path.join(name, os.path.join("text_features", f"{idx}.npy")), data_point['caption_emb'])
-    np.save(os.path.join(name, os.path.join("codes", f"{idx}.npy")), data_point['codes'].cpu())
-
-
+  
+    # np.save(os.path.join(name, os.path.join("text_features", f"{idx}.npy")), data_point['caption_emb'])
+    # np.save(os.path.join(name, os.path.join("codes", f"{idx}.npy")), data_point['codes'].cpu())
+    # [SY]: For lumina
+    filename = os.path.join(pathname, f"{idx:06d}.npz")
+    np.savez(
+        filename,
+        prompt_token_ids=np.array(data_point["prompt_token_ids"], dtype=np.int32),
+        out_token_ids=np.array(data_point["out_token_ids"], dtype=np.int32)
+    )
+    
 def run_extract_code(args):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -155,7 +182,7 @@ def run_extract_code(args):
     index_start = args.start
     index_end = args.end
     ds = ds.select(range(index_start, index_end))
-    ds = ds.shuffle(seed=42)
+    # ds = ds.shuffle(seed=42)
     if "llamagen" in args.model:
         vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
         vq_model.to(device)
@@ -208,6 +235,45 @@ def run_extract_code(args):
             outdata_list.append(outdata)
         with open(os.path.join(args.output_dir, "data.json"), "w") as f:
             json.dump(outdata_list, f)
+    elif args.model == "lumina_mgpt":  # [SY] : I added this for drafter training.
+        from models.base_models.lumina_mgpt.item_processor import FlexARItemProcessor # process_image, process_item
+        item_proc = FlexARItemProcessor(
+            tokenizer="/work1/deming/shared/lumina/Lumina-mGPT-7B-768",
+            base_path="/work1/deming/shared/lumina/Lumina-mGPT-7B-768"
+        )
+        
+        IMAGE_PLACEHOLDER = "<|image|>"
+        
+        for idx, data in enumerate(ds):
+            print("data : ", data.keys())
+            print("data['caption'] : ", data['caption'])
+            print("data['image'] : ", data['image'])
+            prompt_text = f"{data['caption']}"
+            conv = [
+                {"from": "human", "value": prompt_text},
+                {"from": "gpt", "value": IMAGE_PLACEHOLDER}
+            ]
+            
+            # # Create a valid conversation entry
+            img_path = os.path.join("/work1/deming/shared/", data["image"])
+            data_item = {
+                "conversations": conv,
+                "image": [img_path]
+            }
+
+            # Text prompt tokens (input)
+            prompt_token_ids = item_proc.process_item(data_item, training_mode=True)
+
+            # Image tokens (output)
+            image_tokens_dict = item_proc.process_image(img_path)
+
+            outdata = {
+                "prompt_token_ids": prompt_token_ids,
+                "out_token_ids": image_tokens_dict["input_ids"],
+            }
+    
+            writedata(args.output_dir, outdata, idx + index_start)
+        
     else:
         raise NotImplementedError(f"Model {args.model} not implemented yet")
 

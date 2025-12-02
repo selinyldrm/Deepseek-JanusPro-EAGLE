@@ -15,4 +15,5 @@ source /home1/seliny2/.bashrc
 conda activate lantern
 cd /work1/deming/seliny2/LANTERN
 HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python3 main.py extract_code --model llamagen2 --data_path /work1/deming/shared/relaion-coco --output_dir /work1/deming/shared/relaion-coco-tokenized --start 2200000 --end 2300000
+# python3 main.py extract_code --model lumina_mgpt --data_path /work1/deming/shared/relaion-coco --output_dir /work1/deming/shared/lumina/relaion-coco-tokenized --start 100000 --end 200000
+python3 main.py extract_code --model lumina_mgpt --output_dir /work1/deming/shared/lumina/relaion-tokenized --data_path /work1/deming/shared/lumina/relaion-clean.json --start 100000 --end 200000 --num_samples 500000
