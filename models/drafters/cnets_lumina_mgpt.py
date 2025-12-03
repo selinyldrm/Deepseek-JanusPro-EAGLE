@@ -941,7 +941,7 @@ def sample(logits, k=1):
     bias = []
     masked_logits = logits
     masked_logits[masked_logits == float('-inf')] = 0.0
-    topk_vals, topk_idx = torch.topk(logits, 500, dim=-1)
+    topk_vals, topk_idx = torch.topk(logits, 16384, dim=-1)
     masked_logits = topk_vals.to(torch.float32)
     normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
     
@@ -1176,6 +1176,8 @@ class Model(nn.Module):
         # Initalize the corresponding variables for each tree type
         input_ids = input_ids[:, 1:].to(hidden_states.device) # [1, 45] -> [2, 45]
         bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        filtered_logits = None
         if tree_type == "static":
             ss_token, ss_prob, ss_original_prob = [], [], []
         else:
@@ -1263,6 +1265,7 @@ class Model(nn.Module):
         
         for i in range(num_iterations):
             if tree_type == "static":
+                filtered_logits = last_headout
                 topk_index, topk_prob, original_prob, bias = sample(last_headout, k=self.top_k)
                 bias_list[i] = bias
                  
@@ -1283,6 +1286,7 @@ class Model(nn.Module):
                 position_ids = len_posi + self.tree_buffer["position_ids"][i]
                 self.tree_mask = self.tree_buffer['attn_mask'][i]
                 self.tree_mask = torch.cat((self.tree_mask, self.tree_mask), dim=0)
+                
             else:
                 position_ids = len_posi + self.position_ids
                 self.tree_mask = tree_mask
@@ -1318,6 +1322,23 @@ class Model(nn.Module):
             # InterleavedTopKLogitsWarper
             last_headout = logits_processors[1](last_headout)
             
+            # [SY]: [1, 16384] --> [5, 16384]
+            filtered_logits[filtered_logits == float('-inf')] = 0.0
+            filtered_logits = filtered_logits.to(torch.float32)
+            normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
+            
+            # [5, 16384] --> [7, 16384]
+            last_headout_modified = last_headout.clone()
+            last_headout_modified[last_headout_modified == float('-inf')] = 0.0
+            curr_logits = last_headout_modified.to(torch.float32)
+            normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
+            
+            # [1,5], [5,7] etc..
+            cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
+            # Now in [0, 1] --> combined with l2 later
+            cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
+            bias_level_list[i].append(cosine_sim_matrix)
+            
             if tree_type == "static":
                 pass
             else:
@@ -1347,7 +1368,7 @@ class Model(nn.Module):
             ss_prob.append(topk_prob)
             ss_original_prob.append(original_prob)
 
-            return (torch.cat(ss_token), torch.cat(ss_prob), ss_original_prob), bias_list # [SY]
+            return (torch.cat(ss_token), torch.cat(ss_prob), ss_original_prob), bias_list, bias_level_list # [SY]
         else:
             scores_list = torch.cat(scores_list, dim=0).view(-1)
             ss_token_list = torch.cat(ss_token, dim=0).view(-1)

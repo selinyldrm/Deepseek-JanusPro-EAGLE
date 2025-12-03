@@ -18,6 +18,7 @@ from .kv_variants.modeling_lumina_mgpt_kv import ChameleonForConditionalGenerati
 from .drafters.cnets_lumina_mgpt import Model
 from .drafters.kv_cache import initialize_past_key_values
 from .drafters.choices import *
+from .drafters.utils import *
 
 from .configs.configs import EConfig
 
@@ -512,7 +513,7 @@ class EaLumina_mGPT(nn.Module):
             self.ea_layer.init_tree()
         
         # use internal logits processors for drafter
-        output, bias_list = self.ea_layer.topK_generate(
+        output, bias_list, level_bias_list = self.ea_layer.topK_generate(
             hidden_states=hidden_states,
             uncond_hidden_states=uncond_hidden_states,
             input_ids=input_ids,
@@ -523,7 +524,7 @@ class EaLumina_mGPT(nn.Module):
         )
 
         if self.eagle_version == 1:
-            return output, token, bias_list
+            return output, token, bias_list, level_bias_list
         else:
             return output, bias_list
 
@@ -613,7 +614,7 @@ class EaLumina_mGPT(nn.Module):
         logits = cfg_tree_logits[retrieve_indices]
         return logits, hidden_states, uncond_hidden_states
 
-    def evaluate_posterior(self, bias_list, l_node_counts,logits, tree_logits, retrieve_indices, 
+    def evaluate_posterior(self, bias_list, level_bias_list , l_node_counts,logits, tree_logits, retrieve_indices,
                             candidates, cart_candidates_prob=None, original_prob=None,
                             p_indices=None, tree_candidates=None, b_indices=None,
                             do_sample=True, lantern=False, lantern_k=1000, lantern_delta=0.1):
@@ -641,13 +642,29 @@ class EaLumina_mGPT(nn.Module):
                 fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
                 
                 gt_logits = logits[fi, i-1]
-                curr_topk_vals, _ = torch.topk(gt_logits, 100, dim=-1)
+                # curr_topk_vals, _ = torch.topk(gt_logits, 2000, dim=-1)
+                # curr_topk_vals_gtp  = torch.softmax(curr_topk_vals, dim=-1)
                 gtp = torch.softmax(gt_logits, dim=0)
+                
+                # # add KL divergence of draft and target
+                curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
+                if curr_draft_logits.shape[0] != 1 :
+                    curr_draft_logits = curr_draft_logits[0]
+                if curr_draft_logits.dim == 1 :
+                    curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                    
+                p = F.log_softmax(curr_draft_logits, dim=-1)
+                kl_draft = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q) for all 65k logits.
                 
                 candidates_set = []
                 
+                level_sim = None
                 m_bias_list = None
                 past_nodes = l_node_counts[i]
+                prev_past_nodes = l_node_counts[i-1]
+                if i < len(level_bias_list) and len(level_bias_list[i-1]):
+                    level_sim = level_bias_list[i-1][0]
+                
                 if i < len(bias_list) and len(bias_list[i]):
                     m_bias_list = copy.deepcopy(bias_list[i])
                     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
@@ -672,31 +689,34 @@ class EaLumina_mGPT(nn.Module):
                             # reject immediately
                             px = 0.0
                         else:
-                            accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
-                            accept_length_fake =  accept_length + 1
-                            is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                            # fi = list(IDs of only TRUE branches)
-                            fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                            # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                            gt_logits_fake_topk, _ = torch.topk(logits[fi_fake, i], 100, dim=-1)
-                            normalized_fake = F.normalize(gt_logits_fake_topk[None], dim=1, eps=1e-6).to(torch.float32)
+                            prev_acc_token = retrieve_indices[j,i-1]
+                            curr_tree_node_idx = retrieve_indices[j,i]
+                            if level_sim is not None:
+                                if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
+                                    lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
+                                    # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
+                                    # combined_score = (lev_sim_score + inv_l2_d) / 2
+                                    if lev_sim_score > 0.625 and kl_draft < 3.0 :
+                                        px +=  r * lev_sim_score
+                            # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
+                            # accept_length_fake =  accept_length + 1
+                            # is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
+                            # # fi = list(IDs of only TRUE branches)
+                            # fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
                             
-                            normalized_curr = F.normalize(curr_topk_vals[None], dim=1, eps=1e-6).to(torch.float32)
-                            lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
-                     
-                            
-                            # # add KL divergence of draft and target
-                            curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
-                            if curr_draft_logits.shape[0] != 1 :
-                                curr_draft_logits = curr_draft_logits[0]
-                            if curr_draft_logits.dim == 1 :
-                                curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                            # # target logits of the nodes on the candidate sequences returned True by fi and current depth
+                            # gt_logits_fake_topk, topk_index_tgt = torch.topk(logits[fi_fake, i], 2000, dim=-1)
+                            # # create masked logit vector filled with -inf
+                            # normalized_fake = F.normalize(gt_logits_fake_topk[None], dim=1, eps=1e-6).to(torch.float32)
+                            # normalized_curr = F.normalize(curr_topk_vals[None], dim=1, eps=1e-6).to(torch.float32)
+                            # lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                            # p = F.log_softmax(normalized_curr, dim=-1)
+                            # kl_target = F.kl_div(p, curr_topk_vals_gtp, reduction='batchmean')  # computes KL(P || Q)
+                            # if lev_sim_score > 0.625 and kl_target < 0.5 :
+                            #     px +=  r * lev_sim_score 
                                 
-                            p = F.log_softmax(curr_draft_logits, dim=-1)
-                            kl_draft = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q) for all 65k logits.
-                            if lev_sim_score > 0.9 and kl_draft < 0.9:
-                                px +=  r * lev_sim_score 
-                                                            
+                           
+                                                        
                             curr_tree_node_idx = retrieve_indices[j,i]
                             if m_bias_list is not None:
                                 if kl_draft < 1.0 :
@@ -831,7 +851,7 @@ class EaLumina_mGPT(nn.Module):
             token = torch.argmax(prob)
             token = token[None, None]
         
-        output, bias_list = self.ea_layer.topK_generate(
+        output, bias_list, level_bias_list = self.ea_layer.topK_generate(
             hidden_states=accept_hidden_states_new,
             uncond_hidden_states=accept_uncond_hidden_states_new,
             input_ids=torch.cat((input_ids, token.to(input_ids.device)), dim=-1),
@@ -843,7 +863,7 @@ class EaLumina_mGPT(nn.Module):
 
         new_token += accept_length + 1
 
-        return input_ids, output, new_token, token, bias_list
+        return input_ids, output, new_token, token, bias_list, level_bias_list
 
     @torch.no_grad()
     def generate(
@@ -959,8 +979,9 @@ class EaLumina_mGPT(nn.Module):
             input_ids = input_ids.repeat(2, 1)
             
         bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
+        level_bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices']))]
         if self.eagle_version == 1:
-            tree_logits, sample_token, init_bias_list = self.initialize_tree(
+            tree_logits, sample_token, init_bias_list, bias_level_list = self.initialize_tree(
                 input_ids=input_ids,
                 attention_mask=attn_mask,
                 tree_attn_mask=tree_buffers["tree_attn_mask"],
@@ -1021,6 +1042,7 @@ class EaLumina_mGPT(nn.Module):
 
             best_candidate, accept_length, sample_p = self.evaluate_posterior(
                 bias_list,
+                level_bias_list,
                 tree_buffers["per_level_node_counts"],
                 logits,
                 tree_logits,
@@ -1038,7 +1060,7 @@ class EaLumina_mGPT(nn.Module):
             )
             accept_list.append(accept_length)
 
-            input_ids, output, new_token, sample_token, new_bias_list = self.update_inference_inputs(
+            input_ids, output, new_token, sample_token, new_bias_list,new_level_bias_list = self.update_inference_inputs(
                 input_ids=input_ids,
                 attention_mask=attn_mask,
                 candidates=candidates,
@@ -1060,7 +1082,7 @@ class EaLumina_mGPT(nn.Module):
                 if self.cfg_mode == "parallel":
                     tree_mask = tree_mask.repeat(2, 1, 1, 1)
             bias_list = new_bias_list
-            
+            level_bias_list = new_level_bias_list
             # accept_length_list.append(accept_length+1)
             pbar.update(accept_length+1)
 

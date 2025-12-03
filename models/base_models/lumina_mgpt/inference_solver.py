@@ -480,18 +480,40 @@ class FlexARInferenceSolver:
             masked_logits = torch.stack(step_logits, dim=0).squeeze(1)
             print("masked_logits shape: ", (masked_logits.shape))
             
-            topk_vals, topk_idx = torch.topk(masked_logits, 500, dim=-1)
-            masked_logits = topk_vals
+            topk_vals, topk_idx = torch.topk(masked_logits, 2000, dim=-1)
+            logp = F.log_softmax(topk_vals, dim=-1)
+            logp_centered = logp - logp.mean(dim=-1, keepdim=True)
+            print("logp_centered shape: ", (logp_centered.shape))
+            proj_dim = 256
+            R = torch.randn(2000, proj_dim, device=topk_vals.device) / math.sqrt(4096)
+            projected = logp_centered @ R
+            cosine_sim_matrix = projected @ projected.T
+            
+            norms = torch.norm(projected, dim=-1, keepdim=True)
+            cos_centered = cosine_sim_matrix / (norms @ norms.T)
+
+            cosine_sim_matrix = cos_centered.to(torch.float32)
+            # masked_logits = topk_vals
+            # masked_logits = topk_vals.to(torch.float32)
+            # proj_size = 2048  # or 2048
+            # R = torch.randn(65536, proj_size, device=masked_logits.device) / math.sqrt(65536)
+
+            # projected = masked_logits @ R
+            # d = (projected[0] - projected[1]).abs().mean()
+            # print("avg logit diff:", d)
+
+            # print("projected: ", projected.shape)
             # masked_logits= logits_processor(prompt, masked_logits)
             # masked_logits[masked_logits == float('-inf')] = 0.0
-            # masked_logits = topk_vals.to(torch.float32)
+            # masked_logits = projected.to(torch.float32)
            
-            normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+            # normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+            
             # normalized = torch.gather(normalized, 1, topk_idx)
 
-            cosine_sim_matrix = torch.matmul(normalized, normalized.T).to(torch.float32) # 2352 vs 2352
+            # cosine_sim_matrix = torch.matmul(normalized, normalized.T).to(torch.float32) # 2352 vs 2352
             lower_tri = torch.tril(cosine_sim_matrix) # 2352 vs 2352
-            mean_val = lower_tri.sum() / (2352 * (2352 + 1) // 2)
+            mean_val = lower_tri.sum() / (cosine_sim_matrix.shape[0] * (cosine_sim_matrix.shape[0] + 1) // 2)
             cosine_sim_matrix = cosine_sim_matrix.cpu().numpy() # 2352 vs 2352
             import matplotlib.pyplot as plt
             import os
