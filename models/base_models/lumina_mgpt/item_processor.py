@@ -100,6 +100,10 @@ class FlexARItemProcessor(MMConvItemProcessor):
         # ckpt = torch.load(ckpt_path, map_location="cpu")
         # print(ckpt["state_dict"])
         
+        # print("image_start_token): ", self.token2id(self.image_start_token))
+        # print("image_end_token): ", self.token2id(self.image_end_token))
+        # print("new_line_token): ", self.token2id(self.new_line_token))
+        
         self.chameleon_ori_translation = VocabTranslation(self.chameleon_ori_vocab, device="cuda")
         self.chameleon_ori_image_tokenizer = ImageTokenizer(
             cfg_path=os.path.join(base_path, "/work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.yaml"),
@@ -141,6 +145,8 @@ class FlexARItemProcessor(MMConvItemProcessor):
             dim=1,
         ).flatten()
 
+        
+        
         result_toks = [
             self.token2id(self.image_start_token),
             self.token2id(self.get_n_grids_token(h_grids)),

@@ -1,33 +1,31 @@
-🔧 Loaded feature layer indices from config: [1, 17, 35]
-🔥 Eagle3 mode enabled: Generating multi-layer feature training data
-📊 Feature layer indices: [1, 17, 35]
-📁 Output directory: /work1/deming/shared/llamagen/selin-eagle3-train-data_eagle3
-(tensor([[[ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         ...,
-         [ 0.0581, -0.1016,  0.0037,  ...,  0.0884,  0.0879, -0.0396],
-         [ 0.1099, -0.0532, -0.0747,  ...,  0.1055,  0.1050,  0.0269],
-         [ 0.3477, -0.2578, -0.0625,  ..., -0.1143,  0.2344, -0.0085]]],
-       device='cuda:0', dtype=torch.bfloat16), tensor([[[ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         ...,
-         [ 0.7539, -0.3398, -1.6406,  ...,  2.0156, -0.2285,  0.8477],
-         [ 0.0566,  0.2578, -0.7031,  ...,  0.6719, -0.3652,  0.7031],
-         [ 0.4570, -0.4512, -2.5625,  ..., -0.0693, -0.7695, -1.3594]]],
-       device='cuda:0', dtype=torch.bfloat16), tensor([[[ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         ...,
-         [-1.1719,  8.8125, -4.3125,  ...,  7.0938, -5.3750,  1.9141],
-         [-3.5469,  3.2031,  0.3477,  ...,  2.5156, -8.2500, -5.6250],
-         [-1.3594, -0.3711,  6.1250,  ..., 11.1250, -3.8125, -2.9062]]],
-       device='cuda:0', dtype=torch.bfloat16), tensor([[[ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
-         ...,
-         [-0.4609,  0.4883, -0.1807,  ...,  0.6133, -0.0197, -0.4727],
-         [-1.3359,  0.2158,  1.0312,  ..., -0.1992, -0.0039, -1.0234],
-         [-0.8047,  0.0530,  1.3047,  ...,  1.0547,  0.3086, -0.3125]]],
-       device='cuda:0', dtype=torch.bfloat16))
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
+masked_logits shape:  torch.Size([2352, 65536])
+masked_logits logits_processed shape: torch.Size([2352, 65536])
+Row identical: False
+Total variance: 11.418408393859863
+Row variances: tensor([4.9546, 5.4678, 5.0957, 5.4452, 5.4751, 5.5527, 5.5404, 5.5152, 5.5019,
+        5.4403], device='cuda:0')
+Num zero rows: 0
+Shape: torch.Size([2352, 65536])
+Row identical: False
+Total variance: 7.634523626620648e-07
+Row variances: tensor([6.7597e-07, 6.8120e-07, 6.8730e-07, 6.8854e-07, 6.8199e-07, 6.8026e-07,
+        6.8269e-07, 6.7835e-07, 6.8241e-07, 6.7884e-07], device='cuda:0')
+Num zero rows: 0
+generate time=107.36123943328857 seconds
+
+masked_logits shape:  torch.Size([2352, 65536])
+masked_logits logits_processed shape: torch.Size([2352, 65536])
+Row identical: False
+Total variance: 11.65880012512207
+Row variances: tensor([4.9220, 5.1295, 5.2880, 5.2567, 5.5300, 4.7951, 4.6108, 4.3741, 4.7071,
+        4.8503], device='cuda:0')
+Num zero rows: 0
+Shape: torch.Size([2352, 65536])
+Row identical: False
+Total variance: 8.01135286110366e-07
+Row variances: tensor([6.7456e-07, 6.8020e-07, 7.0264e-07, 7.0766e-07, 6.9564e-07, 7.1498e-07,
+        7.2384e-07, 7.2835e-07, 7.6596e-07, 7.6810e-07], device='cuda:0')
+Num zero rows: 0
+generate time=106.50103688240051 seconds
+

@@ -641,6 +641,7 @@ class EaLumina_mGPT(nn.Module):
                 fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
                 
                 gt_logits = logits[fi, i-1]
+                curr_topk_vals, _ = torch.topk(gt_logits, 100, dim=-1)
                 gtp = torch.softmax(gt_logits, dim=0)
                 
                 candidates_set = []
@@ -676,31 +677,34 @@ class EaLumina_mGPT(nn.Module):
                             is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
                             # fi = list(IDs of only TRUE branches)
                             fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                            # print("fi_fake: ", fi_fake)
                             # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                            gt_logits_fake = logits[fi_fake, i][None]
-                            normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
-                            normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
-                            lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
-                            if lev_sim_score > 0.625 :
-                                px +=  r * lev_sim_score 
+                            gt_logits_fake_topk, _ = torch.topk(logits[fi_fake, i], 100, dim=-1)
+                            normalized_fake = F.normalize(gt_logits_fake_topk[None], dim=1, eps=1e-6).to(torch.float32)
                             
-                            # curr_tree_node_idx = retrieve_indices[j,i]
+                            normalized_curr = F.normalize(curr_topk_vals[None], dim=1, eps=1e-6).to(torch.float32)
+                            lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                     
+                            
                             # # add KL divergence of draft and target
-                            # curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
-                            # if curr_draft_logits.shape[0] != 1 :
-                            #     curr_draft_logits = curr_draft_logits[0]
-                            # if curr_draft_logits.dim == 1 :
-                            #     curr_draft_logits = curr_draft_logits.unsqueeze(0)
-                            # kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
-                        
-                            # if m_bias_list is not None:
-                            #     if kl_draft < 2.0 :
-                            #         for bias_idx, tpl in enumerate(m_bias_list) :
-                            #             id1,id2 = tpl
-                            #             if id1 == curr_tree_node_idx:
-                            #                 similar_xi = tree_candidates[0][id2]
-                            #                 px += r * gtp[similar_xi]
+                            curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
+                            if curr_draft_logits.shape[0] != 1 :
+                                curr_draft_logits = curr_draft_logits[0]
+                            if curr_draft_logits.dim == 1 :
+                                curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                                
+                            p = F.log_softmax(curr_draft_logits, dim=-1)
+                            kl_draft = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q) for all 65k logits.
+                            if lev_sim_score > 0.9 and kl_draft < 0.9:
+                                px +=  r * lev_sim_score 
+                                                            
+                            curr_tree_node_idx = retrieve_indices[j,i]
+                            if m_bias_list is not None:
+                                if kl_draft < 1.0 :
+                                    for bias_idx, tpl in enumerate(m_bias_list) :
+                                        id1,id2 = tpl
+                                        if id1 == curr_tree_node_idx:
+                                            similar_xi = tree_candidates[0][id2]
+                                            px += r * gtp[similar_xi]
                             # if lantern:
                             #     nearest_probs = gtp[self.nearest_latents[xi - self.image_token_offset, :lantern_k]+self.image_token_offset].reshape(lantern_k, 1)
                             #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)

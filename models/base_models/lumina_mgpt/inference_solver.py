@@ -10,7 +10,7 @@ import torch
 import transformers
 from transformers import GenerationConfig, TextStreamer, StoppingCriteria, StoppingCriteriaList
 from transformers.generation.logits_process import LogitsProcessor, LogitsProcessorList, LogitsWarper
-
+import torch.nn.functional as F
 from .item_processor import FlexARItemProcessor
 from models.base_models.lumina_mgpt.modeling_lumina_mgpt import ChameleonForConditionalGeneration
 
@@ -397,6 +397,8 @@ class FlexARInferenceSolver:
     ):
 
         conversations = []
+        prompt_text = None
+        prefix = "Generate an image of 768x768 according to the following prompt:"
         for q, a in qas:
             conversations.append(
                 {
@@ -410,9 +412,19 @@ class FlexARInferenceSolver:
                     "value": a,
                 }
             )
+            
+
+            # split at the prefix
+            
+            parts = q.split(prefix, 1)  # split at first occurrence
+            # take the part after the prefix
+            cleaned = parts[1].strip() if len(parts) > 1 else s
+            prompt_text = cleaned
+            # print("prompt_text: ", prompt_text)
         item = {"image": images, "conversations": conversations}
 
         _prompt = self.item_processor.process_item(item)
+        
         prompt = []
         for value in _prompt:
             if isinstance(value, int):
@@ -439,6 +451,8 @@ class FlexARInferenceSolver:
             top_k=None, # top_k is handled by the logits_processor
             do_sample=True if temperature > 0 else False,
             eos_token_id=[8710],
+            output_logits=True, # [SY]: added for observing logit similarity in base model
+            return_dict_in_generate = True,
         )
 
         if logits_processor is None:
@@ -457,19 +471,65 @@ class FlexARInferenceSolver:
                 streamer=streamer, stopping_criteria=tqdm_loggers, attention_mask=attn_mask,
             )
             end = time.time()
+            # [SY]
+            generated_tokens = generation_result.sequences[0][prompt_len:].tolist()
+            count = generated_tokens.count(self.item_processor.token2id(self.item_processor.new_line_token))
+            # print("number of new line tokens: ", count)
+            step_logits = generation_result.logits[3:2355]  # [SY]: list of logit_processed logits for keeping only top-k predictions. helps fix 1.0 similarity
+            # print("logits len: ", len(step_logits))
+            masked_logits = torch.stack(step_logits, dim=0).squeeze(1)
+            print("masked_logits shape: ", (masked_logits.shape))
+            
+            topk_vals, topk_idx = torch.topk(masked_logits, 500, dim=-1)
+            masked_logits = topk_vals
+            # masked_logits= logits_processor(prompt, masked_logits)
+            # masked_logits[masked_logits == float('-inf')] = 0.0
+            # masked_logits = topk_vals.to(torch.float32)
+           
+            normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+            # normalized = torch.gather(normalized, 1, topk_idx)
+
+            cosine_sim_matrix = torch.matmul(normalized, normalized.T).to(torch.float32) # 2352 vs 2352
+            lower_tri = torch.tril(cosine_sim_matrix) # 2352 vs 2352
+            mean_val = lower_tri.sum() / (2352 * (2352 + 1) // 2)
+            cosine_sim_matrix = cosine_sim_matrix.cpu().numpy() # 2352 vs 2352
+            import matplotlib.pyplot as plt
+            import os
+            for row in range(48):
+                plt.imshow(cosine_sim_matrix[49*row:49*row+48, 49*row:49*row+48], cmap='coolwarm', vmin=0, vmax=1.0)
+                plt.colorbar()
+                plt.title(f"Cosine Similarity Between Logits")
+                plt.xlabel("Token Index (i)")
+                plt.ylabel("cosine_similarity")
+                plt.grid()
+                os.makedirs(f"/work1/deming/shared/lumina/similarity-analysis/logits/{prompt_text}/", exist_ok=True)
+                plt.savefig(f"/work1/deming/shared/lumina/similarity-analysis/logits/{prompt_text}/row-{row}.png")
+                plt.close()
+            plt.imshow(cosine_sim_matrix, cmap='coolwarm', vmin=0, vmax=1.0)
+            plt.colorbar()
+            plt.title(f"Cosine Similarity Between Logits, Avg={mean_val}")
+            plt.xlabel("Token Index (i)")
+            plt.ylabel("cosine_similarity")
+            plt.grid()
+            os.makedirs(f"/work1/deming/shared/lumina/similarity-analysis/logits/{prompt_text}/", exist_ok=True)
+            plt.savefig(f"/work1/deming/shared/lumina/similarity-analysis/logits/{prompt_text}/full.png")
+            plt.close()
+            
 
             step_compression = 1.0 
             latency = end - start
             # print(f"Latency: {latency:.2f}s")
 
-            generation_result = generation_result[0][prompt_len:].tolist()
-            if len(generation_result) > 0 and generation_result[-1] == 8710:
-                generation_result = generation_result[:-1]
+            # generation_result = generation_result[0][prompt_len:].tolist()
+            # if len(generation_result) > 0 and generation_result[-1] == 8710:
+            #     generation_result = generation_result[:-1]
+            if len(generated_tokens) > 0 and generated_tokens[-1] == 8710:
+                generated_tokens = generated_tokens[:-1]
 
         if tqdm_loggers is not None:
             tqdm_loggers[0].close()
 
-        return generation_result, latency, torch.tensor([step_compression] * max_gen_len) 
+        return generated_tokens, latency, torch.tensor([step_compression] * max_gen_len) 
 
     # def decode_ids(self, tokens: List[int]):
     #     generated_images = []

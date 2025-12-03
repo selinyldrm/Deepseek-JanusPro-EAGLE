@@ -941,7 +941,8 @@ def sample(logits, k=1):
     bias = []
     masked_logits = logits
     masked_logits[masked_logits == float('-inf')] = 0.0
-    masked_logits = masked_logits.to(torch.float32)
+    topk_vals, topk_idx = torch.topk(logits, 500, dim=-1)
+    masked_logits = topk_vals.to(torch.float32)
     normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
     
     if normalized.shape[0] > 1 :
