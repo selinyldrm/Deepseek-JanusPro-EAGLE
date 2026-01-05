@@ -696,7 +696,7 @@ class EaLumina_mGPT(nn.Module):
                                     lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
                                     # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                                     # combined_score = (lev_sim_score + inv_l2_d) / 2
-                                    if lev_sim_score > 0.625 and kl_draft < 3.0 :
+                                    if lev_sim_score > 0.625  and kl_draft < 1.0:
                                         px +=  r * lev_sim_score
                             # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
                             # accept_length_fake =  accept_length + 1
@@ -719,7 +719,7 @@ class EaLumina_mGPT(nn.Module):
                                                         
                             curr_tree_node_idx = retrieve_indices[j,i]
                             if m_bias_list is not None:
-                                if kl_draft < 1.0 :
+                                if kl_draft < 3.0 :
                                     for bias_idx, tpl in enumerate(m_bias_list) :
                                         id1,id2 = tpl
                                         if id1 == curr_tree_node_idx:
@@ -903,7 +903,6 @@ class EaLumina_mGPT(nn.Module):
         input_ids = torch.cat((input_ids, image_start_sequence), dim=-1)
 
         self.eval()
-        accept_length_list = []
         
         input_ids = input_ids.clone()
         self.ea_layer.reset_kv()
@@ -1083,7 +1082,6 @@ class EaLumina_mGPT(nn.Module):
                     tree_mask = tree_mask.repeat(2, 1, 1, 1)
             bias_list = new_bias_list
             level_bias_list = new_level_bias_list
-            # accept_length_list.append(accept_length+1)
             pbar.update(accept_length+1)
 
             if eos_token_ids is not None:
@@ -1095,4 +1093,4 @@ class EaLumina_mGPT(nn.Module):
         pbar.close()
         end = time.time()
         
-        return input_ids, end-st, accept_length_list
+        return input_ids, end-st, accept_list
