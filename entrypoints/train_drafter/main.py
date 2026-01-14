@@ -64,7 +64,7 @@ def parse_args():
     
     parser.add_argument('--max_len', type=int, default=4096)
     parser.add_argument('--eval_freq', type=int, default=1)
-    parser.add_argument('--save_freq', type=int, default=5)
+    parser.add_argument('--save_freq', type=int, default=1)
     parser.add_argument('--wandb', action='store_true', default=True)
 
     return parser
@@ -332,11 +332,11 @@ def run_train_drafter(args):
             os.makedirs(args.save_dir)
 
     config = EConfig.from_pretrained(args.config_path)
-    # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
+    ckpt_path = "/work1/deming/shared/lumina/drafter-lossscaled/lumina_mgpt_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_coupled_mscoco2017train30k/state_1/model.safetensors"
     model = Model(config, load_emb=True, path=args.base_path)
-    # from safetensors.torch import load_file
-    # state_dict = load_file(ckpt_path)
-    # model.load_state_dict(state_dict, strict=True)
+    from safetensors.torch import load_file
+    state_dict = load_file(ckpt_path)
+    model.load_state_dict(state_dict, strict=True)
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))
@@ -354,7 +354,7 @@ def run_train_drafter(args):
             model, head, optimizer, train_loader, test_loader
         )
  
-    for epoch in range(0, args.num_epochs):
+    for epoch in range(1, args.num_epochs):
         epoch_loss, epoch_correct, epoch_total, epoch_top3\
             = run_epoch(args, model, train_loader, optimizer, scheduler, criterion, head, accelerator, args.is_warmup, train_mode=True)
         

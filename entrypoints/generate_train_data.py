@@ -31,10 +31,9 @@ def parse_args():
     return parser
 
 class SupervisedDataset(Dataset):
-    def __init__(self, data_path, model, uncond_embedding=None):
+    def __init__(self, data_path, index_start , index_end, model, uncond_embedding=None):
         super(SupervisedDataset, self).__init__()
         self.model = model
-
         if model == "lumina_mgpt" or model == "anole":
             """
                 self.dataset = [
@@ -48,7 +47,9 @@ class SupervisedDataset(Dataset):
             # [SY]: Lumina adjustment
             self.dataset = []
             files = sorted([f for f in os.listdir(data_path) if f.endswith('.npz')])
-            for fname in files:
+            files = files[index_start:index_end]
+            from tqdm import tqdm 
+            for fname in tqdm(files):
                 path = os.path.join(data_path, fname)
                 with np.load(path, allow_pickle=True) as npz:
                     prompt = npz["prompt"].copy()
@@ -59,7 +60,6 @@ class SupervisedDataset(Dataset):
                         "prompt_token_ids": prompt,
                         "out_token_ids": output
                     })
-                
                 
         elif "llamagen" in self.model:
             self.code_data = sorted(os.listdir(os.path.join(data_path, "codes")))
@@ -149,35 +149,40 @@ def generate_data(model, data, model_type, eagle3=False, feature_layer_indices=N
         out_token_ids = data["out_token_ids"][0]
         print("prompt_token_ids: ", prompt_token_ids.shape)
         print("out_token_ids: ", out_token_ids.shape)
-        print("prompt_token_ids: ", prompt_token_ids)
-        print("out_token_ids: ", out_token_ids)
+        # print("prompt_token_ids: ", prompt_token_ids)
+        # print("out_token_ids: ", out_token_ids)
 
-        cond_input_ids = torch.cat([prompt_token_ids, out_token_ids], dim=-1)
+        cond_input_ids = torch.cat([prompt_token_ids, out_token_ids], dim=-1).unsqueeze(0) 
         cond_outputs = model(input_ids=cond_input_ids.cuda(), output_hidden_states=True)
 
-        uncond_input_ids = out_token_ids
+        uncond_input_ids = out_token_ids.unsqueeze(0)
         uncond_outputs = model(input_ids=uncond_input_ids.cuda(), output_hidden_states=True)
 
-        if eagle3:
-            # Eagle3: Extract hidden states from specified layers and concatenate
-            max_layers = len(cond_outputs.hidden_states)
-            if feature_layer_indices is None:
-                feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
+        # if eagle3:
+        #     # Eagle3: Extract hidden states from specified layers and concatenate
+        #     max_layers = len(cond_outputs.hidden_states)
+        #     if feature_layer_indices is None:
+        #         feature_layer_indices = [0, max_layers//2, max_layers-1]  # Default fallback
             
-            # Validate layer indices
-            for idx in feature_layer_indices:
-                if idx >= max_layers or idx < 0:
-                    raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
+        #     # Validate layer indices
+        #     for idx in feature_layer_indices:
+        #         if idx >= max_layers or idx < 0:
+        #             raise ValueError(f"Invalid layer index {idx}. Model has {max_layers} layers (0-{max_layers-1})")
             
-            cond_layer_states = [cond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
-            cond_hidden_states = torch.cat(cond_layer_states, dim=-1)
+        #     cond_layer_states = [cond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+        #     cond_hidden_states = torch.cat(cond_layer_states, dim=-1)
             
-            uncond_layer_states = [uncond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
-            uncond_hidden_states = torch.cat(uncond_layer_states, dim=-1)
-        else:
+        #     uncond_layer_states = [uncond_outputs.hidden_states[idx].cpu()[0] for idx in feature_layer_indices]
+        #     uncond_hidden_states = torch.cat(uncond_layer_states, dim=-1)
+        # else:
             # Original: Use only final hidden state
-            cond_hidden_states = cond_outputs.hidden_states[-1].cpu()[0]
-            uncond_hidden_states = uncond_outputs.hidden_states[-1].cpu()[0]
+        cond_hidden_states = cond_outputs.hidden_states[-1].cpu()[0]
+        uncond_hidden_states = uncond_outputs.hidden_states[-1].cpu()[0]
+        
+        print("cond_hidden_states: ", cond_hidden_states.shape)
+        print("uncond_hidden_states: ", uncond_hidden_states.shape)
+        print("cond_input_ids: ", cond_input_ids[0].shape)
+        print("uncond_input_ids: ", uncond_input_ids[0].shape)
 
         return {"cond_input_ids": cond_input_ids.cpu()[0], "cond_hidden_states": cond_hidden_states,
                 "uncond_input_ids": uncond_input_ids.cpu()[0], "uncond_hidden_states": uncond_hidden_states}
@@ -306,13 +311,13 @@ def run_generate_data(args):
         raise NotImplementedError(f"Model {args.model} not supported")
     model.eval()
     
-    ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
-    # ds = ds.select(range(min(args.num_samples, len(ds))))
     index_start = args.start
     index_end = args.end
-    ds = ds.select(range(index_start, index_end))
+    ds = SupervisedDataset(args.data_path, index_start , index_end, args.model, uncond_embedding)
+    # ds = ds.select(range(min(args.num_samples, len(ds))))
+    
+    # ds = ds.select(range(index_start, index_end))
     ds = ds.shuffle(seed=42)
-
     
     # Update output directory for Eagle3 mode
     if args.eagle3:
@@ -328,7 +333,7 @@ def run_generate_data(args):
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    for idx,data in enumerate(ds):
+    for idx,data in enumerate(tqdm(ds)):
         outdata = generate_data(model, data, args.model, args.eagle3, feature_layer_indices)
         if outdata is not None:
             writedata(args.output_dir, outdata, idx + index_start)

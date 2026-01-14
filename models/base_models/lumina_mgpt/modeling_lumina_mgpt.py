@@ -523,7 +523,7 @@ class ChameleonSdpaAttention(ChameleonAttention):
             )
 
         bsz, q_len, _ = hidden_states.size()
-
+        
         query_states = self.q_proj(hidden_states)
         key_states = self.k_proj(hidden_states)
         value_states = self.v_proj(hidden_states)
@@ -1337,6 +1337,7 @@ class ChameleonModel(ChameleonPreTrainedModel):
                     cache_position,
                 )
             else:
+                # print("decoder_layer attention_mask:", attention_mask.shape)
                 layer_outputs = decoder_layer(
                     hidden_states,
                     attention_mask=causal_mask,

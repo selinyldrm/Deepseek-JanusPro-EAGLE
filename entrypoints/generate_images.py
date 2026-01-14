@@ -42,6 +42,10 @@ def parse_args():
                         default="PartiPrompts")
     parser.add_argument("--num_images", type=int, help="Number of images to generate",
                         default=10)
+    parser.add_argument("--s_idx", type=int,
+                        default=0)
+    parser.add_argument("--e_idx", type=int,
+                        default=5000)
     parser.add_argument("--slice", type=str, help="Slice of prompts to use; format: 'start-end'",
                         default=None)
     parser.add_argument("--output_dir", type=str, help="Output directory for generated images",
@@ -177,23 +181,7 @@ def load_prompts(args):
             captions = json.load(f)
             for caption in captions:
                 prompts.append(caption)
-    
-
-    # if args.slice is not None:
-    #     assert re.match(r'^\d+-\d+$', args.slice), f"Invalid format: '{args.slice}'. Expected format is 'start-end'."
-
-    #     start, end = map(int, args.slice.split('-'))
-    #     assert start < end, f"Invalid range: '{args.slice}'. Start value must be less than end value."
-    #     assert start >= 0 and end >= 0, "Slice values must be non-negative."
-
-    #     prompts = prompts[start:end]
-    
-    # if args.num_images < len(prompts):
-    #     print(f"Number of images to generate is less than the number of prompts. Sampling {args.num_images} prompts.")
-    #     prompts = random.sample(prompts, args.num_images)
-    # else:
-    #     print(f"Number of images to generate is greater than the number of prompts. Generating only {len(prompts)} images and no sampling.")
-    #     pass
+                
 
     # if args.multigpu:
     #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
@@ -202,18 +190,13 @@ def load_prompts(args):
     #     with open("/work1/deming/seliny2/LANTERN/global_statistics_0_0_5.json", "r") as f:
     #         data = json.load(f)
         
-    # # # Extract prompt fields 
+    # Extract prompt fields 
     # prompts = [entry["prompt"] for entry in data.values()]
     
     # if args.multigpu :
     #     return prompts[:100]
     
-    # delete below before return
-    # with open("/mnt/shared/gpfs/home/seliny2/LANTERN/global_statistics_0_100.json", "r") as f:
-    #     data = json.load(f)
-    # prompts = [entry["prompt"] for entry in data.values()]
-    
-    return prompts
+    return prompts[args.s_idx:args.e_idx]
 
 def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path, test, relaxed, **kwargs):
     # print(f"Generating image for prompt: {prompt}")
@@ -295,15 +278,6 @@ def run_generate_image(args):
         set_seed(args.random_seed)
     
     prompts = load_prompts(args)
-    # global_statistics = {}  
-    # for idx, prompt in tqdm(enumerate(prompts), total=len(prompts)):
-    #     statistics = {
-    #             "prompt": prompt,
-    #         }
-    #     global_statistics[f"prompt_{idx}"] = statistics
-    # with open(f"{args.output_dir}/global_statistics_{args.start_idx}_{args.end_idx}.json", "w") as f:
-    #     json.dump(global_statistics, f, indent=4)
-    
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -317,7 +291,6 @@ def run_generate_image(args):
         if batch_end[-1] > len(prompts):
             batch_end[-1] = len(prompts)
         import torch.multiprocessing as mp
-        # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
         mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=world_size, join=True)
     else:
@@ -495,201 +468,205 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             latencies = np.array(global_latencies.cpu())
             avg_latency = np.mean(latencies, axis=0)
             print(f"Avg latency: {avg_latency} per image, with {global_latencies.shape} images.")
+            with open(f"{args.output_dir}/lumina_{str(args.s_idx)}-{str(args.e_idx)}.txt", "w") as f:
+                f.write(f"Avg latency: {avg_latency} per image, with {global_latencies.shape} images.")
             plt.scatter(range(len(latencies)), latencies, marker='o', label=f"Latency of {total_prompt_count} Images with avg={avg_latency:.2f}")
             plt.xlabel("Generation Index")
             plt.ylabel("Time (Sec)")
             plt.legend()
             plt.grid(True)
             plt.tight_layout()
-            plt.savefig(f"{args.output_dir}/avg-latency.png")
+            plt.savefig(f"{args.output_dir}/avg-latency-{str(args.s_idx)}-{str(args.e_idx)}.png")
             plt.close()
 
             global_acceptance = torch.cat(all_gathered_acceptance)
             global_acceptance = global_acceptance[global_acceptance >= 0]
-            avg_acceptance = global_acceptance.sum().item()/5000.0
+            avg_acceptance = global_acceptance.sum().item()/(args.e_idx - args.s_idx)
             print(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
+            with open(f"{args.output_dir}/lumina_{str(args.s_idx)}-{str(args.e_idx)}.txt", "w") as f:
+                f.write(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
             plt.scatter(range(len(global_acceptance)), global_acceptance, marker='o', label=f"Acceptance of {total_prompt_count} Images with avg={avg_acceptance:.2f}")
             plt.xlabel("Generation Index")
             plt.ylabel("Acceptance Length (tokens)")
             plt.legend()
             plt.grid(True)
             plt.tight_layout()
-            plt.savefig(f"{args.output_dir}/avg-accept.png")
+            plt.savefig(f"{args.output_dir}/avg-accept-{args.s_idx}-{args.e_idx}.png")
             plt.close()
 
 
-        if args.test: 
-            # min_len_oh = min(len(lst) for lst in overheads)
-            min_len = min(len(lst) for lst in acceptance_lists)
-            rank_acceptance = [torch.tensor(lst[:min_len]) for lst in acceptance_lists]
-            rank_acceptance = torch.stack(rank_acceptance)  # shape [N, min_len]
-            # rank_oh = [torch.tensor(lst[:min_len_oh]) for lst in overheads]
-            # rank_oh = torch.stack(rank_oh)
-            pad_len = 800
-            if min_len < pad_len:
-                pad = torch.zeros(rank_acceptance.shape[0], pad_len - min_len)
-                rank_acceptance = torch.cat([rank_acceptance, pad], dim=1)
-            if rank_acceptance.shape[0] < 13:
-                pad = torch.zeros(13-rank_acceptance.shape[0], pad_len)
-                rank_acceptance = torch.cat([rank_acceptance, pad], dim=0)
-            # if min_len_oh < 5000:
-            #     pad = torch.zeros(rank_oh.shape[0], 5000 - min_len_oh)
-            #     rank_oh = torch.cat([rank_oh, pad], dim=1)
-            # if rank_oh.shape[0] < 13:
-            #     pad = torch.zeros(13-rank_oh.shape[0], 5000)
-            #     rank_oh = torch.cat([rank_oh, pad], dim=0)
-            # print(f"Rank {rank} rank_acceptance.shape: {rank_acceptance.shape}")
+        # if args.test: 
+        #     # min_len_oh = min(len(lst) for lst in overheads)
+        #     min_len = min(len(lst) for lst in acceptance_lists)
+        #     rank_acceptance = [torch.tensor(lst[:min_len]) for lst in acceptance_lists]
+        #     rank_acceptance = torch.stack(rank_acceptance)  # shape [N, min_len]
+        #     # rank_oh = [torch.tensor(lst[:min_len_oh]) for lst in overheads]
+        #     # rank_oh = torch.stack(rank_oh)
+        #     pad_len = 800
+        #     if min_len < pad_len:
+        #         pad = torch.zeros(rank_acceptance.shape[0], pad_len - min_len)
+        #         rank_acceptance = torch.cat([rank_acceptance, pad], dim=1)
+        #     if rank_acceptance.shape[0] < 13:
+        #         pad = torch.zeros(13-rank_acceptance.shape[0], pad_len)
+        #         rank_acceptance = torch.cat([rank_acceptance, pad], dim=0)
+        #     # if min_len_oh < 5000:
+        #     #     pad = torch.zeros(rank_oh.shape[0], 5000 - min_len_oh)
+        #     #     rank_oh = torch.cat([rank_oh, pad], dim=1)
+        #     # if rank_oh.shape[0] < 13:
+        #     #     pad = torch.zeros(13-rank_oh.shape[0], 5000)
+        #     #     rank_oh = torch.cat([rank_oh, pad], dim=0)
+        #     # print(f"Rank {rank} rank_acceptance.shape: {rank_acceptance.shape}")
 
-            # # p 
-            # pmin_len = min(len(lst) for lst in p if len(lst) > 0)
-            # # print(f"Rank {rank} rankp.min_len: {min_len}")
-            # # pp
-            # ppmin_len = min(len(lst) for lst in pp if len(lst) > 0)
-            # # print(f"Rank {rank} rankpp.min_len: {min_len}")
-            # # r
-            # rmin_len = min(len(lst) for lst in r if len(lst) > 0)
-            # # print(f"Rank {rank} rankr.min_len: {min_len}")
-            # min_len = min(pmin_len,ppmin_len)
-            # min_len = min(min_len,rmin_len)
-            # # print(f"Rank {rank} global.min_len: {min_len}")
+        #     # # p 
+        #     # pmin_len = min(len(lst) for lst in p if len(lst) > 0)
+        #     # # print(f"Rank {rank} rankp.min_len: {min_len}")
+        #     # # pp
+        #     # ppmin_len = min(len(lst) for lst in pp if len(lst) > 0)
+        #     # # print(f"Rank {rank} rankpp.min_len: {min_len}")
+        #     # # r
+        #     # rmin_len = min(len(lst) for lst in r if len(lst) > 0)
+        #     # # print(f"Rank {rank} rankr.min_len: {min_len}")
+        #     # min_len = min(pmin_len,ppmin_len)
+        #     # min_len = min(min_len,rmin_len)
+        #     # # print(f"Rank {rank} global.min_len: {min_len}")
 
-            # rankp = [torch.tensor(lst[:min_len]) for lst in p]
-            # rankp = torch.stack(rankp)  # shape [N, min_len]
-            # pad_len = 2500
-            # if min_len < pad_len:
-            #     pad = torch.zeros(rankp.shape[0], pad_len - min_len)
-            #     rankp = torch.cat([rankp, pad], dim=1)
-            # if rankp.shape[0] < 13:
-            #     pad = torch.zeros(13-rankp.shape[0], pad_len)
-            #     rankp = torch.cat([rankp, pad], dim=0)
-            # # print(f"Rank {rank} rankp.shape: {rankp.shape}")
+        #     # rankp = [torch.tensor(lst[:min_len]) for lst in p]
+        #     # rankp = torch.stack(rankp)  # shape [N, min_len]
+        #     # pad_len = 2500
+        #     # if min_len < pad_len:
+        #     #     pad = torch.zeros(rankp.shape[0], pad_len - min_len)
+        #     #     rankp = torch.cat([rankp, pad], dim=1)
+        #     # if rankp.shape[0] < 13:
+        #     #     pad = torch.zeros(13-rankp.shape[0], pad_len)
+        #     #     rankp = torch.cat([rankp, pad], dim=0)
+        #     # # print(f"Rank {rank} rankp.shape: {rankp.shape}")
             
 
         
-            # rankpp = [torch.tensor(lst[:min_len]) for lst in pp]
-            # rankpp = torch.stack(rankpp)  # shape [N, min_len]
-            # pad_len = 2500
-            # if min_len < pad_len:
-            #     pad = torch.zeros(rankpp.shape[0], pad_len - min_len)
-            #     rankpp = torch.cat([rankpp, pad], dim=1)
-            # if rankpp.shape[0] < 13:
-            #     pad = torch.zeros(13-rankpp.shape[0], pad_len)
-            #     rankpp = torch.cat([rankpp, pad], dim=0)
-            # # print(f"Rank {rank} rankpp.shape: {rankpp.shape}")
+        #     # rankpp = [torch.tensor(lst[:min_len]) for lst in pp]
+        #     # rankpp = torch.stack(rankpp)  # shape [N, min_len]
+        #     # pad_len = 2500
+        #     # if min_len < pad_len:
+        #     #     pad = torch.zeros(rankpp.shape[0], pad_len - min_len)
+        #     #     rankpp = torch.cat([rankpp, pad], dim=1)
+        #     # if rankpp.shape[0] < 13:
+        #     #     pad = torch.zeros(13-rankpp.shape[0], pad_len)
+        #     #     rankpp = torch.cat([rankpp, pad], dim=0)
+        #     # # print(f"Rank {rank} rankpp.shape: {rankpp.shape}")
 
         
-            # rankr = [torch.tensor(lst[:min_len]) for lst in r]
-            # rankr = torch.stack(rankr)  # shape [N, min_len]
-            # pad_len = 2500
-            # if min_len < pad_len:
-            #     pad = torch.zeros(rankr.shape[0], pad_len - min_len)
-            #     rankr = torch.cat([rankr, pad], dim=1)
-            # if rankr.shape[0] < 13:
-            #     pad = torch.zeros(13-rankr.shape[0], pad_len)
-            #     rankr = torch.cat([rankr, pad], dim=0)
-            # print(f"Rank {rank} rankr.shape: {rankr.shape}")
+        #     # rankr = [torch.tensor(lst[:min_len]) for lst in r]
+        #     # rankr = torch.stack(rankr)  # shape [N, min_len]
+        #     # pad_len = 2500
+        #     # if min_len < pad_len:
+        #     #     pad = torch.zeros(rankr.shape[0], pad_len - min_len)
+        #     #     rankr = torch.cat([rankr, pad], dim=1)
+        #     # if rankr.shape[0] < 13:
+        #     #     pad = torch.zeros(13-rankr.shape[0], pad_len)
+        #     #     rankr = torch.cat([rankr, pad], dim=0)
+        #     # print(f"Rank {rank} rankr.shape: {rankr.shape}")
         
-            all_gathered_acceptance = [torch.zeros_like(rank_acceptance) for _ in range(2)]
-            torch.distributed.all_gather(all_gathered_acceptance, rank_acceptance)
+        #     all_gathered_acceptance = [torch.zeros_like(rank_acceptance) for _ in range(2)]
+        #     torch.distributed.all_gather(all_gathered_acceptance, rank_acceptance)
 
-            # all_gathered_overhead = [torch.zeros_like(rank_oh) for _ in range(8)]
-            # torch.distributed.all_gather(all_gathered_overhead, rank_oh)
+        #     # all_gathered_overhead = [torch.zeros_like(rank_oh) for _ in range(8)]
+        #     # torch.distributed.all_gather(all_gathered_overhead, rank_oh)
 
-            # all_gathered_p = [torch.zeros_like(rankp) for _ in range(8)]
-            # torch.distributed.all_gather(all_gathered_p, rankp)
+        #     # all_gathered_p = [torch.zeros_like(rankp) for _ in range(8)]
+        #     # torch.distributed.all_gather(all_gathered_p, rankp)
 
-            # all_gathered_pp = [torch.zeros_like(rankpp) for _ in range(8)]
-            # torch.distributed.all_gather(all_gathered_pp, rankpp)
+        #     # all_gathered_pp = [torch.zeros_like(rankpp) for _ in range(8)]
+        #     # torch.distributed.all_gather(all_gathered_pp, rankpp)
 
-            # all_gathered_r = [torch.zeros_like(rankr) for _ in range(8)]
-            # torch.distributed.all_gather(all_gathered_r, rankr)
+        #     # all_gathered_r = [torch.zeros_like(rankr) for _ in range(8)]
+        #     # torch.distributed.all_gather(all_gathered_r, rankr)
         
-            def remove_padding(x: torch.Tensor, pad_val: int = 0):
-                result = []
-                for row in x:
-                    # Find where padding starts (assuming trailing padding)
-                    non_pad = (row != pad_val).nonzero(as_tuple=True)[0]
-                    if len(non_pad) > 0:
-                        last_idx = non_pad[-1].item() + 1
-                        result.append(row[:last_idx])
-                    else:
-                        result.append(torch.tensor([], dtype=row.dtype, device=row.device))
-                return result
+        #     def remove_padding(x: torch.Tensor, pad_val: int = 0):
+        #         result = []
+        #         for row in x:
+        #             # Find where padding starts (assuming trailing padding)
+        #             non_pad = (row != pad_val).nonzero(as_tuple=True)[0]
+        #             if len(non_pad) > 0:
+        #                 last_idx = non_pad[-1].item() + 1
+        #                 result.append(row[:last_idx])
+        #             else:
+        #                 result.append(torch.tensor([], dtype=row.dtype, device=row.device))
+        #         return result
         
-            if rank == 0 :
-                global_acceptance = torch.cat(all_gathered_acceptance)[:total_prompt_count]        
-                global_acceptance = remove_padding(global_acceptance) 
-                min_len = min(len(lst) for lst in global_acceptance)
-                print(f"Min_len for global accept: {min_len}")
-                global_acceptance = [lst[:min_len] for lst in global_acceptance]
-                global_acceptance = torch.stack(global_acceptance).cpu().numpy()
-                # print(f"Rank {rank} global_acceptance.shape: {global_acceptance.shape}")
+        #     if rank == 0 :
+        #         global_acceptance = torch.cat(all_gathered_acceptance)[:total_prompt_count]        
+        #         global_acceptance = remove_padding(global_acceptance) 
+        #         min_len = min(len(lst) for lst in global_acceptance)
+        #         print(f"Min_len for global accept: {min_len}")
+        #         global_acceptance = [lst[:min_len] for lst in global_acceptance]
+        #         global_acceptance = torch.stack(global_acceptance).cpu().numpy()
+        #         # print(f"Rank {rank} global_acceptance.shape: {global_acceptance.shape}")
 
-                global_overhead = torch.cat(all_gathered_overhead)[:total_prompt_count]        
-                global_overhead = remove_padding(global_overhead) 
-                min_len = min(len(lst) for lst in global_overhead)
-                global_overhead = [lst[:min_len] for lst in global_overhead]
-                global_overhead = torch.stack(global_overhead).cpu().numpy()
-                avg_overhead = np.mean(global_overhead, axis=0)
+        #         global_overhead = torch.cat(all_gathered_overhead)[:total_prompt_count]        
+        #         global_overhead = remove_padding(global_overhead) 
+        #         min_len = min(len(lst) for lst in global_overhead)
+        #         global_overhead = [lst[:min_len] for lst in global_overhead]
+        #         global_overhead = torch.stack(global_overhead).cpu().numpy()
+        #         avg_overhead = np.mean(global_overhead, axis=0)
 
-                plt.scatter(range(len(avg_overhead)), avg_overhead, marker='o', label=f"Avg Overhead over {total_prompt_count} Images={np.mean(avg_overhead):.2f}")
-                plt.xlabel("Generation Index")
-                plt.ylabel("Latency (sec)")
-                plt.legend()
-                plt.grid(True)
-                plt.tight_layout()
-                plt.savefig(f"{args.output_dir}/avg-overhead.png")
-                plt.close()
+        #         plt.scatter(range(len(avg_overhead)), avg_overhead, marker='o', label=f"Avg Overhead over {total_prompt_count} Images={np.mean(avg_overhead):.2f}")
+        #         plt.xlabel("Generation Index")
+        #         plt.ylabel("Latency (sec)")
+        #         plt.legend()
+        #         plt.grid(True)
+        #         plt.tight_layout()
+        #         plt.savefig(f"{args.output_dir}/avg-overhead.png")
+        #         plt.close()
 
-                avg_acceptance = np.mean(global_acceptance, axis=0)
+        #         avg_acceptance = np.mean(global_acceptance, axis=0)
 
-                plt.scatter(range(len(avg_acceptance)), avg_acceptance, marker='o', label=f"Avg Acceptance Length over {total_prompt_count} Images={np.mean(avg_acceptance):.2f}")
-                plt.xlabel("Generation Index")
-                plt.ylabel("Number of Tokens Accepted")
-                plt.legend()
-                plt.grid(True)
-                plt.tight_layout()
-                plt.savefig(f"{args.output_dir}/avg-accept-length.png")
-                plt.close()
+        #         plt.scatter(range(len(avg_acceptance)), avg_acceptance, marker='o', label=f"Avg Acceptance Length over {total_prompt_count} Images={np.mean(avg_acceptance):.2f}")
+        #         plt.xlabel("Generation Index")
+        #         plt.ylabel("Number of Tokens Accepted")
+        #         plt.legend()
+        #         plt.grid(True)
+        #         plt.tight_layout()
+        #         plt.savefig(f"{args.output_dir}/avg-accept-length.png")
+        #         plt.close()
 
-                if test:
-                    # p
-                    global_p = torch.cat(all_gathered_p)[:total_prompt_count, :1000]             
-                    # print(f"Rank {rank} global_p.shape: {global_p.shape}")
-                    # pp
-                    global_pp = torch.cat(all_gathered_pp)[:total_prompt_count, :1000]             
+        #         # if test:
+        #         #     # p
+        #         #     global_p = torch.cat(all_gathered_p)[:total_prompt_count, :1000]             
+        #         #     # print(f"Rank {rank} global_p.shape: {global_p.shape}")
+        #         #     # pp
+        #         #     global_pp = torch.cat(all_gathered_pp)[:total_prompt_count, :1000]             
                 
-                    # print(f"Rank {rank} global_pp.shape: {global_pp.shape}")
-                    # r
-                    global_r = torch.cat(all_gathered_r)[:total_prompt_count , :1000]        
-                    # print(f"Rank {rank} global_r.shape: {global_r.shape}")
+        #         #     # print(f"Rank {rank} global_pp.shape: {global_pp.shape}")
+        #         #     # r
+        #         #     global_r = torch.cat(all_gathered_r)[:total_prompt_count , :1000]        
+        #         #     # print(f"Rank {rank} global_r.shape: {global_r.shape}")
 
-                    avg_p = np.mean(global_p.cpu().numpy(), axis=0)
-                    avg_pp = np.mean(global_pp.cpu().numpy(), axis=0)
-                    avg_r = np.mean(global_r.cpu().numpy(), axis=0)
+        #         #     avg_p = np.mean(global_p.cpu().numpy(), axis=0)
+        #         #     avg_pp = np.mean(global_pp.cpu().numpy(), axis=0)
+        #         #     avg_r = np.mean(global_r.cpu().numpy(), axis=0)
 
-                    plt.scatter(range(len(avg_p)), avg_p, label="Original Confidence Score",  marker='o', alpha=0.5)
-                    plt.scatter(range(len(avg_pp)), avg_pp, label="LANTERN Confidence Score",  marker='s', alpha=0.5)
-                    plt.scatter(range(len(avg_r)), avg_r, label="Confidence Threshold", marker='^', alpha=0.5)
-                    plt.xlabel("Generation Index")
-                    plt.ylabel("Confidence Scores")
-                    plt.title("Avg Confidence Scores over 100 Images")
-                    plt.legend()
-                    plt.grid(True)
-                    plt.tight_layout()
-                    plt.show()
-                    plt.savefig(f"{args.output_dir}/avg-confidence-scores.png")
-                    plt.close()
+        #         #     plt.scatter(range(len(avg_p)), avg_p, label="Original Confidence Score",  marker='o', alpha=0.5)
+        #         #     plt.scatter(range(len(avg_pp)), avg_pp, label="LANTERN Confidence Score",  marker='s', alpha=0.5)
+        #         #     plt.scatter(range(len(avg_r)), avg_r, label="Confidence Threshold", marker='^', alpha=0.5)
+        #         #     plt.xlabel("Generation Index")
+        #         #     plt.ylabel("Confidence Scores")
+        #         #     plt.title("Avg Confidence Scores over 100 Images")
+        #         #     plt.legend()
+        #         #     plt.grid(True)
+        #         #     plt.tight_layout()
+        #         #     plt.show()
+        #         #     plt.savefig(f"{args.output_dir}/avg-confidence-scores.png")
+        #         #     plt.close()
 
-                max_accpt = np.max(global_acceptance, axis=0)
-                plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 100 Images")
-                plt.xlabel("Generation Index")
-                plt.ylabel("Number of Tokens Accepted")
-                plt.legend()
-                plt.grid(True)
-                plt.tight_layout()
-                plt.savefig(f"{args.output_dir}/max-avg-accept-length.png")
-                plt.close()
+        #         max_accpt = np.max(global_acceptance, axis=0)
+        #         plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 100 Images")
+        #         plt.xlabel("Generation Index")
+        #         plt.ylabel("Number of Tokens Accepted")
+        #         plt.legend()
+        #         plt.grid(True)
+        #         plt.tight_layout()
+        #         plt.savefig(f"{args.output_dir}/max-avg-accept-length.png")
+        #         plt.close()
 
         torch.distributed.destroy_process_group()
     else:
@@ -726,62 +703,60 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
 
 
 
-        if args.test:
-            min_len = min(len(lst) for lst in acceptance_lists)
-            acceptance_lists = [torch.tensor(lst[:min_len]) for lst in acceptance_lists]
-            acceptance_lists = np.array(acceptance_lists)
-            max_accpt = np.max(acceptance_lists, axis=0)
-            avg_accpt = np.mean(acceptance_lists, axis=0)
+        # if args.test:
+        #     min_len = min(len(lst) for lst in acceptance_lists)
+        #     acceptance_lists = [torch.tensor(lst[:min_len]) for lst in acceptance_lists]
+        #     acceptance_lists = np.array(acceptance_lists)
+        #     max_accpt = np.max(acceptance_lists, axis=0)
+        #     avg_accpt = np.mean(acceptance_lists, axis=0)
 
-            # plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 5 Images")
-            plt.scatter(range(len(avg_accpt)), avg_accpt, marker='o', label=f"Avg Acceptance Length over 5 Images={np.mean(avg_accpt):.2f}")
-            plt.xlabel("Generation Index")
-            plt.ylabel("Number of Tokens Accepted")
-            plt.legend()
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig(f"{args.output_dir}/5imgs-avg-accept-length.png")
-            plt.close()
+        #     # plt.plot(range(len(max_accpt)), max_accpt, label=f"Max Acceptance Length over 5 Images")
+        #     plt.scatter(range(len(avg_accpt)), avg_accpt, marker='o', label=f"Avg Acceptance Length over 5 Images={np.mean(avg_accpt):.2f}")
+        #     plt.xlabel("Generation Index")
+        #     plt.ylabel("Number of Tokens Accepted")
+        #     plt.legend()
+        #     plt.grid(True)
+        #     plt.tight_layout()
+        #     plt.savefig(f"{args.output_dir}/5imgs-avg-accept-length.png")
+        #     plt.close()
 
-            def to_float(x):
-                """Convert list of tensors or mixed types (possibly CUDA) to pure float list."""
-                out = []
-                for v in x:
-                    if torch.is_tensor(v):
-                        out.append(float(v.detach().cpu().item()))
-                    else:
-                        out.append(float(v))
-                return out
+        #     def to_float(x):
+        #         """Convert list of tensors or mixed types (possibly CUDA) to pure float list."""
+        #         out = []
+        #         for v in x:
+        #             if torch.is_tensor(v):
+        #                 out.append(float(v.detach().cpu().item()))
+        #             else:
+        #                 out.append(float(v))
+        #         return out
 
-            plt.scatter(range(len(analysis_r)), to_float(analysis_r), marker='o', label=f"R")
-            plt.scatter(range(len(analysis_p_p)), to_float(analysis_p_p), marker='*', label=f"prior ratio (score)")
-            plt.scatter(range(len(analysis_p)), to_float(analysis_p), marker='x', label=f"lantern ratio (score)")
-            plt.ylim(0, 1)
+        #     plt.scatter(range(len(analysis_r)), to_float(analysis_r), marker='o', label=f"R")
+        #     plt.scatter(range(len(analysis_p_p)), to_float(analysis_p_p), marker='*', label=f"prior ratio (score)")
+        #     plt.scatter(range(len(analysis_p)), to_float(analysis_p), marker='x', label=f"lantern ratio (score)")
+        #     plt.ylim(0, 1)
 
-            plt.xlabel("Generation Index")
-            plt.ylabel("Latency (sec)")
-            plt.legend()
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig(f"{args.output_dir}/5imgs-acc-scores.png")
-            plt.close()
+        #     plt.xlabel("Generation Index")
+        #     plt.ylabel("Latency (sec)")
+        #     plt.legend()
+        #     plt.grid(True)
+        #     plt.tight_layout()
+        #     plt.savefig(f"{args.output_dir}/5imgs-acc-scores.png")
+        #     plt.close()
 
           
-            # min_len = min(len(lst) for lst in overheads)
-            # l_overhead = [lst[:min_len] for lst in overheads]
-            # l_overhead = torch.stack(overheads).cpu().numpy()
-            # avg_overhead = np.mean(l_overhead, axis=0)
+        #     # min_len = min(len(lst) for lst in overheads)
+        #     # l_overhead = [lst[:min_len] for lst in overheads]
+        #     # l_overhead = torch.stack(overheads).cpu().numpy()
+        #     # avg_overhead = np.mean(l_overhead, axis=0)
 
-            # plt.scatter(range(len(l_overhead)), l_overhead, marker='o', label=f"Avg Overhead over 100 Images={np.mean(avg_overhead):.2f}")
-            # plt.xlabel("Generation Index")
-            # plt.ylabel("Latency (sec)")
-            # plt.legend()
-            # plt.grid(True)
-            # plt.tight_layout()
-            # plt.savefig(f"{args.output_dir}/5imgs-avg-overhead.png")
-            # plt.close()
-
-
+        #     # plt.scatter(range(len(l_overhead)), l_overhead, marker='o', label=f"Avg Overhead over 100 Images={np.mean(avg_overhead):.2f}")
+        #     # plt.xlabel("Generation Index")
+        #     # plt.ylabel("Latency (sec)")
+        #     # plt.legend()
+        #     # plt.grid(True)
+        #     # plt.tight_layout()
+        #     # plt.savefig(f"{args.output_dir}/5imgs-avg-overhead.png")
+        #     # plt.close()
             
 
     with open(f"{args.output_dir}/global_statistics_{rank}_{start_idx}_{end_idx}.json", "w") as f:

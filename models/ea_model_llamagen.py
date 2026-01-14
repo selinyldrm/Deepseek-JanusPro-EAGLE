@@ -193,58 +193,21 @@ class EaModel(nn.Module):
             ea_layer_state_dict = load_file(load_model_path)
         
         # ignore base model layers to prevent errors during checkpoint loading on draft model
-        filtered_state_dict = {}
-        with torch.no_grad():
-            for k, v in ea_layer_state_dict.items() :
-                # if k.startswith("target_model.model.layers"):
-                #     continue
-                if k.startswith("target_model."):
-                    # new_k = k[len("target_model."):]  # remove the prefix
-                    # filtered_state_dict[new_k] = v
-                    # base_model.lm_head.weight.copy_(
-                    #     ea_layer_state_dict["target_model.lm_head.weight"]
-                    # )
-                    continue
-                # elif k.startswith("target_model.model.embed_tokens.weight"):
-                #     base_model.model.embed_tokens.weight.copy_(
-                #         ea_layer_state_dict["target_model.model.embed_tokens.weight"]
-                #     )
-                # elif k.startswith("target_model.model.cls_embedding.uncond_embedding"):
-                #     base_model.model.cls_embedding.uncond_embedding.copy_(
-                #         ea_layer_state_dict["target_model.model.cls_embedding.uncond_embedding"]
-                #     )
-                # elif k.startswith("target_model.model.cls_embedding.cap_proj.fc1"):
-                #     base_model.model.cls_embedding.cap_proj.fc1.weight.copy_(
-                #         ea_layer_state_dict["target_model.model.cls_embedding.cap_proj.fc1.weight"]
-                #     )
-                # elif k.startswith("target_model.model.cls_embedding.cap_proj.fc2"):
-                #     base_model.model.cls_embedding.cap_proj.fc2.weight.copy_(
-                #         ea_layer_state_dict["target_model.model.cls_embedding.cap_proj.fc2.weight"]
-                #     )
-                # elif k.startswith("target_model.model.norm"):
-                #     base_model.model.norm.weight.copy_(
-                #         ea_layer_state_dict["target_model.model.norm.weight"]
-                #     )
-                else:
-                    filtered_state_dict[k] = v
+        # filtered_state_dict = {}
+        # with torch.no_grad():
+        #     for k, v in ea_layer_state_dict.items() :
+        #         # if k.startswith("target_model.model.layers"):
+        #         #     continue
+        #         if k.startswith("target_model."):
+        #             # new_k = k[len("target_model."):]  # remove the prefix
+        #             # filtered_state_dict[new_k] = v
+        #             # base_model.lm_head.weight.copy_(
+        #             #     ea_layer_state_dict["target_model.lm_head.weight"]
+        #             # )
+        #             continue
+        #         else:
+        #             filtered_state_dict[k] = v
         
-        # base_w = base_model.lm_head.weight.detach()
-        # base_e = base_model.model.embed_tokens.weight.detach()
-        # # Optional: check shape first to avoid runtime error
-        # if base_e.shape != base_w.shape:
-        #     print(f"Shape mismatch: base_emb {base_e.shape} vs base lmhead {base_w.shape}")
-        #     identical = False
-        # else:
-        #     # Exact elementwise comparison
-        #     identical = torch.equal(base_e, base_w)
-
-        #     # Optionally, check closeness for floating point tolerance
-        #     close = torch.allclose(base_e, base_w, atol=1e-1)
-
-        # print(f"Identical weights: {identical}")
-        # print(f"Numerically close: {close}")
-        
-
 
         model = cls(
             base_model,
@@ -553,8 +516,7 @@ class EaModel(nn.Module):
         hidden_states=torch.cat(outputs["hidden_states"],dim=-1)
 
         tree_logits, bias_list, logit_sim = self.ea_layer.topK_genrate_v1(step, None, hidden_states, input_ids, self.base_model.lm_head,logits_processor, cfg_scale)
-        # print(f"tree_logits after eagle's topK_genrate_v1: {tree_logits[0].shape}, {tree_logits[1].shape}, {tree_logits[2][0].shape, tree_logits[2][1].shape}")
-        # print("input_ids after eagle: ", input_ids.shape)
+
         self.base_model.model.tree_mask = tree_attn_mask
         return tree_logits, logits, token, bias_list, logit_sim
 
@@ -721,11 +683,12 @@ class EaModel(nn.Module):
                 # print("verifying at depth: ", i, " curr accept_length: ", accept_length)
                 m_bias_list = None
                 level_sim = None
-                # past_nodes = l_node_counts[i]
-                # prev_past_nodes = l_node_counts[i-1]
-                # if i < len(bias_list) and len(bias_list[i]):
-                #     m_bias_list = copy.deepcopy(bias_list[i])
-                #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+                
+                # [SY]: CASCADE constructs similarity set here
+                past_nodes = l_node_counts[i]
+                if i < len(bias_list) and len(bias_list[i]):
+                    m_bias_list = copy.deepcopy(bias_list[i])
+                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
                
                 adjustflag = False
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
@@ -758,67 +721,48 @@ class EaModel(nn.Module):
                         accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
                         accept_length_fake =  accept_length + 1
                         is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                        # fi = list(IDs of only TRUE branches)
                         fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                        # print("fi_fake: ", fi_fake)
                         # target logits of the nodes on the candidate sequences returned True by fi and current depth
                         gt_logits_fake = logits[fi_fake, i][None]
-                        # print("gt_logits_fake.shape: ", gt_logits_fake.shape)
                         normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
                         normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
                         lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                        # [SY]: Inter-Step similarity with L2-cosine similarity combined
                         # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
                         # combined_score = (lev_sim_score.item() + inv_l2_d) / 2
-                        if lev_sim_score > 0.25 :
-                            px +=  r * lev_sim_score 
-
-                        # p = F.log_softmax(normalized_curr, dim=-1)
-
-                        # kl = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
-                        # if lev_sim_score > 0.5 and kl < 5.0 :
+                        
+                        # [SY]: Inter-Step similarity without KL-divergence
+                        # # if lev_sim_score > 0.25 :
                         #     px +=  r * lev_sim_score 
 
-                        # curr_tree_node_idx = retrieve_indices[j,i]
+                        p = F.log_softmax(normalized_curr, dim=-1)
+                        kl = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
                         
-                        # # add KL divergence of draft and target
-                        # curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
-                        # if curr_draft_logits.shape[0] != 1 :
-                        #     curr_draft_logits = curr_draft_logits[0]
-                        # if curr_draft_logits.dim == 1 :
-                        #     curr_draft_logits = curr_draft_logits.unsqueeze(0)
-                        # kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
-                                                   
-                        # if m_bias_list is not None:
-                        #     if kl_draft < 3.0 :
-                        #         for bias_idx, tpl in enumerate(m_bias_list) :
-                        #             id1,id2 = tpl
-                        #             if id1 == curr_tree_node_idx:
-                        #                 similar_xi = tree_candidates[0][id2]
-                        #                 px += r * gtp[similar_xi]
-                        #                 # print("r: ", r, "px: ", px, " +=px ", r * gtp[similar_xi]  )
+                        # [SY]: Inter-Step similarity with KL-divergence (default mode)
+                        if lev_sim_score > 0.5 and kl < 5.0 :
+                            px +=  r * lev_sim_score 
 
-                           
+                        curr_tree_node_idx = retrieve_indices[j,i]
+                        
+                        # [SY]: KL divergence of draft from target
+                        curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
+                        if curr_draft_logits.shape[0] != 1 :
+                            curr_draft_logits = curr_draft_logits[0]
+                        if curr_draft_logits.dim == 1 :
+                            curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                        kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
+                        
+                        # [SY]: Intra-Step similarity with KL-divergence                           
+                        if m_bias_list is not None:
+                            if kl_draft < 3.0 : # [SY]: comment this line out for without KL-divergence
+                                for bias_idx, tpl in enumerate(m_bias_list) :
+                                    id1,id2 = tpl
+                                    if id1 == curr_tree_node_idx:
+                                        similar_xi = tree_candidates[0][id2]
+                                        px += r * gtp[similar_xi]                           
                             
                         if testing:
                             px_prior = px
-                        # if lantern:
-                        #     # [10, 1]
-                        #     nearest_probs = gtp[self.nearest_latents[xi, :lantern_k]].reshape(lantern_k, 1)
-                        #     # [10, 1]
-                        #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
-                        #     if lantern_delta > 1.0:
-                        #         indices = (cumsum_nearest_probs <= (lantern_delta - 1) * px).nonzero(as_tuple=True)[0]
-                        #     else:
-                        #         indices = (cumsum_nearest_probs <= lantern_delta).nonzero(as_tuple=True)[0]
-                        #     if indices.numel() == 0:
-                        #         indices = -1
-                        #     else:
-                        #         indices = indices[-1]
-                        #     if indices == -1:
-                        #         px = px
-                        #     else:
-                        #         # pick one index from cumsum
-                        #         px = px + cumsum_nearest_probs[indices]
                         
                         acp = px / qx
                         if testing and (px_prior/ qx) < acp:
@@ -832,30 +776,16 @@ class EaModel(nn.Module):
                             break
                         else:
                             # parent node index - p_indices[j][i], it is 0
-                            # print("curr node: " , curr_tree_node_idx)
-                            # print("parent node: " , p_indices[j][i])
                             # op is token probabilities from sample()
                             # op[i-1] fetches probabilities of one level up (parent node's)
                             q = op[i - 1][p_indices[j][i]].clone()
                             b = b_indices[j][i]
                             # sibling nodes if any to also cancel in parent
-                            # print("b  node: " , b )
-
                             if len(b) > 0:
                                 mask = tree_candidates[0][b]
                                 q[mask] = 0
                                 q = q / q.sum()
-                            # if lantern:
-                            #     if (indices != -1):
-                            #         # cancel probs of curr token's neighbor tokens in the parent
-                            #         q[self.nearest_latents[xi, :lantern_k + 1]] = 0
-                                # if m_bias_list is not None:
-                                #     for bias_idx, tpl in enumerate(m_bias_list) :
-                                #         id1, id2 = tpl
-                                #         if id1 == curr_tree_node_idx:
-                                #             similar_xi = tree_candidates[0][id2]
-                                #             if indices_l_lantern[bias_idx] != -1:
-                                #                 q[self.nearest_latents[similar_xi, :lantern_k + 1]] = 0
+                            
                             gtp = gtp - q
                             gtp[gtp < 0] = 0
 

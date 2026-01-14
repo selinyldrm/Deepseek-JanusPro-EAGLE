@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument('--data_path', type=str, help="data path for image and caption files",
                         default="data/laion_coco")
     parser.add_argument('--output_dir', type=str, default='data/extracted_code/llamagen')
-    parser.add_argument('--num_samples', type=int, default=1000000)
+    parser.add_argument('--num_samples', type=int, default=500000)
     parser.add_argument('--start', type=int, default=0)
     parser.add_argument('--end', type=int, default=500000)
 

@@ -694,10 +694,12 @@ class EaLumina_mGPT(nn.Module):
                             if level_sim is not None:
                                 if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
                                     lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                                    # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
-                                    # combined_score = (lev_sim_score + inv_l2_d) / 2
-                                    if lev_sim_score > 0.625  and kl_draft < 1.0:
-                                        px +=  r * lev_sim_score
+                                    inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
+                                    combined_score = (lev_sim_score + inv_l2_d) / 2
+                                    # if lev_sim_score > 0.85  and kl_draft < 1.0:
+                                    #     px +=  r * lev_sim_score
+                                    if combined_score > 0.625:
+                                        px +=  r * combined_score
                             # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
                             # accept_length_fake =  accept_length + 1
                             # is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
@@ -719,7 +721,7 @@ class EaLumina_mGPT(nn.Module):
                                                         
                             curr_tree_node_idx = retrieve_indices[j,i]
                             if m_bias_list is not None:
-                                if kl_draft < 3.0 :
+                                if kl_draft < 0.85 :
                                     for bias_idx, tpl in enumerate(m_bias_list) :
                                         id1,id2 = tpl
                                         if id1 == curr_tree_node_idx:
