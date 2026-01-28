@@ -1325,22 +1325,22 @@ class Model(nn.Module):
             # InterleavedTopKLogitsWarper
             last_headout = logits_processors[1](last_headout)
             
-            # # [SY]: [1, 16384] --> [5, 16384]
-            # filtered_logits[filtered_logits == float('-inf')] = 0.0
-            # filtered_logits = filtered_logits.to(torch.float32)
-            # normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
+            # [SY]: [1, 16384] --> [5, 16384]
+            filtered_logits[filtered_logits == float('-inf')] = 0.0
+            filtered_logits = filtered_logits.to(torch.float32)
+            normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            # # [5, 16384] --> [7, 16384]
-            # last_headout_modified = last_headout.clone()
-            # last_headout_modified[last_headout_modified == float('-inf')] = 0.0
-            # curr_logits = last_headout_modified.to(torch.float32)
-            # normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
+            # [5, 16384] --> [7, 16384]
+            last_headout_modified = last_headout.clone()
+            last_headout_modified[last_headout_modified == float('-inf')] = 0.0
+            curr_logits = last_headout_modified.to(torch.float32)
+            normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            # # [1,5], [5,7] etc..
-            # cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
-            # # Now in [0, 1] --> combined with l2 later
-            # cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
-            # bias_level_list[i].append(cosine_sim_matrix)
+            # [1,5], [5,7] etc..
+            cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
+            # Now in [0, 1] --> combined with l2 later
+            cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
+            bias_level_list[i].append(cosine_sim_matrix)
             
             if tree_type == "static":
                 pass
