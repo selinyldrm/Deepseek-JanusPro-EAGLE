@@ -1,0 +1,2 @@
+base_model_path:  /work1/deming/shared/lumina/Lumina-mGPT-7B-768/ ea_model_path:  /work1/deming/shared/lumina/LANTERN-Lumina-mGPT-7B-768/
+VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt

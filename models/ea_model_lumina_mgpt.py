@@ -603,15 +603,31 @@ class EaLumina_mGPT(nn.Module):
 
         cfg_tree_logits = uncond_tree_logits + self.cfg_scale * (tree_logits - uncond_tree_logits)
 
+        # finite_mask = torch.isfinite(cfg_tree_logits)
+        # num_finite_per_batch = finite_mask.view(cfg_tree_logits.shape[0], -1).sum(dim=1)
+        # print("Number of finite logits per batch:", num_finite_per_batch.item() if num_finite_per_batch.numel()==1 else num_finite_per_batch)
+        # # Count total finite logits
+        # total_finite = finite_mask.sum()
+        # print("Total finite logits initially:", total_finite.item())
+        
         # MultiModalLogitsProcessor
         cfg_tree_logits = self.internal_logits_processors[0](
             cfg_tree_logits[0], image_start_token_id_index=self.image_start_token_id_index, position_ids=position_ids + 1
         )
+        # finite_mask = torch.isfinite(cfg_tree_logits)
+        # num_finite_per_batch = finite_mask.view(cfg_tree_logits.shape[0], -1).sum(dim=1)
+        # print("Number of finite logits per batch:", num_finite_per_batch.item() if num_finite_per_batch.numel()==1 else num_finite_per_batch)
+
+        # # Count total finite logits
+        # total_finite = finite_mask.sum()
+        # print("Total finite logits after multimodal:", total_finite.item())
 
         # InterleavedTopKLogitsWarper
         cfg_tree_logits = self.internal_logits_processors[1](cfg_tree_logits)
         
         logits = cfg_tree_logits[retrieve_indices]
+        # print("logits_out min/max:", logits.min(), logits.max())
+        # print("logits: ", logits)
         return logits, hidden_states, uncond_hidden_states
 
     def evaluate_posterior(self, bias_list, level_bias_list , l_node_counts,logits, tree_logits, retrieve_indices,
@@ -642,9 +658,13 @@ class EaLumina_mGPT(nn.Module):
                 fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
                 
                 gt_logits = logits[fi, i-1]
+                # finite_mask = torch.isfinite(gt_logits)  # True where logits are finite
+                # gt_logits_finite = gt_logits[finite_mask]  # 1D tensor of valid logits
+                
                 # curr_topk_vals, _ = torch.topk(gt_logits, 2000, dim=-1)
                 # curr_topk_vals_gtp  = torch.softmax(curr_topk_vals, dim=-1)
                 gtp = torch.softmax(gt_logits, dim=0)
+                # gtp_finite = torch.softmax(gt_logits_finite, dim=0)
                 
                 # # add KL divergence of draft and target
                 curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
@@ -682,6 +702,13 @@ class EaLumina_mGPT(nn.Module):
 
                         r = random.random()
                         px = gtp[xi]
+                        if self.eagle_version == 1:
+                            qx = cart_candidates_prob[j, i]
+                            if qx <= 0:
+                                continue
+                        else:
+                            qx = 1.0
+
                         if xi in self.image_syntax_tokens:
                             # accept immediately
                             px = 1.0
@@ -693,40 +720,60 @@ class EaLumina_mGPT(nn.Module):
                             curr_tree_node_idx = retrieve_indices[j,i]
                             if level_sim is not None:
                                 if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
-                                    lev_sim_score = level_sim[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                                    inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
-                                    combined_score = (lev_sim_score + inv_l2_d) / 2
-                                    # if lev_sim_score > 0.85  and kl_draft < 1.0:
-                                    #     px +=  r * lev_sim_score
-                                    if combined_score > 0.625:
-                                        px +=  r * combined_score
+                                    min_val = level_sim.min()
+                                    max_val = level_sim.max()
+                                    level_sim_norm = (level_sim - min_val) / (max_val - min_val).clamp_min(1e-12)
+                                    # T=10
+                                    # avg_level_sim = level_sim.mean() 
+                                    # if avg_level_sim > 0.5 :
+                                        # level_sim_norm = torch.softmax(level_sim / T, dim=-1)
+                                        # Retrieve the score for the current token-node pair
+                                    lev_sim_score = level_sim_norm[prev_acc_token - prev_past_nodes, curr_tree_node_idx - past_nodes]
+                                        # inv_l2_d = 1 - torch.sqrt(2 * (1 - lev_sim_score))
+                                        # combined_score = (lev_sim_score + inv_l2_d) / 2
+                                    if  lev_sim_score > 0.625 and kl_draft < 1.0:
+                                        px +=  r * lev_sim_score
+                            
                             # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
                             # accept_length_fake =  accept_length + 1
                             # is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
                             # # fi = list(IDs of only TRUE branches)
                             # fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                            
                             # # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                            # gt_logits_fake_topk, topk_index_tgt = torch.topk(logits[fi_fake, i], 2000, dim=-1)
+                            # # gt_logits_fake_topk, topk_index_tgt = torch.topk(logits[fi_fake, i], 2000, dim=-1)
                             # # create masked logit vector filled with -inf
-                            # normalized_fake = F.normalize(gt_logits_fake_topk[None], dim=1, eps=1e-6).to(torch.float32)
-                            # normalized_curr = F.normalize(curr_topk_vals[None], dim=1, eps=1e-6).to(torch.float32)
+                            # normalized_fake = F.normalize(logits[fi_fake, i][None], dim=-1, eps=1e-6)
+                            # normalized_curr = F.normalize(gt_logits[None], dim=-1, eps=1e-6)
                             # lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+                            # print("lev_sim_score: ", lev_sim_score)
+                            # # diff = gt_logits_finite - fake_logits_finite
+                            # # diff_norm = torch.norm(diff) / diff.numel()  # L2 norm
+                            # # avg_logit = gt_logits_finite.mean()
+                            # # print("avg_logit: ", avg_logit , "diff_norm: ", diff_norm)
                             # p = F.log_softmax(normalized_curr, dim=-1)
-                            # kl_target = F.kl_div(p, curr_topk_vals_gtp, reduction='batchmean')  # computes KL(P || Q)
-                            # if lev_sim_score > 0.625 and kl_target < 0.5 :
-                            #     px +=  r * lev_sim_score 
-                                
-                           
-                                                        
+                            
+                            # # lev_sim_score = torch.nn.functional.cosine_similarity(p_s, p_fake, dim=0).squeeze()
+                            # # print("diff_norm: ", diff_norm)
+                            # # print("avg_logit: ", avg_logit)
+                            # kl_target = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
+                            
+                            # # lev_sim_score = torch.sum(p * p_gt)
+                            # # lev_sim_score = torch.sum(p_s * p_fake)
+                            # # if diff_norm  > avg_logit*0.1 and kl_target < 1.0 :
+                            # #     px +=  r * diff_norm
+                            
+                            # if lev_sim_score > 0.625 and kl_target < 1.0 :
+                            #     px +=  r * lev_sim_score
+                                                            
                             curr_tree_node_idx = retrieve_indices[j,i]
                             if m_bias_list is not None:
-                                if kl_draft < 0.85 :
+                                if kl_draft < 1.0 :
                                     for bias_idx, tpl in enumerate(m_bias_list) :
                                         id1,id2 = tpl
                                         if id1 == curr_tree_node_idx:
                                             similar_xi = tree_candidates[0][id2]
                                             px += r * gtp[similar_xi]
+                            
                             # if lantern:
                             #     nearest_probs = gtp[self.nearest_latents[xi - self.image_token_offset, :lantern_k]+self.image_token_offset].reshape(lantern_k, 1)
                             #     cumsum_nearest_probs = torch.cumsum(nearest_probs, dim=0)
@@ -745,12 +792,6 @@ class EaLumina_mGPT(nn.Module):
                             #     else:
                             #         px = px + cumsum_nearest_probs[indices]
                         
-                        if self.eagle_version == 1:
-                            qx = cart_candidates_prob[j, i]
-                            if qx <= 0:
-                                continue
-                        else:
-                            qx = 1.0
                         
                         acp = px / qx
 
@@ -773,7 +814,27 @@ class EaLumina_mGPT(nn.Module):
                             # if lantern and (xi in self.image_tokens):
                                 # if (indices != -1):
                                 #     gtp[self.nearest_latents[xi-self.image_token_offset, :lantern_k+1]+self.image_token_offset] = 0
-                            
+                            if m_bias_list is not None:
+                                if kl_draft < 1.0 :
+                                    for bias_idx, tpl in enumerate(m_bias_list) :
+                                        id1,id2 = tpl
+                                        if id1 == curr_tree_node_idx:
+                                            similar_xi = tree_candidates[0][id2]
+                                            gtp[similar_xi] *= -(r-1)
+                                                                        
+                            if level_sim is not None:
+                                if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
+                                    min_val = level_sim.min()
+                                    max_val = level_sim.max()
+                                    level_sim_norm = (level_sim - min_val) / (max_val - min_val).clamp_min(1e-12)
+                                    lev_sim_score = level_sim_norm[prev_acc_token - prev_past_nodes, curr_tree_node_idx - past_nodes]
+                                    if  lev_sim_score > 0.625 and kl_draft < 1.0:
+                                        px -=  r * lev_sim_score
+                            # if  kl_target != -1 and  diff_norm  > avg_logit*0.1 and kl_target < 1.0 :
+                            #     gtp[xi] -=  r * diff_norm 
+                            # if lev_sim_score > 0.625 and kl_target < 1.0 :
+                            #     gtp[xi] -=  r * lev_sim_score 
+                                
                             if self.eagle_version == 1:
                                 gtp = gtp - q
                                 gtp[gtp < 0] = 0
@@ -982,7 +1043,7 @@ class EaLumina_mGPT(nn.Module):
         bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices'])+1)]
         level_bias_list = [ [] for x in range(len(self.tree_buffers['tree_indices']))]
         if self.eagle_version == 1:
-            tree_logits, sample_token, init_bias_list, bias_level_list = self.initialize_tree(
+            tree_logits, sample_token, init_bias_list, new_level_bias_list = self.initialize_tree(
                 input_ids=input_ids,
                 attention_mask=attn_mask,
                 tree_attn_mask=tree_buffers["tree_attn_mask"],
@@ -992,6 +1053,7 @@ class EaLumina_mGPT(nn.Module):
             tree_position_ids = tree_buffers["tree_position_ids"]
             retrieve_indices = tree_buffers["retrieve_indices_head"]
             bias_list = init_bias_list
+            level_bias_list = new_level_bias_list
 
         else:
             tree_candidates, retrieve_indices, tree_mask, tree_position_ids = self.initialize_tree(

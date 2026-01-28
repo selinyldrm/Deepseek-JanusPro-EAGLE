@@ -669,6 +669,7 @@ class EaModel(nn.Module):
             return best_candidate, accept_length, logits[best_candidate, accept_length]
 
         else:
+            model_conf = []
             cart_candidates_prob = cart_candidates_prob.to(logits.device)
             accept_length = 1
             accept_cand = candidates[0][:1]
@@ -713,6 +714,8 @@ class EaModel(nn.Module):
                         candidates_set.append(xi)
                         r = random.random()
                         px = gtp[xi]
+                        px_orig = px.clone()
+                        model_conf.append(px_orig)
 
                         qx = cart_candidates_prob[j, i]
                         if qx <= 0:
@@ -739,28 +742,30 @@ class EaModel(nn.Module):
                         kl = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
                         
                         # [SY]: Inter-Step similarity with KL-divergence (default mode)
-                        if lev_sim_score > 0.5 and kl < 5.0 :
+                        if lev_sim_score > 0.625 and kl < 4.0 :
                             px +=  r * lev_sim_score 
-
+                            
+                        
                         curr_tree_node_idx = retrieve_indices[j,i]
                         
                         # [SY]: KL divergence of draft from target
-                        curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
-                        if curr_draft_logits.shape[0] != 1 :
-                            curr_draft_logits = curr_draft_logits[0]
-                        if curr_draft_logits.dim == 1 :
-                            curr_draft_logits = curr_draft_logits.unsqueeze(0)
-                        kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
+                        # curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
+                        # if curr_draft_logits.shape[0] != 1 :
+                        #     curr_draft_logits = curr_draft_logits[0]
+                        # if curr_draft_logits.dim == 1 :
+                        #     curr_draft_logits = curr_draft_logits.unsqueeze(0)
+                        # kl_draft = F.kl_div(curr_draft_logits, gtp, reduction='batchmean')  # computes KL(P || Q)
                         
                         # [SY]: Intra-Step similarity with KL-divergence                           
                         if m_bias_list is not None:
-                            if kl_draft < 3.0 : # [SY]: comment this line out for without KL-divergence
-                                for bias_idx, tpl in enumerate(m_bias_list) :
-                                    id1,id2 = tpl
-                                    if id1 == curr_tree_node_idx:
-                                        similar_xi = tree_candidates[0][id2]
-                                        px += r * gtp[similar_xi]                           
+                            # if kl_draft < 3.0 : # [SY]: comment this line out for without KL-divergence
+                            for bias_idx, tpl in enumerate(m_bias_list) :
+                                id1,id2 = tpl
+                                if id1 == curr_tree_node_idx:
+                                    similar_xi = tree_candidates[0][id2]
+                                    px += r * gtp[similar_xi]                           
                             
+
                         if testing:
                             px_prior = px
                         
@@ -802,7 +807,7 @@ class EaModel(nn.Module):
                 sample_p = torch.softmax(gt_logits, dim=0)
             if testing:
                 return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r, eval_overhead
-            return torch.tensor(best_candidate), accept_length - 1, sample_p
+            return torch.tensor(best_candidate), accept_length - 1, sample_p, model_conf
 
 
     
@@ -1346,6 +1351,8 @@ class EaModel(nn.Module):
 
         recent_acc_logits = None
 
+    
+        model_conf_list = []
         # draft_tokens = tree_logits[0].flatten()[None] # eagle-3 directly uses draft tokens rather than features. shape : [1,250]
         st = time.time()
         for idx in range(max_steps):
@@ -1395,10 +1402,12 @@ class EaModel(nn.Module):
                 #     logits, candidates, logits_processor, lantern=True, lantern_k=1000, lantern_delta=3
                 # )
 
-                best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
+                best_candidate, accept_length, sample_p, model_conf = self.evaluate_posterior_v1(
                     idx, relaxed, testing, tree_logits, bias_list, recent_acc_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                 )
                 accept_list.append(accept_length)
+                model_conf_list.append(model_conf)
+                
 
                 input_ids, tree_logits, new_token, hidden_state, sample_token, new_bias_list, sim_list = self.update_inference_inputs(
                     idx,
@@ -1463,7 +1472,9 @@ class EaModel(nn.Module):
             r = [i for r in analysis_r for i in r]
 
             return input_ids[:, 120:120+max_length], time.time()-st, accept_list, p , pp, r , overhead_list, accepted_logits, img_sim_list
-        return input_ids[:, 120:120+max_length], time.time()-st, accept_list
+        flat_model_conf = [item for sublist in model_conf_list for item in sublist]
+        print("avg flat_model_conf: ", sum(flat_model_conf)/len(flat_model_conf))
+        return input_ids[:, 120:120+max_length], time.time()-st, accept_list, flat_model_conf
     
     @torch.no_grad()
     def decode_ids(self, ids):

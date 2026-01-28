@@ -73,10 +73,8 @@ def parse_args():
     parser.add_argument("--tree_choices", type=str, help="Tree choice for LANTERN",
                         default="mc_sim_7b_63")
     parser.add_argument("--drafter_top_k", type=int, default=None, help="Top-k for drafter")
-
-    # legacy arguments
-    parser.add_argument("--start_idx", type=int, default=0, help="Start index for image generation")
-    parser.add_argument("--end_idx", type=int, default=10000, help="End index for image generation")
+    parser.add_argument("--split_idx", type=int,
+                        default=0)
 
     return parser
 
@@ -242,8 +240,11 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
     if test:
         generated_tokens, latency, acceptance_list, analysis_p, analysis_p_p, analysis_r, overhead_list, logit_list, sim_list  = model.generate(**generate_params)
     else: 
-        generated_tokens, latency, accpt = model.generate(**generate_params)
-        print(f"generate time={latency} seconds\n", flush=True)
+        # generated_tokens, latency, accpt, tvd_image  = model.generate(**generate_params)
+        # generated_tokens, latency, accpt, model_conf_img  = model.generate(**generate_params)
+        # print(f"generate time={latency} seconds\n", flush=True)
+        generated_tokens, latency, accpt  = model.generate(**generate_params)
+        
     _, generated_image = model.decode_ids(generated_tokens)
 
     def sanitize_filename(text, max_len=256):
@@ -258,7 +259,7 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
     
         text = re.sub(r'[\/:*?"<>|]', '', text).strip().replace(' ', '_')
         return text[:max_len]
-
+    import statistics
     if model_name in ["lumina_mgpt", "anole"]:
         os.makedirs(f"{output_dir}", exist_ok=True)
         filename = sanitize_filename(prompt)
@@ -267,8 +268,10 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         os.makedirs(f"{output_dir}", exist_ok=True)
         filename = sanitize_filename(prompt)
         save_image(generated_image, f"{output_dir}/{filename}.png", normalize=True, value_range=(-1, 1))
+        
     if test:
         return latency, acceptance_list, analysis_p, analysis_p_p, analysis_r, overhead_list, logit_list, sim_list
+    # return latency, accpt, tvd_image
     return latency, accpt
 
 def run_generate_image(args):
@@ -284,9 +287,8 @@ def run_generate_image(args):
 
 
     if args.multigpu:
-        batch_sz = int((len(prompts)-args.start_idx) / world_size + 0.5) 
-        batch_sz = int((len(prompts)-args.start_idx) / world_size + 0.5) 
-        batch_start = [args.start_idx + (b_idx)*batch_sz for b_idx in range(world_size)]
+        batch_sz = int((args.e_idx-args.s_idx) / world_size + 0.5) 
+        batch_start = [(b_idx)*batch_sz for b_idx in range(world_size)]
         batch_end = [bs_idx + batch_sz for bs_idx in batch_start]
         if batch_end[-1] > len(prompts):
             batch_end[-1] = len(prompts)
@@ -294,19 +296,21 @@ def run_generate_image(args):
 
         mp.spawn(worker, args=(batch_start,batch_end,args,prompts, len(prompts)), nprocs=world_size, join=True)
     else:
-        worker(0, 0,len(prompts),args,prompts, len(prompts))    # 
+        worker(0, 0, args.e_idx-args.s_idx, args, prompts, len(prompts))    # 
 
-def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
+def worker(rank, start_idx,end_idx, args,prompts, total_prompt_count):
     torch.cuda.set_device(f"cuda:{rank}")
     model = load_model(args)
 
+    orig_start = args.s_idx
+    orig_end = args.e_idx
     if args.multigpu:
         start_idx = start_idx[rank]
         end_idx = end_idx[rank]
-        args.start_idx = start_idx
-        args.end_idx = end_idx
+        # args.s_idx = start_idx
+        # args.e_idx = end_idx
         print(f"Starting worker for prompts {start_idx} to {end_idx} on Rank {rank}")
-    
+        
     global_statistics = {}  
     latencies = []
     
@@ -319,8 +323,10 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
         overheads = []
         global_sim = torch.zeros(32, 32).to(torch.float32)
     global_acceptance = []
+    global_tvd = []
+    global_model_conf = []
     for idx, prompt in tqdm(enumerate(prompts), total=len(prompts)):
-        if idx < start_idx    or idx >= end_idx:
+        if idx + args.split_idx < start_idx    or idx >= end_idx:
             continue
         if args.model == "lumina_mgpt":
             q1 = f"Generate an image of 768x768 according to the following prompt:\n{prompt}"
@@ -411,8 +417,16 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             # plt.close()
             
         else:
-            latency, accpt = generate_and_save_image(args.output_dir, **generate_image_kwargs)
+            # latency, accpt, tvd_total = generate_and_save_image(args.output_dir, **generate_image_kwargs)
+            # latency, accpt, model_conf_img= generate_and_save_image(args.output_dir, **generate_image_kwargs)
+            latency, accpt= generate_and_save_image(args.output_dir, **generate_image_kwargs)
+            print(f"generate time={latency:.2f} for prompt: {prompt}\n", flush=True)
+
+
         global_acceptance.append(accpt)
+        # global_model_conf.append(model_conf_img)
+       
+        # global_tvd.append(tvd_total.float())
 
         latencies.append(latency)
 
@@ -434,7 +448,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
     # plt.tight_layout()
     # plt.savefig(f"{args.output_dir}/avg-logit-similarity-rank{rank}.png")
     # plt.close()
-
+        
     if args.multigpu:
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '12355'
@@ -453,37 +467,41 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
 
         local_acc = [sum(row) / len(row) for row in global_acceptance]
         local_tensor_acc = torch.tensor(local_acc)
+        # local_tensor_tvd = torch.tensor(global_tvd) 
+        
         # if global_acceptance.numel() < 13:
         #     pad_len = 13 - x.numel()
         #     local_tensor_acc[x] = torch.cat([local_tensor_acc[x], torch.full((pad_len,), -1.0)])  # use -1.0 as dummy
         # Gather from all workers
         all_gathered_acceptance = [torch.zeros_like(local_tensor_acc) for _ in range(world_size)]
+        # all_gathered_tvd = [torch.zeros_like(local_tensor_tvd) for _ in range(world_size)]
         
         torch.distributed.all_gather(all_gathered_acceptance, local_tensor_acc)
+        # torch.distributed.all_gather(all_gathered_tvd, local_tensor_tvd)
+
 
         # Reduce at rank 0
         if rank == 0:
-            global_latencies = torch.cat(all_gathered)
-            global_latencies = global_latencies[global_latencies >= 0]
-            latencies = np.array(global_latencies.cpu())
-            avg_latency = np.mean(latencies, axis=0)
-            print(f"Avg latency: {avg_latency} per image, with {global_latencies.shape} images.")
-            with open(f"{args.output_dir}/lumina_{str(args.s_idx)}-{str(args.e_idx)}.txt", "w") as f:
-                f.write(f"Avg latency: {avg_latency} per image, with {global_latencies.shape} images.")
-            plt.scatter(range(len(latencies)), latencies, marker='o', label=f"Latency of {total_prompt_count} Images with avg={avg_latency:.2f}")
-            plt.xlabel("Generation Index")
-            plt.ylabel("Time (Sec)")
-            plt.legend()
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig(f"{args.output_dir}/avg-latency-{str(args.s_idx)}-{str(args.e_idx)}.png")
-            plt.close()
+            # global_tvd = torch.cat(all_gathered_tvd)
+            # with open(f"{args.output_dir}/tvd_{str(orig_start)}-{str(orig_end)}.txt", "w") as f:
+            #     f.write(f"TVD= {global_tvd}")
+            # # avg_tvd = global_tvd.sum().item()/(orig_end - orig_start)
+            # avg_tvd = global_tvd.sum().item()/global_tvd.shape[-1]
+            # print(f"Avg TVD: {avg_tvd} per image, with {global_tvd.shape} images.")
+            # plt.scatter(range(len(global_tvd)), global_tvd, marker='o', label=f"TVD of {total_prompt_count} Images with avg={avg_tvd:.2f}")
+            # plt.xlabel("Image Index")
+            # plt.ylabel("Avg TVD Per Image")
+            # plt.legend()
+            # plt.grid(True)
+            # plt.tight_layout()
+            # plt.savefig(f"{args.output_dir}/avg-tvd-2-{str(orig_start)}-{str(orig_end)}.png")
+            # plt.close()
 
             global_acceptance = torch.cat(all_gathered_acceptance)
             global_acceptance = global_acceptance[global_acceptance >= 0]
-            avg_acceptance = global_acceptance.sum().item()/(args.e_idx - args.s_idx)
+            avg_acceptance = global_acceptance.sum().item()/(orig_end - orig_start)
             print(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
-            with open(f"{args.output_dir}/lumina_{str(args.s_idx)}-{str(args.e_idx)}.txt", "w") as f:
+            with open(f"{args.output_dir}/acceptance_{str(orig_start)}-{str(orig_end)}.txt", "w") as f:
                 f.write(f"Avg acceptance: {avg_acceptance} per image, with {global_acceptance.shape} images.")
             plt.scatter(range(len(global_acceptance)), global_acceptance, marker='o', label=f"Acceptance of {total_prompt_count} Images with avg={avg_acceptance:.2f}")
             plt.xlabel("Generation Index")
@@ -491,7 +509,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
             plt.legend()
             plt.grid(True)
             plt.tight_layout()
-            plt.savefig(f"{args.output_dir}/avg-accept-{args.s_idx}-{args.e_idx}.png")
+            plt.savefig(f"{args.output_dir}/avg-accept-{str(orig_start)}-{str(orig_end)}.png")
             plt.close()
 
 
@@ -670,6 +688,83 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
 
         torch.distributed.destroy_process_group()
     else:
+        # flat_tvd = [x for sublist in global_tvd for x in sublist]
+        # avg_tvd = sum(flat_tvd)/len(flat_tvd)
+        # print(f"Avg TVD: {avg_tvd} per image.")
+        # plt.scatter(range(len(flat_tvd)), flat_tvd, marker='o', label=f"TVD of {total_prompt_count} Images with avg={avg_tvd:.2f}")
+        # plt.xlabel("Image Index")
+        # plt.ylabel("Avg TVD per Image")
+        # plt.legend()
+        # plt.grid(True)
+        # plt.tight_layout()
+        # plt.savefig(f"{args.output_dir}/avg-tvd-{str(orig_start)}-{str(orig_end)}.png")
+        # plt.close()
+        
+        # flat_confidence = [x for sublist in global_model_conf for x in sublist]
+        # flat_confidence = np.array([t.item() for t in flat_confidence], dtype=float)
+        
+        # filtered_confidence = [
+        #     [x for x in row if x <= 1.0]
+        #     for row in global_model_conf
+        # ]
+        # flat_confidence = [
+        #     [x.detach().cpu().numpy().item() for x in row]
+        #     for row in filtered_confidence
+        # ]
+        # bins = np.linspace(
+        #     min(map(np.min, flat_confidence)),
+        #     max(map(np.max, flat_confidence)),
+        #     51  # 6 bins → 7 edges
+        # )
+        # bin_centers = 0.5 * (bins[:-1] + bins[1:])
+
+        # histograms = []
+
+        # for data in flat_confidence:
+        #     counts, _ = np.histogram(data, bins=bins)
+        #     histograms.append(counts)
+
+        # histograms = np.array(histograms)
+        # avg_counts = histograms.mean(axis=0)
+        # N = avg_counts.sum()
+
+        # import matplotlib.pyplot as plt
+        # from scipy.stats import skew
+        # # mean = flat_confidence.mean()
+        # # std = flat_confidence.std(ddof=1)
+        # mean = np.sum(avg_counts * bin_centers) / N
+        # variance = np.sum(avg_counts * (bin_centers - mean)**2) / (N - 1)
+        # std = np.sqrt(variance)
+        # sk = np.sum(
+        #     avg_counts * ((bin_centers - mean) / std) ** 3
+        # ) / N
+        # min_val = bins[np.argmax(avg_counts > 0)]
+        # max_val = bins[len(avg_counts) - np.argmax(avg_counts[::-1] > 0)]   
+        # # min_val = flat_confidence.min()
+        # # max_val = flat_confidence.max()
+        # # sk = skew(flat_confidence)
+        # label = (
+        #     f"min={min_val:.2f}, max={max_val:.2f}\n"
+        #     f"skew={sk:.2f}, std={std:.2f}\n"
+        # )
+        # # plt.hist(flat_confidence, bins=6, edgecolor="black", label=label)
+        # plt.bar(
+        #     bins[:-1],
+        #     avg_counts,
+        #     width=np.diff(bins),
+        #     align="edge",
+        #     edgecolor="black",
+        #     label=label
+        # )
+        # plt.xlabel("Target Probability")
+        # plt.ylabel("Frequency")
+        # plt.title('Histogram of Model Confidence')
+        # plt.axvline(mean, color="red", linestyle="--", linewidth=2, label=f"mean = {mean:.2f}")
+        # plt.legend(frameon=True)
+        # plt.grid(True)
+        # plt.savefig(f"{args.output_dir}/avg-histogram-{str(orig_start)}-{str(orig_end)}.png")
+        # plt.close()
+            
         latencies = torch.tensor(latencies)
         latencies = np.array(latencies.cpu())
         avg_latency = np.mean(latencies, axis=0)
@@ -759,6 +854,7 @@ def worker(rank, start_idx,end_idx,args,prompts, total_prompt_count):
         #     # plt.close()
             
 
+    
     with open(f"{args.output_dir}/global_statistics_{rank}_{start_idx}_{end_idx}.json", "w") as f:
         json.dump(global_statistics, f, indent=4)
 
