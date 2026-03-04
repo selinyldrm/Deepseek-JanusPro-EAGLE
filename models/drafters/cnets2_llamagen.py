@@ -518,6 +518,16 @@ class Model(nn.Module):
     def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=5, top_k=8, threshold=1.0):
         super().__init__()
 
+        # We use a small MLP to transform the hidden state into a probability
+        # 1. Project hidden_size -> intermediate (optional but recommended)
+        # 2. Project intermediate -> 1 (the scalar probability)
+        self.semantic_head = nn.Sequential(
+            nn.Linear(config.hidden_size, config.hidden_size // 4),
+            nn.SiLU(), # Matches Llama-style activations
+            nn.Linear(config.hidden_size // 4, 1),
+            nn.Sigmoid() # Squashes output to [0, 1] for BCE/MSE loss
+        )
+
         self.gradient_checkpointing = True
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
@@ -729,10 +739,13 @@ class Model(nn.Module):
             if use_cache:
                 next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
 
+        # 3. Predict semantic saliency
+        semantic_probs = self.semantic_head(hidden_states).squeeze(-1)
+        
         if use_cache:
-            return hidden_states, next_decoder_cache
+            return hidden_states, next_decoder_cache, semantic_probs
 
-        return hidden_states
+        return hidden_states, semantic_probs
 
     def reset_kv(self):
         self.stable_kv = None
@@ -1012,10 +1025,10 @@ class Model(nn.Module):
         if hasattr(self, "stable_kv") and self.stable_kv is not None:
             kv_len=self.stable_kv[0][0].shape[2]
             position_ids = torch.arange(kv_len, input_ids.shape[1], device=hidden_states.device).unsqueeze(0)
-            out_hidden, past_key_values = self(hidden_states, input_ids=input_ids[:,kv_len:], position_ids=position_ids, 
+            out_hidden, past_key_values, segment_probs = self(hidden_states, input_ids=input_ids[:,kv_len:], position_ids=position_ids, 
                                                past_key_values=self.stable_kv,use_cache=True)
         else:
-            out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, use_cache=True)
+            out_hidden, past_key_values, segment_probs = self(hidden_states, input_ids=input_ids, use_cache=True)
         self.stable_kv=past_key_values
         last_hidden = out_hidden[:, -1]
         if not self.diff_device:
@@ -1032,7 +1045,7 @@ class Model(nn.Module):
         # print("input_ids: ", input_ids.shape, flush=True)
 
         bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
-        # bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        bias_level_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
         # print("len(self.tree_buffer['tree_indices']): ", len(self.tree_buffer['tree_indices']), flush=True)
         # print("len(self.tree_buffer['tree_indices']): ", len(self.tree_buffer['tree_indices']))
         # level count on the tree == len(self.tree_buffer['tree_indices'])
@@ -1068,7 +1081,7 @@ class Model(nn.Module):
             #hidden_states = hidden_states.repeat(1,len_sq,1)
             self.tree_mask=self.tree_buffer['attn_mask'][i]
             position_ids=len_posi+self.tree_buffer["position_ids"][i]
-            out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, past_key_values=past_key_values, position_ids=position_ids, use_cache=True)
+            out_hidden, past_key_values, segment_probs = self(hidden_states, input_ids=input_ids, past_key_values=past_key_values, position_ids=position_ids, use_cache=True)
             len_posi += 1
 
             if not self.diff_device:
@@ -1086,28 +1099,28 @@ class Model(nn.Module):
             #     filtered_logits = filtered_logits[prev_accept, :]
 
             ################## comment out LEVEL BIAS here
-            # [1, 16384] --> [5, 16384]
-            # filtered_logits[filtered_logits == float('-inf')] = 0.0
-            # filtered_logits = filtered_logits.to(torch.float32)
-            # normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
+            #[1, 16384] --> [5, 16384]
+            filtered_logits[filtered_logits == float('-inf')] = 0.0
+            filtered_logits = filtered_logits.to(torch.float32)
+            normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            # [5, 16384] --> [7, 16384]
-            # last_headout_modified = last_headout.clone()
-            # last_headout_modified = logits_processor(None, last_headout_modified)
-            # last_headout_modified[last_headout_modified == float('-inf')] = 0.0
-            # curr_logits = last_headout_modified.to(torch.float32)
-            # normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
+            #[5, 16384] --> [7, 16384]
+            last_headout_modified = last_headout.clone()
+            last_headout_modified = logits_processor(None, last_headout_modified)
+            last_headout_modified[last_headout_modified == float('-inf')] = 0.0
+            curr_logits = last_headout_modified.to(torch.float32)
+            normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            # [1,5], [5,7] etc..
-            # cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
-            # Now in [0, 1] --> combined with l2 later
-            # cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
+            #[1,5], [5,7] etc..
+            cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
+            #Now in [0, 1] --> combined with l2 later
+            cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
 
-            # logit_sim.append(cosine_sim_matrix)
+            logit_sim.append(cosine_sim_matrix)
             
             # [1, 1], [5,1]
             bias_list[i] = bias
-            # bias_level_list[i].append(cosine_sim_matrix)
+            bias_level_list[i].append(cosine_sim_matrix)
 
         if logits_processor is not None:
             topk_index,topk_prob,op, bias, _ = self.sample(recent_logits, last_headout,step, logits_processor,k=self.top_k)
@@ -1121,8 +1134,8 @@ class Model(nn.Module):
         ss_op.append(op)
         bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
-        # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
-        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
+        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
+        # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
 
     @torch.no_grad()
     def acc(self, data, head, max_length=5):

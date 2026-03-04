@@ -1,22 +1,32 @@
 import re
 
 def average_generate_time(file_path: str) -> float:
-    pattern = re.compile(r"generate time=([\d.]+)\s*seconds")
+    # Flexible pattern: matches 'generate time', optional colon/equals, then the number
+    pattern = re.compile(r"generate time[:\s=]*([\d.]+)")
     times = []
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, "r") as f:
         for line in f:
-            match = pattern.search(line)
+            # Case-insensitive search for better coverage
+            match = pattern.search(line.lower())
             if match:
-                times.append(float(match.group(1)))
+                try:
+                    val = float(match.group(1))
+                    times.append(val)
+                except ValueError:
+                    continue
+            # DEBUG: If 'generate time' is in the line but it didn't match, show us why
+            elif "generate time" in line.lower():
+                print(f"Potential match failed on line: {line.strip()}")
 
     if not times:
-        raise ValueError("No generate time entries found in the file.")
+        print("\n--- ERROR ---")
+        print(f"Total lines searched: {sum(1 for _ in open(file_path))}")
+        raise ValueError("No generate time entries found in the file. Check the log format above.")
 
     return sum(times) / len(times)
 
-
 if __name__ == "__main__":
-    file_path = "/work1/deming/seliny2/LANTERN/lumina-264128.log"  # replace with your file path
+    file_path = "/work1/deming/shared/llamagen/eagle2-results/context-aware/debugged-merging-0.9-0.625-kl4.0.txt"
     avg_time = average_generate_time(file_path)
-    print(f"Average generate time: {avg_time:.6f} seconds")
+    print(f"\nAverage generate time: {avg_time:.6f} seconds")

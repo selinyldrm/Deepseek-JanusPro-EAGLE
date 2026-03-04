@@ -1829,6 +1829,7 @@ class ChameleonForConditionalGeneration(ChameleonPreTrainedModel, GenerationMixi
         for i in range(max_length):
             output = self.forward(input_ids=input_tokens, attention_mask=input_mask, past_key_values=past_key_values, position_ids=input_position_ids)
             logits = output.logits
+            
             # print("output.logits shape: ", output.logits.shape)   
             cfg_logits = cfg_logit_process(logits, cfg)
             # print("cfg_logits shape: ", cfg_logits.shape)   

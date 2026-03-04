@@ -13,7 +13,21 @@ from transformers.generation.logits_process import LogitsProcessor, LogitsProces
 import torch.nn.functional as F
 from .item_processor import FlexARItemProcessor
 from .modeling_lumina_mgpt import ChameleonForConditionalGeneration
+import matplotlib.pyplot as plt
+import regex as re
+import os
+def sanitize_filename(text, max_len=256):
+    # Remove unsafe characters and trim long prompts
+    # Remove prefix: "Generate an image of 768x768 according to the following prompt"
+    text = re.sub(
+        r'^\s*generate\s+an?\s+image\s+of\s+\d+x\d+\s+(according\s+to\s+the\s+following\s+prompt[:,]?\s*)?',
+        '',
+        text,
+        flags=re.IGNORECASE
+    )
 
+    text = re.sub(r'[\/:*?"<>|]', '', text).strip().replace(' ', '_')
+    return text[:max_len]
 class TqdmStoppingCriteria(StoppingCriteria):
     def __init__(self, total_tokens):
         super().__init__()
@@ -475,10 +489,25 @@ class FlexARInferenceSolver:
             generated_tokens = generation_result.sequences[0][prompt_len:].tolist()
             # count = generated_tokens.count(self.item_processor.token2id(self.item_processor.new_line_token))
             # print("number of new line tokens: ", count)
-            # step_logits = generation_result.logits[3:2355]  # [SY]: list of logit_processed logits for keeping only top-k predictions. helps fix 1.0 similarity
-            # # print("logits len: ", len(step_logits))
-            # masked_logits = torch.stack(step_logits, dim=0).squeeze(1)
-            # print("masked_logits shape: ", (masked_logits.shape))
+            
+            step_logits = generation_result.logits[3:2355]  # [SY]: list of logit_processed logits for keeping only top-k predictions. helps fix 1.0 similarity
+            # print("logits len: ", len(step_logits))
+            masked_logits = torch.stack(step_logits, dim=0).squeeze(1).to(torch.float64)
+            print("masked_logits shape: ", (masked_logits.shape))
+            
+            num_finite = torch.isfinite(masked_logits).sum()
+            print("Logit num_finite: ", num_finite)
+            # for idx in range(masked_logits.shape[0]):
+            #     num_nan = torch.isnan(masked_logits[idx]).sum().item()
+            #     num_posinf = torch.isposinf(masked_logits[idx]).sum().item()
+            #     num_neginf = torch.isneginf(masked_logits[idx]).sum().item()
+            #     print("idx: ", num_nan, num_posinf, num_neginf)
+            normalized = F.normalize(masked_logits, dim=-1, eps=1e-6).to(torch.float64)
+            cosine_sim_matrix = torch.matmul(normalized, normalized.T).to(torch.float64)
+            
+            num_finite = torch.isfinite(cosine_sim_matrix).sum()
+            print("cosine_sim_matrix num_finite: ", num_finite)
+            cosine_sim_matrix = cosine_sim_matrix.cpu().numpy()
             
             # topk_vals, topk_idx = torch.topk(masked_logits, 2000, dim=-1)
             # logp = F.log_softmax(topk_vals, dim=-1)
@@ -496,7 +525,7 @@ class FlexARInferenceSolver:
             # lower_tri = torch.tril(cosine_sim_matrix) # 2352 vs 2352
             # mean_val = lower_tri.sum() / (cosine_sim_matrix.shape[0] * (cosine_sim_matrix.shape[0] + 1) // 2)
             # cosine_sim_matrix = cosine_sim_matrix.cpu().numpy() # 2352 vs 2352
-            # import matplotlib.pyplot as plt
+            
             # import os
             # for row in range(48):
             #     plt.imshow(cosine_sim_matrix[49*row:49*row+48, 49*row:49*row+48], cmap='coolwarm', vmin=0, vmax=1.0)
@@ -517,6 +546,27 @@ class FlexARInferenceSolver:
             # os.makedirs(f"/work1/deming/shared/lumina/similarity-analysis/logits/{prompt_text}/", exist_ok=True)
             # plt.savefig(f"/work1/deming/shared/lumina/similarity-analysis/logits/{prompt_text}/full.png")
             # plt.close()
+            for row in range(48):
+                plt.imshow(cosine_sim_matrix[49*row:49*row+48, 49*row:49*row+48], cmap='coolwarm')
+                plt.colorbar()
+                plt.title("Cosine Similarity Between Token Features")
+                plt.xlabel("Token Index (i)")
+                plt.ylabel("cosine_similarity")
+                plt.grid()
+                prompt_name = sanitize_filename(prompt_text)
+                os.makedirs(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/", exist_ok=True)
+                plt.savefig(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/row-{row}.png")
+                plt.close()
+            plt.imshow(cosine_sim_matrix, cmap='coolwarm')
+            plt.colorbar()
+            plt.title("Cosine Similarity Between Token Features")
+            plt.xlabel("Token Index (i)")
+            plt.ylabel("cosine_similarity")
+            plt.grid()
+            prompt_name = sanitize_filename(prompt_text)
+            os.makedirs(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/", exist_ok=True)
+            plt.savefig(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/full.png")
+            plt.close()
             
 
             step_compression = 1.0 

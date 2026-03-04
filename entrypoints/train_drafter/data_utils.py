@@ -5,6 +5,7 @@ import torch
 from typing import Any, Dict, List
 from torch.utils.data import Dataset
 import numpy as np
+from pathlib import Path
 
 
 def list_files(path):
@@ -48,6 +49,7 @@ class CustomDataset(Dataset):
         self.data = datapath
         self.max_len = max_len
         self.transform = transform
+        self.mask_dir = "/work1/deming/shared/llamagen/mscoco_train_dataset/masks-labels"
         if model == "lumina_mgpt":
             self.num_image_tokens = 2357
         elif model == "anole":
@@ -63,7 +65,16 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        data = torch.load(self.data[index], weights_only=True)
+        # 1. Get the absolute path from your list
+        abs_path = self.data[index]
+
+        # 2. Extract the "stem" (filename without extension)
+        file_id = Path(abs_path).stem
+        data = torch.load(abs_path, weights_only=True)
+        
+        mask_path = os.path.join(self.mask_dir, f"{file_id}.pt")
+        # Load corresponding SAM2 mask label
+        mask_labels = torch.load(mask_path, weights_only=True)
        
         # print("self.data[index]: ", self.data[index])
         # data = np.load(self.data[index])
@@ -97,11 +108,11 @@ class CustomDataset(Dataset):
             input_ids_target = torch.cat((input_ids_target, zeropadding), dim=1)
 
         elif "llamagen" in self.model:
-            # hidden_states = data['hidden_state'][:self.max_len][None, :]
+            hidden_states = data['hidden_state'][:self.max_len][None, :]
             input_ids = data['input_ids'][:self.max_len][None, :]
             # [SY] input id will be separate from cond_idx for eagle3. that's why, don't pad
-            # input_ids_padding = torch.zeros_like(input_ids)[:, :119]
-            # input_ids = torch.cat((input_ids_padding, input_ids), dim=1) 
+            input_ids_padding = torch.zeros_like(input_ids)[:, :119]
+            input_ids = torch.cat((input_ids_padding, input_ids), dim=1) 
             loss_mask = data["loss_mask"][:self.max_len][None, :]
 
             length = input_ids.shape[1]
@@ -111,7 +122,7 @@ class CustomDataset(Dataset):
             zeropadding = torch.tensor([[0]])
             
             input_ids_target = input_ids
-            # input_ids_target = torch.cat((input_ids_target, zeropadding), dim=1) [SY] input id will be separate from cond_idx for eagle3.
+            input_ids_target = torch.cat((input_ids_target, zeropadding), dim=1) # [SY] input id will be separate from cond_idx for eagle3.
 
         loss_mask = loss_mask[0].tolist()
         loss_mask[-1] = 0
@@ -120,6 +131,7 @@ class CustomDataset(Dataset):
         target = hidden_states[:, 1:, :]
         zeropadding = torch.zeros(1, 1, target.shape[2])
         target = torch.cat((target, zeropadding), dim=1)
+                
         item = {
             "input_ids": input_ids_target,
             # "cond_idx": data['cond_idx'], # [SY]: uncomment for llamagen with eagle3 training.
@@ -127,6 +139,7 @@ class CustomDataset(Dataset):
             "target": target, # [SY]: comment out for llamagen with eagle3 training.
             "attention_mask": attention_mask,
             "loss_mask": loss_mask,
+            "binary_mask": mask_labels[None, :], # batch dim added here
         }
 
         if self.transform:  # [SY]: comment out for llamagen with eagle3 training.
@@ -161,6 +174,19 @@ class DataCollatorWithPadding:
             [item['loss_mask'] + [0] * (max_length - len(item['loss_mask'])) for item in features])
         batch_attention_mask = torch.tensor(
             [item['attention_mask'] + [0] * (max_length - len(item['attention_mask'])) for item in features])
+        
+        batch_binary_mask = torch.cat(
+                [
+                    self.paddingtensor2D
+                    ( 
+                        torch.cat(
+                        [
+                            torch.zeros(1, 120, device=batch_input_ids.device), 
+                            item['binary_mask']
+                        ]
+                        , dim=-1), max_length
+                    ) 
+                for item in features])
         batch = {
             "input_ids": batch_input_ids,
             # "cond_idx": batch_cond_idx, # [SY] Eagle3: uncomment
@@ -168,6 +194,7 @@ class DataCollatorWithPadding:
             "target": batch_target, # [SY] Eagle3: comment this out
             "attention_mask": batch_attention_mask,
             "loss_mask": batch_loss_mask,
+            "binary_target": batch_binary_mask,
         }
         return batch
 
