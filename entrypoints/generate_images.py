@@ -246,6 +246,7 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         generated_tokens, latency, accpt  = model.generate(**generate_params)
         
     _, generated_image = model.decode_ids(generated_tokens)
+    print("generated_image len: ", len(generated_image))
 
     def sanitize_filename(text, max_len=256):
         # Remove unsafe characters and trim long prompts

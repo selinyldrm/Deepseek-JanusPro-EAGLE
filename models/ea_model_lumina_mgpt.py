@@ -603,7 +603,6 @@ class EaLumina_mGPT(nn.Module):
 
         cfg_tree_logits = uncond_tree_logits + self.cfg_scale * (tree_logits - uncond_tree_logits)
         cfg_tree_logits_raw = cfg_tree_logits[0].clone()
-        print("cfg_tree_logits_raw.shape: ", cfg_tree_logits_raw.shape, flush=True)
 
         # MultiModalLogitsProcessor
         cfg_tree_logits = self.internal_logits_processors[0](
@@ -613,10 +612,8 @@ class EaLumina_mGPT(nn.Module):
         # InterleavedTopKLogitsWarper
         cfg_tree_logits = self.internal_logits_processors[1](cfg_tree_logits)
         
-        
-        print("cfg_tree_logits.shape: ", cfg_tree_logits.shape, flush=True)
-        
         logits = cfg_tree_logits[retrieve_indices]
+                
         logits_raw = cfg_tree_logits_raw[retrieve_indices]
         # print("logits_out min/max:", logits.min(), logits.max())
         # print("logits: ", logits)
@@ -626,185 +623,155 @@ class EaLumina_mGPT(nn.Module):
                             candidates, cart_candidates_prob=None, original_prob=None,
                             p_indices=None, tree_candidates=None, b_indices=None,
                             do_sample=True, lantern=False, lantern_k=1000, lantern_delta=0.1):
-        if do_sample:
-            accept_length = 1
-            accept_cand = candidates[0][:1]
-            best_candidate = 0
 
-            if self.eagle_version == 1:
-                assert cart_candidates_prob is not None, "Cartesian candidate probabilities are required for EAGLE v1"
-                assert original_prob is not None, "Original probabilities are required for EAGLE v1"
-                assert tree_candidates is not None, "Tree candidates are required for EAGLE v1"
-                assert p_indices is not None, "Parent indices are required for EAGLE v1"
-                assert b_indices is not None, "B indices are required for EAGLE v1"
-                
-                cart_candidates_prob = cart_candidates_prob.to(logits.device)
 
-            # for-loop over levels
-            for i in range(1, candidates.shape[1]):
-                if i != accept_length:
-                    break
-                
-                adjustflag = False
-                is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
-                fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
-                
-                gt_logits = logits[fi, i-1]
-                gt_logits_raw = logits_raw[fi, i-1]
-                # finite_mask = torch.isfinite(
-                    # gt_logits)  # True where logits are finite
-                # gt_logits_finite = gt_logits[finite_mask]  # 1D tensor of valid logits
-                
-                # curr_topk_vals, _ = torch.topk(gt_logits, 2000, dim=-1)
-                # curr_topk_vals_gtp  = torch.softmax(curr_topk_vals, dim=-1)
-                gtp = torch.softmax(gt_logits, dim=0)
-                # gtp_finite = torch.softmax(gt_logits_finite, dim=0)
-                
-                # # add KL divergence of draft and target
-                curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
-                if curr_draft_logits.shape[0] != 1 :
-                    curr_draft_logits = curr_draft_logits[0]
-                if curr_draft_logits.dim == 1 :
-                    curr_draft_logits = curr_draft_logits.unsqueeze(0)
+        cart_candidates_prob = cart_candidates_prob.to(logits.device)
+        accept_length = 1
+        accept_cand = candidates[0][:1]
+        best_candidate = 0
+        # BFS
+        eval_overhead = 0.0
+        next_draft_corrected = None
+        
+        # print("logits_processor logits.shape: ", logits.shape)
+        # for x in range(len(op)):
+            # print("op[x].shape: ", op[x].shape)
+        for i in range(1, candidates.shape[1]): # token depth
+            if i != accept_length:
+                break
+            # print("verifying at depth: ", i, " curr accept_length: ", accept_length)
+            m_bias_list = None
+            level_sim = None
+            past_nodes = l_node_counts[i]
+            # prev_past_nodes = l_node_counts[i-1]
+            if i < len(bias_list) and len(bias_list[i]):
+                m_bias_list = copy.deepcopy(bias_list[i])
+                m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+            # if i < len(level_bias_list) and len(level_bias_list[i-1]):
+            #     level_sim = level_bias_list[i-1][0]
+                # BUGFIX
+                # level_sim += past_nodes
+            adjustflag = False
+            # print("accept_cand: ", accept_cand)
+            # print("accept_length: ", accept_length)
+            # print("candidates: ", candidates)
+            is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
+            fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
+            gt_logits = logits[fi, i-1]
+            gtp = torch.softmax(gt_logits, dim=0)
+            # print("gtp.shape: ",gtp.shape )
+            candidates_set = []
+            
+            for j in range(candidates.shape[0]): # candidate sequences
+                if is_eq[j]:
+                    prev_acc_token = retrieve_indices[j,i-1]
+                    # xi is the token ID in the codebook !!! repetitive nodes due to j,i indexing 
+                    x = candidates[j, i]
+                    xi = x.item()
                     
-                p = F.log_softmax(curr_draft_logits, dim=-1)
-                kl_draft = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q) for all 65k logits.
-                
-                candidates_set = []
-                
-                # level_sim = None
-                m_bias_list = None
-                past_nodes = l_node_counts[i]
-                # prev_past_nodes = l_node_counts[i-1]
-                # if i < len(level_bias_list) and len(level_bias_list[i-1]):
-                #     level_sim = level_bias_list[i-1][0]
-                
-                if i < len(bias_list) and len(bias_list[i]):
-                    m_bias_list = copy.deepcopy(bias_list[i])
-                    m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+                    if xi in candidates_set or xi == -1:
+                        continue
+                    candidates_set.append(xi)
+                    r = random.random()
+                    # print("gtp_level.shape: ", gtp_level.shape)
+                    # print("current_gtp.shape: ", current_gtp.shape)
+                    
+                    qx = cart_candidates_prob[j, i]
+                    
+                    if xi in self.image_syntax_tokens:
+                        # accept immediately
+                        px = 1.0
+                    elif not xi in self.image_tokens:
+                        # reject immediately
+                        px = 0.0
+                        q = original_prob[i - 1][p_indices[j][i]].clone()
+                        b = b_indices[j][i]
 
-                # for-loop within a level
-                for j in range(candidates.shape[0]):
-                    if is_eq[j]:
-                        x = candidates[j, i]
-                        xi = x.item()
+                        if len(b) > 0:
+                            mask = tree_candidates[0][b]
+                            q[mask] = 0
+                            q = q / q.sum()
+                            
+                        gtp = gtp - q
+                        gtp[gtp < 0] = 0
 
-                        if xi in candidates_set or xi == -1:
-                            continue
-                        
-                        candidates_set.append(xi)
+                        if gtp.sum() == 0:
+                            gtp[self.image_tokens] = 1.0
 
-                        r = random.random()
+                        gtp = gtp / gtp.sum()
+                        adjustflag = True
+                        continue
+                    else: 
                         px = gtp[xi]
-                        if self.eagle_version == 1:
-                            qx = cart_candidates_prob[j, i]
-                            if qx <= 0:
-                                continue
-                        else:
-                            qx = 1.0
-
-                        if xi in self.image_syntax_tokens:
-                            # accept immediately
-                            px = 1.0
-                        elif not xi in self.image_tokens:
-                            # reject immediately
-                            px = 0.0
-                        else:
-                            prev_acc_token = retrieve_indices[j,i-1]
-                            accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
-                            accept_length_fake =  accept_length + 1
-                            is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                            fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                            gt_logits_fake = logits_raw[fi_fake, i][None]
-                            # print("gt_logits_fake.shape: ", gt_logits_fake.shape)
-                            normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
-                            normalized_curr = F.normalize(gt_logits_raw[None], dim=1, eps=1e-6).to(torch.float32)
-                            lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
-                            
-                            p = F.log_softmax(normalized_curr, dim=-1)
-                            kl_target = F.kl_div(p, torch.softmax(gt_logits_raw, dim=0), reduction='batchmean')  # computes KL(P || Q)
-                            print("lev_sim_score: ", lev_sim_score, " kl_target: ", kl_target)
-                            # curr_tree_node_idx = retrieve_indices[j,i]
-                            # if level_sim is not None:
-                            #     min_val = level_sim.min()
-                            #     max_val = level_sim.max()
-                            #     level_sim_norm = (level_sim - min_val) / (max_val - min_val).clamp_min(1e-12)
-                            #     if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
-                            #         lev_sim_score = level_sim_norm[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                            if lev_sim_score > 0.625 and  kl_target < 1.0:
-                                px +=  r * lev_sim_score
-                            
-                                    
-                            curr_tree_node_idx = retrieve_indices[j,i]
-                            if m_bias_list is not None:
-                                if kl_draft < 1.0 :
-                                    for bias_idx, tpl in enumerate(m_bias_list) :
-                                        id1,id2 = tpl
-                                        if id1 == curr_tree_node_idx:
-                                            similar_xi = tree_candidates[0][id2]
-                                            px += r * gtp[similar_xi]
-                            
-                            
+                    
+                    if qx <= 0:
+                        continue
+                    ########################## ACCEPT #####################################
+                    acp = px / qx
+                    curr_tree_node_idx = retrieve_indices[j,i]
+                    # print("\ncurr_tree_node_idx: ", curr_tree_node_idx)
+                    if r <= acp:
+                        accept_cand = torch.cat((accept_cand, x[None]), dim=0)
+                        accept_length += 1
+                        best_candidate = j
+                        # print("Accepted immediately: ", curr_tree_node_idx)
+                        break
+                    
+                   
+                    gt_logits_next = torch.softmax(logits[j, i], dim=0)
+                    # print("gt_logits_next.shape: ", gt_logits_next.shape)
+                    normalized_gt_logits_next = F.normalize(gt_logits_next, dim=-1, eps=1e-6).to(torch.float32)
+                    normalized_gt_curr = F.normalize(gtp, dim=-1, eps=1e-6).to(torch.float32)
+                    lev_sim_score = torch.matmul(normalized_gt_curr, normalized_gt_logits_next.T).squeeze()
+                    
+                    # delta_curr = gtp - original_prob[i-1][p_indices[j][i]]  # draft logits processed and softmaxed during sample
+                    delta_curr =  float(px) - float(qx)
+                    if delta_curr < 0 and xi in self.image_tokens :
+                        current_entropy = -torch.sum(gtp * torch.log(gtp + 1e-10))
+                    
+                        alpha = torch.sigmoid(current_entropy - 5) 
+                        alpha = alpha.clamp(0, 1)   # cap maximum relaxation    
                         
-                        acp = px / qx
-
-                        if r <= acp:
+                        temp_curr_gtp_xi = copy.deepcopy(gtp[xi])
+                        temp_curr_gtp_xi =  (1-alpha) * gtp[xi] - alpha * delta_curr
+                        # print("Corrected current token from: ", gtp_level[j][xi]  * delta_curr[xi], " to ", gtp_level[j][xi] )
+                        corrected_acp = temp_curr_gtp_xi / qx
+                        if r <= corrected_acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                             accept_length += 1
                             best_candidate = j
+                            # print("Accepted after correction: ", curr_tree_node_idx)
                             break
-                        else:
-                            assert not xi in self.image_syntax_tokens, "Image syntax tokens should not be rejected"
-                            
-                            if self.eagle_version == 1:
-                                q = original_prob[i - 1][p_indices[j][i]].clone()
-                                b = b_indices[j][i]
-                                if len(b) > 0:
-                                    mask = tree_candidates[0][b]
-                                    q[mask] = 0
-                                    q = q / q.sum()
-                            
-                            # Recover distribution
-                            if m_bias_list is not None:
-                                if kl_draft < 1.0 :
-                                    for bias_idx, tpl in enumerate(m_bias_list) :
-                                        id1,id2 = tpl
-                                        if id1 == curr_tree_node_idx:
-                                            similar_xi = tree_candidates[0][id2]
-                                            gtp[similar_xi] *= -(r-1)
-                            if lev_sim_score > 0.625 and  kl_target < 1.0:
-                                px -=  r * lev_sim_score
-                            # if level_sim is not None:
-                            #     min_val = level_sim.min()
-                            #     max_val = level_sim.max()
-                            #     level_sim_norm = (level_sim - min_val) / (max_val - min_val).clamp_min(1e-12)
-                            #     if curr_tree_node_idx-past_nodes < level_sim.shape[1]:
-                            #         lev_sim_score = level_sim_norm[prev_acc_token-prev_past_nodes, curr_tree_node_idx-past_nodes]
-                            #         if lev_sim_score > 0.625 and  kl_draft < 1.0:
-                            #             gtp[xi] -=  r * lev_sim_score
-                                        
-                            if self.eagle_version == 1:
-                                gtp = gtp - q
-                                gtp[gtp < 0] = 0
-                            else:
-                                gtp[xi] = 0
 
-                            if gtp.sum() == 0:
-                                gtp = torch.ones_like(gtp)
-                            
-                            gtp /= gtp.sum()
-                            adjustflag = True
+                    ################ REJECT #####################################
 
-            if adjustflag and accept_length != candidates.shape[1]:
-                sample_p = gtp
-            else:
-                gt_logits = logits[best_candidate, accept_length-1]
-                sample_p = torch.softmax(gt_logits, dim=0)
-            
-            return torch.tensor(best_candidate), accept_length-1, sample_p
-        
+                    q = original_prob[i - 1][p_indices[j][i]].clone()
+                    b = b_indices[j][i]
+
+                    if len(b) > 0:
+                        mask = tree_candidates[0][b]
+                        q[mask] = 0
+                        q = q / q.sum()
+                   
+                    # rejection sampling
+                    # if delta_curr[xi] < 0  and xi in self.image_tokens : 
+                    #     gtp[xi] =  temp_curr_gtp_xi
+                        
+                    gtp = gtp - q
+                    gtp[gtp < 0] = 0
+
+                    if gtp.sum() == 0:
+                        gtp[self.image_tokens] = 1.0
+
+                    gtp = gtp / gtp.sum()
+                    adjustflag = True
+                            
+        if adjustflag and accept_length != candidates.shape[1]:
+            sample_p = gtp
         else:
-            raise NotImplementedError("Greedy decoding is not implemented yet")
+            gt_logits = logits[best_candidate, accept_length-1]
+            sample_p = torch.softmax(gt_logits, dim=0)
+        return torch.tensor(best_candidate), accept_length - 1, sample_p
 
     def update_inference_inputs(self, input_ids, attention_mask,candidates, best_candidate, accept_length,
                                 retrieve_indices, do_sample, new_token, past_key_values_data,

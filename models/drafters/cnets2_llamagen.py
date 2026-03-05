@@ -1100,27 +1100,27 @@ class Model(nn.Module):
 
             ################## comment out LEVEL BIAS here
             #[1, 16384] --> [5, 16384]
-            filtered_logits[filtered_logits == float('-inf')] = 0.0
-            filtered_logits = filtered_logits.to(torch.float32)
-            normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
+            # filtered_logits[filtered_logits == float('-inf')] = 0.0
+            # filtered_logits = filtered_logits.to(torch.float32)
+            # normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            #[5, 16384] --> [7, 16384]
-            last_headout_modified = last_headout.clone()
-            last_headout_modified = logits_processor(None, last_headout_modified)
-            last_headout_modified[last_headout_modified == float('-inf')] = 0.0
-            curr_logits = last_headout_modified.to(torch.float32)
-            normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
+            # #[5, 16384] --> [7, 16384]
+            # last_headout_modified = last_headout.clone()
+            # last_headout_modified = logits_processor(None, last_headout_modified)
+            # last_headout_modified[last_headout_modified == float('-inf')] = 0.0
+            # curr_logits = last_headout_modified.to(torch.float32)
+            # normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
             
-            #[1,5], [5,7] etc..
-            cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
-            #Now in [0, 1] --> combined with l2 later
-            cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
+            # #[1,5], [5,7] etc..
+            # cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
+            # #Now in [0, 1] --> combined with l2 later
+            # cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
 
-            logit_sim.append(cosine_sim_matrix)
+            # logit_sim.append(cosine_sim_matrix)
             
             # [1, 1], [5,1]
             bias_list[i] = bias
-            bias_level_list[i].append(cosine_sim_matrix)
+            # bias_level_list[i].append(cosine_sim_matrix)
 
         if logits_processor is not None:
             topk_index,topk_prob,op, bias, _ = self.sample(recent_logits, last_headout,step, logits_processor,k=self.top_k)
@@ -1134,8 +1134,8 @@ class Model(nn.Module):
         ss_op.append(op)
         bias_list[len(self.tree_buffer['tree_indices'])] = bias
 
-        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
-        # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
+        # return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, bias_level_list, logit_sim
+        return (torch.cat(ss_token),torch.cat(ss_prob),ss_op), bias_list, logit_sim
 
     @torch.no_grad()
     def acc(self, data, head, max_length=5):

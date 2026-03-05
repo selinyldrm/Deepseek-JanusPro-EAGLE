@@ -939,25 +939,25 @@ def sample(logits, k=1):
     probabilities = torch.nn.functional.softmax(logits, dim=-1)
     
     bias = []
-    masked_logits = logits
-    masked_logits[masked_logits == float('-inf')] = 0.0
-    topk_vals, topk_idx = torch.topk(logits, 16384, dim=-1)
-    masked_logits = topk_vals.to(torch.float32)
-    normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
+    # masked_logits = logits
+    # masked_logits[masked_logits == float('-inf')] = 0.0
+    # topk_vals, topk_idx = torch.topk(logits, 16384, dim=-1)
+    # masked_logits = topk_vals.to(torch.float32)
+    # normalized = F.normalize(masked_logits, dim=1, eps=1e-6).to(torch.float32)
     
-    if normalized.shape[0] > 1 :
-        # Compute cosine similarity matrix: [B, B]
-        cosine_sim_matrix = torch.matmul(normalized, normalized.T)
-        min_val = cosine_sim_matrix.min()
-        max_val = cosine_sim_matrix.max()
-        cosine_sim_matrix = (cosine_sim_matrix - min_val) / (max_val - min_val).clamp_min(1e-12)
-        # Keep scores where similarity > threshold
-        high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
-        # Get indices
-        rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
-        for r,c in zip(rows.tolist(), cols.tolist()):
-            if r != c:
-                bias.append((r,c))
+    # if normalized.shape[0] > 1 :
+    #     # Compute cosine similarity matrix: [B, B]
+    #     cosine_sim_matrix = torch.matmul(normalized, normalized.T)
+    #     min_val = cosine_sim_matrix.min()
+    #     max_val = cosine_sim_matrix.max()
+    #     cosine_sim_matrix = (cosine_sim_matrix - min_val) / (max_val - min_val).clamp_min(1e-12)
+    #     # Keep scores where similarity > threshold
+    #     high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
+    #     # Get indices
+    #     rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+    #     for r,c in zip(rows.tolist(), cols.tolist()):
+    #         if r != c:
+    #             bias.append((r,c))
         
     sampled_indices = torch.multinomial(probabilities, k, replacement=False)
     sampled_probs = torch.gather(probabilities, -1, sampled_indices)
@@ -1325,22 +1325,6 @@ class Model(nn.Module):
             # InterleavedTopKLogitsWarper
             last_headout = logits_processors[1](last_headout)
             
-            # [SY]: [1, 16384] --> [5, 16384]
-            filtered_logits[filtered_logits == float('-inf')] = 0.0
-            filtered_logits = filtered_logits.to(torch.float32)
-            normalized_prev = F.normalize(filtered_logits, dim=1, eps=1e-6).to(torch.float32)
-            
-            # [5, 16384] --> [7, 16384]
-            last_headout_modified = last_headout.clone()
-            last_headout_modified[last_headout_modified == float('-inf')] = 0.0
-            curr_logits = last_headout_modified.to(torch.float32)
-            normalized_curr = F.normalize(curr_logits, dim=1, eps=1e-6).to(torch.float32)
-            
-            # [1,5], [5,7] etc..
-            cosine_sim_matrix = torch.matmul(normalized_prev, normalized_curr.T)
-            # Now in [0, 1] --> combined with l2 later
-            cosine_sim_matrix = (cosine_sim_matrix + 1) / 2  
-            bias_level_list[i].append(cosine_sim_matrix)
             
             if tree_type == "static":
                 pass
