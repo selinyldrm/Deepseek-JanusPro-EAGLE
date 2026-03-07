@@ -632,6 +632,7 @@ class EaLumina_mGPT(nn.Module):
         # BFS
         eval_overhead = 0.0
         next_draft_corrected = None
+        G = 25
         
         # print("logits_processor logits.shape: ", logits.shape)
         # for x in range(len(op)):
@@ -707,7 +708,26 @@ class EaLumina_mGPT(nn.Module):
                     if qx <= 0:
                         continue
                     ########################## ACCEPT #####################################
-                    acp = px / qx
+                    
+                    # Sort by target probability descending
+                    sorted_indices = torch.argsort(gtp, descending=True)  # [vocab]
+
+                    # Find which rank xi has
+                    xi_rank = (sorted_indices == xi).nonzero(as_tuple=True)[0].item()
+
+                    # Which cluster does xi belong to?
+                    cluster_id = xi_rank // G
+
+                    # Get all tokens in xi's cluster
+                    cluster_start = cluster_id * G
+                    cluster_end = cluster_start + G
+                    cluster_token_indices = sorted_indices[cluster_start:cluster_end]  # [G]
+
+                    # Sum p and q over the cluster
+                    p_cluster = gtp[cluster_token_indices].sum()
+                    q_cluster = original_prob[i-1][p_indices[j][i]][cluster_token_indices].sum()
+
+                    acp = min(1.0, float(p_cluster) / float(q_cluster))
                     curr_tree_node_idx = retrieve_indices[j,i]
                     # print("\ncurr_tree_node_idx: ", curr_tree_node_idx)
                     if r <= acp:
@@ -718,30 +738,13 @@ class EaLumina_mGPT(nn.Module):
                         break
                     
                    
-                    gt_logits_next = torch.softmax(logits[j, i], dim=0)
-                    # print("gt_logits_next.shape: ", gt_logits_next.shape)
-                    normalized_gt_logits_next = F.normalize(gt_logits_next, dim=-1, eps=1e-6).to(torch.float32)
-                    normalized_gt_curr = F.normalize(gtp, dim=-1, eps=1e-6).to(torch.float32)
-                    lev_sim_score = torch.matmul(normalized_gt_curr, normalized_gt_logits_next.T).squeeze()
+                    # gt_logits_next = torch.softmax(logits[j, i], dim=0)
+                    # # print("gt_logits_next.shape: ", gt_logits_next.shape)
+                    # normalized_gt_logits_next = F.normalize(gt_logits_next, dim=-1, eps=1e-6).to(torch.float32)
+                    # normalized_gt_curr = F.normalize(gtp, dim=-1, eps=1e-6).to(torch.float32)
+                    # lev_sim_score = torch.matmul(normalized_gt_curr, normalized_gt_logits_next.T).squeeze()
                     
-                    # delta_curr = gtp - original_prob[i-1][p_indices[j][i]]  # draft logits processed and softmaxed during sample
-                    delta_curr =  float(px) - float(qx)
-                    if delta_curr < 0 and xi in self.image_tokens :
-                        current_entropy = -torch.sum(gtp * torch.log(gtp + 1e-10))
                     
-                        alpha = torch.sigmoid(current_entropy - 5) 
-                        alpha = alpha.clamp(0, 1)   # cap maximum relaxation    
-                        
-                        temp_curr_gtp_xi = copy.deepcopy(gtp[xi])
-                        temp_curr_gtp_xi =  (1-alpha) * gtp[xi] - alpha * delta_curr
-                        # print("Corrected current token from: ", gtp_level[j][xi]  * delta_curr[xi], " to ", gtp_level[j][xi] )
-                        corrected_acp = temp_curr_gtp_xi / qx
-                        if r <= corrected_acp:
-                            accept_cand = torch.cat((accept_cand, x[None]), dim=0)
-                            accept_length += 1
-                            best_candidate = j
-                            # print("Accepted after correction: ", curr_tree_node_idx)
-                            break
 
                     ################ REJECT #####################################
 
@@ -754,8 +757,8 @@ class EaLumina_mGPT(nn.Module):
                         q = q / q.sum()
                    
                     # rejection sampling
-                    # if delta_curr[xi] < 0  and xi in self.image_tokens : 
-                    #     gtp[xi] =  temp_curr_gtp_xi
+                    # GSD rejection: zero out the entire rejected cluster
+                    gtp[cluster_token_indices] = 0.0
                         
                     gtp = gtp - q
                     gtp[gtp < 0] = 0

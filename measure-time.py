@@ -27,6 +27,6 @@ def average_generate_time(file_path: str) -> float:
     return sum(times) / len(times)
 
 if __name__ == "__main__":
-    file_path = "/work1/deming/shared/llamagen/eagle2-results/context-aware/debugged-merging-0.9-0.625-kl4.0.txt"
+    file_path = "/work1/deming/shared/llamagen/eagle2-results/context-aware/GSD-25/GSD-25.txt"
     avg_time = average_generate_time(file_path)
     print(f"\nAverage generate time: {avg_time:.6f} seconds")

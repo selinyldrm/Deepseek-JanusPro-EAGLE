@@ -327,7 +327,7 @@ def worker(rank, start_idx,end_idx, args,prompts, total_prompt_count):
     global_tvd = []
     global_model_conf = []
     for idx, prompt in tqdm(enumerate(prompts), total=len(prompts)):
-        if idx + args.split_idx < start_idx    or idx >= end_idx:
+        if idx  < start_idx + args.split_idx   or idx >= end_idx:
             continue
         if args.model == "lumina_mgpt":
             q1 = f"Generate an image of 768x768 according to the following prompt:\n{prompt}"

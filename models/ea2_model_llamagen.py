@@ -13,7 +13,7 @@ import numpy as np
 from torchvision.utils import save_image
 import math
 import matplotlib.pyplot as plt
-
+import regex as re
 
 from .kv_variants.modeling_llamagen_kv import LlamaForCausalLM as KVLlamaForCausalLM
 from .drafters.utils import *
@@ -27,7 +27,203 @@ from .drafters.choices import *
 import torch.nn.functional as F
 import copy
 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
+
 LAMBDA_MAX = 0.5   # maximum correction strength — tune this hyperparameter
+
+def semantic_head_heatmap(
+        prompt,
+        accepted_counts: list,
+        probs: list,
+        grid_h: int = 32,
+        grid_w: int = 32,
+):
+    """
+    Returns
+    -------
+    heatmap : np.ndarray (grid_h, grid_w)
+        Values:
+          >= 0.0  → draft-accepted token, value is semantic prob
+          -1.0    → not yet generated (transparent)
+          -2.0    → target-model bonus token (grey)
+    step_map : np.ndarray (grid_h, grid_w)
+        Which speculative step filled each cell (0-indexed), or -1.
+    """
+    assert len(probs) == sum(accepted_counts), (
+        f"len(probs)={len(probs)} must equal sum(accepted_counts)={sum(accepted_counts)}"
+    )
+
+    heatmap  = np.full((grid_h, grid_w), -1.0, dtype=np.float32)
+    step_map = np.full((grid_h, grid_w), -1,   dtype=np.int32)
+
+    prob_cursor = 0
+    cell_cursor = 0
+
+    for step_idx, n_accepted in enumerate(accepted_counts):
+        # --- one bonus token from the target model FIRST ---
+        if cell_cursor < grid_h * grid_w:
+            r, c = divmod(cell_cursor, grid_w)
+            heatmap[r, c]  = -2.0     # target token
+            step_map[r, c] = step_idx
+            cell_cursor += 1
+
+        # --- accepted draft tokens follow ---
+        for k in range(n_accepted):
+            if cell_cursor >= grid_h * grid_w:
+                break
+            r, c = divmod(cell_cursor, grid_w)
+            heatmap[r, c]  = probs[prob_cursor + k]
+            step_map[r, c] = step_idx
+            cell_cursor += 1
+
+        prob_cursor += n_accepted
+    def sanitize_filename(text, max_len=256):
+        # Remove unsafe characters and trim long prompts
+        # Remove prefix: "Generate an image of 768x768 according to the following prompt"
+        text = re.sub(
+            r'^\s*generate\s+an?\s+image\s+of\s+\d+x\d+\s+(according\s+to\s+the\s+following\s+prompt[:,]?\s*)?',
+            '',
+            text,
+            flags=re.IGNORECASE
+        )
+    
+        text = re.sub(r'[\/:*?"<>|]', '', text).strip().replace(' ', '_')
+        return text[:max_len]
+    print( prompt )
+    prompt = sanitize_filename(prompt[-1])
+    plot_2dmap( heatmap,  step_map, accepted_counts,  f"/work1/deming/shared/llamagen/eagle2-results/context-aware/GSD-25/head-heatmaps/{prompt}.png")
+
+def plot_2dmap(
+    heatmap: np.ndarray,
+    step_map: np.ndarray,
+    accepted_counts: list,
+    save_path: str = "draft_heatmap.png",
+    annotate: bool = True,
+):
+    grid_h, grid_w = heatmap.shape
+
+    # Peaks at 0.5 (bright yellow), dims toward both extremes:
+    #   0.0  → deep navy   (background,  dark/muted)
+    #   0.5  → bright yellow-white  (uncertain, loudest)
+    #   1.0  → deep forest green  (foreground, dark/muted)
+    fg_bg_cmap = LinearSegmentedColormap.from_list(
+        "fg_bg_peaked",
+        [
+            (0.00, "#0d1b2a"),
+            (0.25, "#2176ae"),
+            (0.50, "#ffe45e"),
+            (0.75, "#57cc99"),
+            (1.00, "#0a3d2b"),
+        ],
+        N=256,
+    )
+
+    # ── three masked layers, composited via imshow ────────────────
+    # Layer 1 — empty cells: shown as near-black
+    empty_cmap  = LinearSegmentedColormap.from_list("dark1",  ["#1c1c1e", "#1c1c1e"])
+    empty_data  = np.ma.masked_where(heatmap != -1.0, np.ones_like(heatmap))
+
+    # Layer 2 — target tokens: shown as flat grey
+    target_cmap = LinearSegmentedColormap.from_list("grey1",  ["#7c7c8a", "#7c7c8a"])
+    target_data = np.ma.masked_where(heatmap != -2.0, np.ones_like(heatmap))
+
+    # Layer 3 — draft scores [0, 1]: full semantic colormap
+    draft_data  = np.ma.masked_where(heatmap < 0, heatmap)
+
+    # ── figure ────────────────────────────────────────────────────
+    cell_px = 80
+    fig_w   = max(9,  grid_w * cell_px / 72)
+    fig_h   = max(7,  grid_h * cell_px / 72)
+
+    fig, (ax, cax) = plt.subplots(
+        1, 2,
+        figsize=(fig_w * 2.1, fig_h),
+        gridspec_kw={"width_ratios": [1, 0.035]},
+        facecolor="#0d0d0d",
+    )
+    ax.set_facecolor("#111111")
+
+    # draw layers back → front
+    ax.imshow(empty_data,  cmap=empty_cmap,  vmin=0, vmax=1,
+              interpolation="nearest", aspect="equal")
+    ax.imshow(target_data, cmap=target_cmap, vmin=0, vmax=1,
+              interpolation="nearest", aspect="equal")
+    ax.imshow(draft_data,  cmap=fg_bg_cmap,  vmin=0, vmax=1,
+              interpolation="nearest", aspect="equal")
+
+    # ── grid lines ────────────────────────────────────────────────
+    for r in range(grid_h + 1):
+        ax.axhline(r - 0.5, color="#2a2a2a", linewidth=0.7, zorder=3)
+    for c in range(grid_w + 1):
+        ax.axvline(c - 0.5, color="#2a2a2a", linewidth=0.7, zorder=3)
+
+    # ── cell annotations ─────────────────────────────────────────
+    if annotate:
+        for r in range(grid_h):
+            for c in range(grid_w):
+                v = heatmap[r, c]
+                s = step_map[r, c]
+                if v == -1.0:
+                    continue
+                if v == -2.0:
+                    txt, fc = f"T·s{s}", "white"
+                else:
+                    txt = f"{v:.2f}\ns{s}"
+                    fc  = "white" if v < 0.6 else "#0a0a0a"
+                ax.text(c, r, txt,
+                        ha="center", va="center",
+                        fontsize=6.5, color=fc,
+                        fontfamily="monospace",
+                        linespacing=1.35, zorder=4)
+
+    # ── colorbar ─────────────────────────────────────────────────
+    norm = mcolors.Normalize(vmin=0, vmax=1)
+    sm   = plt.cm.ScalarMappable(cmap=fg_bg_cmap, norm=norm)
+    sm.set_array([])
+    cb   = fig.colorbar(sm, cax=cax)
+    cb.set_label("Semantic score  (0 = BG · 1 = FG)", color="#cccccc", fontsize=8)
+    cb.ax.yaxis.set_tick_params(color="#aaa", labelcolor="#aaa", labelsize=7)
+    cax.set_facecolor("#0d0d0d")
+
+    # ── legend ────────────────────────────────────────────────────
+    legend_items = [
+        mpatches.Patch(facecolor="#0d1b2a", edgecolor="#2176ae", label="Background (0.0)"),
+        mpatches.Patch(facecolor="#ffe45e", edgecolor="none",    label="Uncertain (0.5) — brightest"),
+        mpatches.Patch(facecolor="#0a3d2b", edgecolor="#57cc99", label="Foreground (1.0)"),
+        mpatches.Patch(facecolor="#7c7c8a", edgecolor="none",    label="Target token (T)"),
+        mpatches.Patch(facecolor="#1c1c1e", edgecolor="#444",    label="Not generated"),
+    ]
+    ax.legend(handles=legend_items,
+              loc="lower left", bbox_to_anchor=(0, -0.07),
+              ncol=4, fontsize=7.5,
+              framealpha=0, labelcolor="white")
+
+    # ── title ─────────────────────────────────────────────────────
+    n_steps = len(accepted_counts)
+    n_draft = sum(accepted_counts)
+    avg_acc = n_draft / n_steps if n_steps else 0
+    ax.set_title(
+        f"Speculative Decoding — 2D Semantic Heatmap\n"
+        f"{n_steps} steps  ·  {n_draft} draft tokens  ·  "
+        f"{n_steps} target tokens  ·  avg {avg_acc:.1f} draft/step",
+        color="white", fontsize=9, pad=10,
+    )
+
+    ax.set_xticks(range(grid_w))
+    ax.set_yticks(range(grid_h))
+    ax.set_xticklabels(range(grid_w), color="#555", fontsize=7)
+    ax.set_yticklabels(range(grid_h), color="#555", fontsize=7)
+    ax.tick_params(length=0)
+
+    plt.tight_layout(pad=1.2)
+    plt.savefig(save_path, dpi=160, bbox_inches="tight",
+                facecolor=fig.get_facecolor())
+    print(f"Saved → {save_path}")
+    plt.show()
 
 def cfg_logit_process(combined_logits, cfg_scale=4.0):
     cond_logits, uncond_logits = torch.split(combined_logits, len(combined_logits) // 2, dim=0)
@@ -493,6 +689,7 @@ class EaModel(nn.Module):
         logits_processor,
         cart_candidates_prob,
         op,
+        semantic_prob,
         p_indices,
         tree_candidates,
         b_indices,
@@ -626,6 +823,7 @@ class EaModel(nn.Module):
             return best_candidate, accept_length, logits[best_candidate, accept_length]
 
         else:
+            semantic_list = []
             cart_candidates_prob = cart_candidates_prob.to(logits.device)
             accept_length = 1
             accept_cand = candidates[0][:1]
@@ -633,11 +831,9 @@ class EaModel(nn.Module):
             # BFS
             eval_overhead = 0.0
             next_draft_corrected = None
+            # G_min, G_max = 512, 2048
+            G=25
             
-            # print("logits.shape: ", logits.shape)
-            logits = logits_processor(None, logits)
-            # print("logits_processor logits.shape: ", logits.shape)
-            gtp = torch.softmax(logits, dim=-1)
             # for x in range(len(op)):
                 # print("op[x].shape: ", op[x].shape)
             for i in range(1, candidates.shape[1]): # token depth
@@ -660,23 +856,11 @@ class EaModel(nn.Module):
                 # print("accept_length: ", accept_length)
                 # print("candidates: ", candidates)
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
-                # print("is_eq: ", is_eq)
-                # # # fi = list(IDs of only TRUE branches)
-                # fi = torch.nonzero(is_eq, as_tuple=True)[0]
-                # print("fi: ", fi )
-                # # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                # print("\nlogits.shape: ",logits.shape )
-                # gt_logits = logits[fi, i - 1]
-                # print("gt_logits.shape: ",gt_logits.shape )
-                # # target logits --> 1D [16384]
-                # gt_logits = logits_processor(None, gt_logits)
-                # print("gt_logits.shape: ",gt_logits.shape )
-                # # [16384]
-                # gtp = torch.softmax(gt_logits, dim=0)
-                # print("gtp.shape: ",gtp.shape )
+                fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
+                gt_logits = logits[fi, i-1]
+                gtp = torch.softmax(gt_logits, dim=0)
                 candidates_set = []
-                gtp_level = gtp[:, i-1]
-               
+                semantic_prob_list = semantic_prob[i-1]
                 for j in range(candidates.shape[0]): # candidate sequences
                     if is_eq[j]:
                         prev_acc_token = retrieve_indices[j,i-1]
@@ -688,123 +872,99 @@ class EaModel(nn.Module):
                             continue
                         candidates_set.append(xi)
                         r = random.random()
-                        # print("gtp_level.shape: ", gtp_level.shape)
-                        current_gtp = gtp_level[j]
-
-                        # print("current_gtp.shape: ", current_gtp.shape)
-                        px = current_gtp[xi]
                         
                         qx = cart_candidates_prob[j, i]
+                        curr_tree_node_idx = retrieve_indices[j,i]
                         if qx <= 0:
                             continue
 
                         ########################## ACCEPT #####################################
-                        acp = px / qx
-                        curr_tree_node_idx = retrieve_indices[j,i]
+                        xi_semantic_score = semantic_prob_list[len(b_indices[j][i-1])] # this node's semantic prob returned by semantic_head
+                        # if xi_semantic_score > 0.5:
+                        #     G = G_min   # foreground — lossless
+                        # else:
+                        #     # background — scale G inversely with saliency
+                        #     # seg_score=0.5 → G=G_min, seg_score=0.0 → G=G_max
+                        #     G = int(G_min + (G_max - G_min) * (1.0 - xi_semantic_score * 2))
+                        # Sort by target probability descending
+                        sorted_indices = torch.argsort(gtp, descending=True)  # [vocab]
+
+                        # Find which rank xi has
+                        xi_rank = (sorted_indices == xi).nonzero(as_tuple=True)[0].item()
+
+                        # Which cluster does xi belong to?
+                        cluster_id = xi_rank // G
+
+                        # Get all tokens in xi's cluster
+                        cluster_start = cluster_id * G
+                        cluster_end = cluster_start + G
+                        cluster_token_indices = sorted_indices[cluster_start:cluster_end]  # [G]
+
+                        # Sum p and q over the cluster
+                        p_cluster = gtp[cluster_token_indices].sum()
+                        q_cluster = op[i-1][p_indices[j][i]][cluster_token_indices].sum()
+                        
+                        p_first_cluster_sum = gtp[sorted_indices[0:G]].sum()
+                        q_first_cluster_sum = op[i-1][p_indices[j][i]][sorted_indices[0:G]].sum()
+                        
+                        acp = min(1.0, float(p_cluster) / float(q_cluster))
+                        
                         # print("\ncurr_tree_node_idx: ", curr_tree_node_idx)
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                             accept_length += 1
                             best_candidate = j
                             # print("Accepted immediately: ", curr_tree_node_idx)
+                            semantic_list.append(xi_semantic_score)
+                            entropy_p = -torch.sum(gtp * torch.log(gtp + 1e-10))
+                            entropy_q = -torch.sum(op[i-1][p_indices[j][i]] * torch.log(op[i-1][p_indices[j][i]] + 1e-10))
+                            print("entropy_p : ", entropy_p)
+                            print("entropy_q : ", entropy_q)
+                            print("p_first_cluster_sum : ", p_first_cluster_sum)
+                            print("q_first_cluster_sum : ", q_first_cluster_sum)
                             break
                         
-                        # parent_node_idx = retrieve_indices[j,i-1]
-                        # print("op[i-1] shape: ", op[i-1].shape)
-                        # print("p_indices[j][i]: ", p_indices[j][i])
-                        # if i != candidates.shape[1]-1 :
-                        #     print("p_indices[j][i+1]: ", p_indices[j][i+1])
-                        #     print("cart_candidates_prob[j,i+1]: ", cart_candidates_prob[j,i+1])
-                        #     print("candidates[j, i+1].item(): ", candidates[j, i+1].item())
-                            
-                        # print("cart_candidates_prob[j,i]: ", cart_candidates_prob[j,i])
-                        # print("candidates[j, i].item(): ", candidates[j, i].item())
-                        # print("b_indices[j][i]: ", b_indices[j][i])
-                       
-                        # print("fi_fake: ", fi_fake)
-                        # target logits of the nodes on the candidate sequences returned True by fi and current depth
-                        gt_logits_next = gtp[j, i]
-                        # print("gt_logits_next.shape: ", gt_logits_next.shape)
-                        normalized_gt_logits_next = F.normalize(gt_logits_next, dim=-1, eps=1e-6).to(torch.float32)
-                        normalized_gt_curr = F.normalize(current_gtp, dim=-1, eps=1e-6).to(torch.float32)
-                        lev_sim_score = torch.matmul(normalized_gt_curr, normalized_gt_logits_next.T).squeeze()
                         
-                        delta_curr = current_gtp - op[i-1][p_indices[j][i]]  # draft logits processed and softmaxed during sample
-                        # if lev_sim_score > 0.85 and i != candidates.shape[1]-1:
-                        #     # Correct next token
-                        #     # Compute alpha: high when both entropy is high AND similarity is high
-                        #     alpha = lev_sim_score * torch.sigmoid(current_entropy - 4)
-                        #     alpha = alpha.clamp(0, 1)   # cap maximum relaxation
-                        #     # print("similarity alpha: ", alpha)
-                            
-                        #     corrected_next_target_logits = (1-alpha) * gt_logits_next -  alpha * delta_curr[candidates[j, i+1].item()]
-                        #     corrected_next_target_logits = torch.clamp(corrected_next_target_logits, min=0)
-                        #     next_target_sum = corrected_next_target_logits.sum()
-                        #     if next_target_sum > 0:
-                        #         new_gt_logits_next = corrected_next_target_logits / next_target_sum
-                        #         gtp[j, i] = new_gt_logits_next
-                        #         # print("Corrected child token from: ", gtp[j, i][candidates[j, i+1].item()] * delta_curr[xi], " to ", gtp[j, i][candidates[j, i+1].item()] )
+                        # gt_logits_next = gtp[j, i]
+                        # # print("gt_logits_next.shape: ", gt_logits_next.shape)
+                        # normalized_gt_logits_next = F.normalize(gt_logits_next, dim=-1, eps=1e-6).to(torch.float32)
+                        # normalized_gt_curr = F.normalize(current_gtp, dim=-1, eps=1e-6).to(torch.float32)
+                        # lev_sim_score = torch.matmul(normalized_gt_curr, normalized_gt_logits_next.T).squeeze()
+                        
+                        # delta_curr = current_gtp - op[i-1][p_indices[j][i]]  # draft logits processed and softmaxed during sample
 
-                        # print("current_entropy: ", current_entropy)
-                        # Correct current token
-                        if delta_curr[xi] < 0 : 
-                            current_entropy = -torch.sum(current_gtp * torch.log(current_gtp + 1e-10))
-                            alpha = torch.sigmoid(current_entropy - 2)
-                            alpha = alpha.clamp(0, 1)   # cap maximum relaxation    
-                                    
-                            temp_curr_gtp_xi = copy.deepcopy(gtp_level[j][xi])
-                            gtp_level[j][xi] =  (1-alpha) * gtp_level[j][xi] - alpha * delta_curr[xi]
-                            # print("Corrected current token from: ", gtp_level[j][xi]  * delta_curr[xi], " to ", gtp_level[j][xi] )
-                            # print("gtp_level[j][xi]: ", gtp_level[j][xi])   
-                            # print("qx: ", qx)   
-                            corrected_acp = gtp_level[j][xi] / qx
-                            if r <= corrected_acp:
-                                accept_cand = torch.cat((accept_cand, x[None]), dim=0)
-                                accept_length += 1
-                                best_candidate = j
-                                # print("Accepted after correction: ", curr_tree_node_idx)
-                                break
 
                         # print("Rejecting after correction: ", curr_tree_node_idx)
                         ################ REJECT #####################################
-                        
-                        # parent node index - p_indices[j][i], it is 0
-                        # print("curr node: " , curr_tree_node_idx)
-                        # print("parent node: " , p_indices[j][i])
-                        # op is token probabilities from sample()
-                        # op[i-1] fetches probabilities of one level up (parent node's)
                         q = op[i - 1][p_indices[j][i]].clone()
                         b = b_indices[j][i]
-                        # sibling nodes if any to also cancel in parent
-                        # print("b  node: " , b )
 
                         if len(b) > 0:
                             mask = tree_candidates[0][b]
                             q[mask] = 0
                             q = q / q.sum()
+                    
+                        # rejection sampling
+                        # GSD rejection: zero out the entire rejected cluster
+                        gtp[cluster_token_indices] = 0.0
                             
-                        current_gtp[xi] =  temp_curr_gtp_xi
-                       
-                        if delta_curr[xi] < 0 : 
-                            gtp_level[j][gtp_level[j] < 0] = 0
+                        gtp = gtp - q
+                        gtp[gtp < 0] = 0
 
-                        if gtp_level[j].sum() == 0:
-                            gtp_level[j] = torch.ones_like(gtp_level[j])
+                        if gtp.sum() == 0:
+                            gtp[self.image_tokens] = 1.0
 
-                        gtp_level[j] = gtp_level[j] / gtp_level[j].sum()
+                        gtp = gtp / gtp.sum()
                         adjustflag = True
                             
             if adjustflag and accept_length != candidates.shape[1]:
-                sample_p = gtp_level[j]
-                # print("if - sample_p shape: ", gtp_level[j].shape )
+                sample_p = gtp
             else:
-                # gt_logits = logits[best_candidate, accept_length - 1][None]
-                # gt_logits = logits_processor(None, gt_logits)[0]
-                sample_p = gtp[best_candidate, accept_length - 1]
-                # print("else - sample_p shape: ", gtp_level[j].shape )
+                gt_logits = logits[best_candidate, accept_length-1]
+                sample_p = torch.softmax(gt_logits, dim=0)
             if testing:
                 return torch.tensor(best_candidate), accept_length - 1, sample_p, analysis_p, analysis_p_p, analysis_r, eval_overhead
-            return torch.tensor(best_candidate), accept_length - 1, sample_p
+            return torch.tensor(best_candidate), accept_length - 1, sample_p, semantic_list
 
     
 
@@ -1361,6 +1521,7 @@ class EaModel(nn.Module):
         tvd_total = 0.0
         model_conf_list = []
         st = time.time()
+        semantic_list = []
     
         for idx in range(max_steps):
             
@@ -1395,9 +1556,10 @@ class EaModel(nn.Module):
                     accepted_logits.append(logits[best_candidate, :accept_length + 1])
 
                 else:
-                    best_candidate, accept_length, sample_p = self.evaluate_posterior_v1(
-                    idx, relaxed, testing, bias_list, recent_acc_logits, tree_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
+                    best_candidate, accept_length, sample_p, sl = self.evaluate_posterior_v1(
+                    idx, relaxed, testing, bias_list, recent_acc_logits, tree_logits, tree_buffers["per_level_node_counts"], tree_buffers["retrieve_indices"], logits, candidates, logits_processor, cart_candidates_prob, tree_logits[2], tree_logits[3], tree_buffers["p_indices"], tree_candidates, tree_buffers["b_indices"], lantern, lantern_k, lantern_delta
                 )
+                semantic_list += sl
                 accept_list.append(accept_length)
                 # tvd_total += tvd_change
                 # model_conf_list.append(model_conf)
@@ -1545,6 +1707,7 @@ class EaModel(nn.Module):
             return input_ids[:, 120:120+max_length], time.time()-st, accept_list, p , pp, r , overhead_list, accepted_logits, img_sim_list
         # flat_model_conf = [item for sublist in model_conf_list for item in sublist]
         # print("avg flat_model_conf: ", sum(flat_model_conf)/len(flat_model_conf))
+        semantic_head_heatmap(prompt, accept_list, semantic_list)
         return input_ids[:, 120:120+max_length], time.time()-st, accept_list
     
     @torch.no_grad()

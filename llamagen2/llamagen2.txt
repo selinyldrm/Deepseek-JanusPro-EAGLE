@@ -1,0 +1,82 @@
+/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/requests/__init__.py:86: RequestsDependencyWarning: Unable to find acceptable character detection dependency (chardet or charset_normalizer).
+  warnings.warn(
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:02<00:02,  2.71s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.21s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.43s/it]
+  0%|          | 0/5000 [00:00<?, ?it/s]generated_image len:  1
+generate time=16.09 for prompt: Ma motorcycle parked on the gravel in front of a garage
+
+  0%|          | 1/5000 [00:18<26:00:00, 18.72s/it]generated_image len:  1
+generate time=13.64 for prompt: An office cubicle with four different types of computers.
+
+  0%|          | 2/5000 [00:32<22:03:48, 15.89s/it]generated_image len:  1
+generate time=14.63 for prompt: This is an advanced toilet with a sink and control panel.
+
+  0%|          | 3/5000 [00:47<21:25:50, 15.44s/it]generated_image len:  1
+generate time=14.98 for prompt: A woman sitting on a bench and a woman standing behind the bench at a bus stop
+
+  0%|          | 4/5000 [01:02<21:19:01, 15.36s/it]generated_image len:  1
+generate time=16.56 for prompt: There is a piece of cake on a plate with decorations on it.
+
+  0%|          | 5/5000 [01:19<22:01:46, 15.88s/it]generated_image len:  1
+generate time=14.78 for prompt: Grey house cat devours a song bird on a door step
+
+  0%|          | 6/5000 [01:34<21:38:10, 15.60s/it]generated_image len:  1
+generate time=14.35 for prompt: An older man is wearing a funny hat in his dining room.
+
+  0%|          | 7/5000 [01:49<21:11:08, 15.28s/it]generated_image len:  1
+generate time=13.66 for prompt: A grey and white cat standing in the grass in a parking lot. 
+
+  0%|          | 8/5000 [02:03<20:34:08, 14.83s/it]generated_image len:  1
+generate time=14.05 for prompt: An office desk with two computer screens, books diagrams and a phone on it.
+
+  0%|          | 9/5000 [02:17<20:20:09, 14.67s/it]generated_image len:  1
+generate time=15.27 for prompt: A group of motorcycles down a long street filled with trees on either side.
+
+  0%|          | 10/5000 [02:32<20:41:27, 14.93s/it]generated_image len:  1
+generate time=14.53 for prompt: A young man and his cute cat enjoy a nap together.
+
+  0%|          | 11/5000 [02:47<20:38:24, 14.89s/it]  0%|          | 11/5000 [02:50<21:27:52, 15.49s/it]
+Traceback (most recent call last):
+  File "/work1/deming/seliny2/LANTERN/main.py", line 82, in <module>
+    main()
+  File "/work1/deming/seliny2/LANTERN/main.py", line 79, in main
+    task_runner(task_args)
+  File "/work1/deming/seliny2/LANTERN/entrypoints/generate_images.py", line 300, in run_generate_image
+    worker(0, 0, args.e_idx-args.s_idx, args, prompts, len(prompts))    #
+  File "/work1/deming/seliny2/LANTERN/entrypoints/generate_images.py", line 423, in worker
+    latency, accpt= generate_and_save_image(args.output_dir, **generate_image_kwargs)
+  File "/work1/deming/seliny2/LANTERN/entrypoints/generate_images.py", line 246, in generate_and_save_image
+    generated_tokens, latency, accpt  = model.generate(**generate_params)
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/work1/deming/seliny2/LANTERN/models/ea2_model_llamagen.py", line 1332, in generate
+    tree_candidates = torch.cat([tree_candidates, tree_candidates]).to(self.base_model.device)
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/work1/deming/seliny2/LANTERN/models/ea2_model_llamagen.py", line 1024, in tree_decoding
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/work1/deming/seliny2/LANTERN/models/ea2_model_llamagen.py", line 247, in forward
+    outputs = self.base_model.model(
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_llamagen_kv.py", line 1200, in forward
+    layer_outputs = decoder_layer(
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_llamagen_kv.py", line 847, in forward
+    hidden_states, self_attn_weights, present_key_value = self.self_attn(
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_llamagen_kv.py", line 546, in forward
+    key_states = apply_rotary_emb(key_states.transpose(1, 2), freqs_cis).transpose(1, 2)
+  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_llamagen_kv.py", line 220, in apply_rotary_emb
+    x_out2 = torch.stack([
+KeyboardInterrupt
