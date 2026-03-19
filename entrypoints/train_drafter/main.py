@@ -160,6 +160,24 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 # w_mask[high_entropy_mask] *= high_omega
                 # w_mask[low_entropy_mask] *= low_omega
                 
+            # target_p: [batch, seq, vocab] — target soft distributions
+            # out_prob: [batch, seq, vocab] — draft soft distributions
+
+            # Compute consecutive target similarity
+            gamma = 1.0
+            p_curr = target_head[:, :-1, :]   # [batch, seq-1, vocab]
+            p_next = target_head[:, 1:, :]    # [batch, seq-1, vocab]
+            s_t = F.cosine_similarity(p_curr, p_next, dim=-1)   # [batch, seq-1]
+            s_t = s_t.detach()   # do not backprop through target
+
+            # Compute consecutive draft similarity
+            q_curr = predict[:, :-1, :]   # [batch, seq-1, vocab]
+            q_next = predict[:, 1:, :]    # [batch, seq-1, vocab]
+            q_sim = F.cosine_similarity(q_curr, q_next, dim=-1)   # [batch, seq-1]
+            
+            # Penalize draft for being inconsistent where target is consistent
+            sim_loss = s_t * (1.0 - q_sim)   # [batch, seq-1]
+            
            
             # n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
             # cosine_sim_matrix = torch.bmm(n_target_logits, n_target_logits.transpose(1, 2))
@@ -185,12 +203,18 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 p_loss_mask = loss_mask[::2]
             else:
                 p_loss_mask = loss_mask
+                
+            # Weight by foreground mask — consistency matters more in foreground
+            seg_weight = 1.0 + gamma * data["binary_target"][:, :-1]   # [batch, seq-1]
+            sim_loss = torch.sum(
+                loss_mask[:, :-1].squeeze(-1) * seg_weight * sim_loss
+            ) / (loss_mask.sum() + 1e-5)
 
             # weight = 2.0
             # weighted_mask = p_loss_mask * w_mask
             # weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
             plogp = target_p * out_logp
-            ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
+            # ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
 
             vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
             # loss = vloss + args.p_w * ploss
@@ -212,11 +236,20 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             # 4. Average by the number of active image tokens
             sem_loss = torch.sum(masked_sem_error) / (s_mask.sum() + 1e-5)
 
-            # 5. Final Loss Combination
-            # args.sem_w = 0.1 is your hyperparameter for the semantic task
-            loss = vloss + args.p_w * ploss + 0.1 * sem_loss
+            # # 5. Final Loss Combination
+            sim_w = 0.3
+            # # args.sem_w = 0.1 is your hyperparameter for the semantic task
+            # loss = vloss + args.p_w * ploss + sim_w * sem_loss
             
+            perceptual_weight = 1.0 + gamma * data["binary_target"]         # [batch, seq]
+            ploss_per_token = -torch.sum(plogp, dim=2) 
 
+            ploss = torch.sum(
+                p_loss_mask.squeeze(-1) * perceptual_weight * ploss_per_token
+            ) / (p_loss_mask.sum() + 1e-5)
+
+            loss = vloss + args.p_w * ploss + sim_w * sim_loss + sim_w * sem_loss
+            
             if train_mode:
                 accelerator.backward(loss)
                 accelerator.clip_grad_value_(model.parameters(), args.grad_clip)

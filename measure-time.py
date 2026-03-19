@@ -24,9 +24,10 @@ def average_generate_time(file_path: str) -> float:
         print(f"Total lines searched: {sum(1 for _ in open(file_path))}")
         raise ValueError("No generate time entries found in the file. Check the log format above.")
 
-    return sum(times) / len(times)
+    return sum(times) / len(times), len(times)
 
 if __name__ == "__main__":
-    file_path = "/work1/deming/shared/llamagen/eagle2-results/context-aware/GSD-25/GSD-25.txt"
-    avg_time = average_generate_time(file_path)
+    file_path = "/work1/deming/shared/lumina/inter-only-0.625-kl4.0/4000-5000.txt"
+    avg_time, time_length = average_generate_time(file_path)
     print(f"\nAverage generate time: {avg_time:.6f} seconds")
+    print(f"\t generation count{time_length:.6f} images")

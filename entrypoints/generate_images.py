@@ -71,7 +71,7 @@ def parse_args():
 
     # Experimental arguments
     parser.add_argument("--tree_choices", type=str, help="Tree choice for LANTERN",
-                        default="mc_sim_7b_63")
+                        default="naive_extend_57")
     parser.add_argument("--drafter_top_k", type=int, default=None, help="Top-k for drafter")
     parser.add_argument("--split_idx", type=int,
                         default=0)
