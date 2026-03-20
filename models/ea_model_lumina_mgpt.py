@@ -297,6 +297,67 @@ def safe_topk_cosine_similarity(logits_t, logits_next):
     p_next_normalized = F.normalize(p_next, p=2, dim=-1) # [B, 65536]
     return p_normalized @ p_next_normalized.T         
     
+def _soft_gate(sim: float, kl: float,
+               s0: float = 0.55, beta: float = 12.0,
+               kl_scale: float = 0.15) -> float:
+    """Smooth gate weight in [0, 1].
+ 
+    g = sigmoid(beta * (s - s0)) * exp(-kl_scale * kl)
+ 
+    - Increases continuously with sim  (no hard threshold)
+    - Decreases with KL but never fully kills the signal
+    """
+    sim_weight = 1.0 / (1.0 + math.exp(-beta * (sim - s0)))
+    kl_weight  = math.exp(-kl_scale * max(kl, 0.0))
+    return sim_weight * kl_weight
+
+def sharpen_to_draft(
+    gtp: torch.Tensor,
+    q_draft: torch.Tensor,
+    gate_weight: float,
+    alpha_max: float = 0.15,
+) -> torch.Tensor:
+    """Sharpen gtp in the direction that reduces TVD(gtp, q_draft).
+
+    Adds mass proportional to the draft excess (q - p)+ scaled by gate_weight.
+    Different (gtp, q_draft) pairs with the same gate_weight get different
+    sharpening directions — each one steered by its own draft.
+
+    TVD decomposition:
+        TVD(p, q) = sum_{x: q(x)>p(x)} (q(x) - p(x))   [the draft-excess region]
+                  = sum_{x: p(x)>q(x)} (p(x) - q(x))   [the target-excess region]
+
+    Adding α*(q-p)+ to p moves mass from the target-excess region into the
+    draft-excess region — directly reducing TVD by approximately α*TVD(p,q).
+
+    Args:
+        gtp:         (V,) current target probabilities p_t.
+        q_draft:     (V,) draft probabilities q_t.
+        gate_weight: scalar in [0,1] from _soft_gate — controls magnitude.
+        alpha_max:   maximum fraction of draft excess to inject.
+
+    Returns:
+        p_tilde: (V,) sharpened distribution with TVD(p_tilde, q) < TVD(p, q).
+    """
+    # (q - p)+ — the region where draft exceeds target
+    # These are exactly the tokens where min(p,q) = p(x),
+    # so boosting p(x) here directly increases Σ min(p̃, q)
+    gtp     = gtp.flatten()       # guarantee (V,)
+    q_draft = q_draft.flatten()   # guarantee (V,) regardless of input shape
+    
+    draft_excess = (q_draft - gtp).clamp(min=0.0)
+
+    Z = draft_excess.sum()
+    if Z < 1e-8:
+        # Draft is already below target everywhere — target is sharper than draft.
+        # No room to reduce TVD by boosting; fall back to mild mixture instead.
+        alpha = alpha_max * gate_weight * 0.3
+        return (1.0 - alpha) * gtp + alpha * q_draft
+
+    alpha = alpha_max * gate_weight
+    p_tilde = gtp + alpha * draft_excess
+    return p_tilde / p_tilde.sum()
+
 class EaLumina_mGPT(nn.Module):
 
     def __init__(
@@ -555,7 +616,7 @@ class EaLumina_mGPT(nn.Module):
             [tree_candidates, torch.zeros((1), dtype=torch.long, device=tree_candidates.device) - 1],
             dim = 0
         )
-
+        
         cart_candidates = tree_candidates_ext[retrieve_indices]
 
         candidates_tree_prob = tree_logits[1]
@@ -652,24 +713,53 @@ class EaLumina_mGPT(nn.Module):
                     break
                 
                 adjustflag = False
+                # print("candidates: ", candidates)
+                # print("accept_cand: ", accept_cand)
                 is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
-                fi = torch.nonzero(is_eq, as_tuple=True)[0][0]
+                fi = torch.nonzero(is_eq, as_tuple=True)[0]
+                # print("fi: ", fi)
+                fi = fi[0]
                 
                 gt_logits = logits[fi, i-1]
                 # curr_topk_vals, _ = torch.topk(gt_logits, 2000, dim=-1)
                 # curr_topk_vals_gtp  = torch.softmax(curr_topk_vals, dim=-1)
                 gtp = torch.softmax(gt_logits, dim=0)
                 
-                # # add KL divergence of draft and target
-                curr_draft_logits = tree_logits[2][i-1] # logit processed and softmax already during sample
-                if curr_draft_logits.shape[0] != 1 :
-                    curr_draft_logits = curr_draft_logits[0]
-                if curr_draft_logits.dim == 1 :
-                    curr_draft_logits = curr_draft_logits.unsqueeze(0)
-                    
-                p = F.log_softmax(curr_draft_logits, dim=-1)
+                # print("len(original_prob[i - 1]): ", len(original_prob[i - 1]))
+                # print(f"i:{i} best_candidate:{best_candidate} accept_length-1:{accept_length-1}")
+                # print("[p_indices[best_candidate][accept_length]: ", p_indices[best_candidate][accept_length])
+                # print("[p_indices[best_candidate]: ", p_indices[best_candidate])
+                curr_draft_logits = original_prob[i - 1][p_indices[best_candidate][accept_length]]
+                p = curr_draft_logits.clamp(min=1e-10).log()
                 kl_draft = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q) for all 65k logits.
-                
+                        
+                # ------------------------------------------------------------------
+                # Step 2: Level-wide cosine similarity between consecutive logits.
+                # Use the target logits at level i-1 vs i-2 (the "look-behind" pair)
+                # to estimate how similar adjacent spatial positions are.
+                # At level 1 there is no previous level → no enhancement.
+                # ------------------------------------------------------------------
+                gate_weight =0.0
+        
+                if i >= 2:
+                    accept_cand_prev = accept_cand[:-1]
+                    accept_length_prev =  accept_length - 1
+                    is_eq_prev = (candidates[:, :accept_length_prev] == accept_cand_prev).all(dim=1)
+                    fi_prev = torch.nonzero(is_eq_prev, as_tuple=True)[0][0]
+                    logits_prev_level = logits[fi_prev, i - 2]          # ℓ_{t-1}
+        
+                    level_sim  = safe_topk_cosine_similarity(
+                        gt_logits.clone().unsqueeze(0), logits_prev_level.clone().unsqueeze(0)
+                        )[0][0]
+                    gate_weight = _soft_gate(level_sim, kl_draft, 0.3, 8.0, 0.05)
+        
+                # ------------------------------------------------------------------
+                # Step 3: Pre-sharpen the *full* gtp once before the candidate loop.
+                # Every candidate at this level now benefits from the signal.
+                # ------------------------------------------------------------------
+                gtp_enhanced = sharpen_to_draft(gtp, curr_draft_logits, gate_weight, 0.05)
+                gtp = gtp_enhanced
+        
                 candidates_set = []
                 
                 level_sim = None
@@ -702,8 +792,7 @@ class EaLumina_mGPT(nn.Module):
                         elif not xi in self.image_tokens:
                             # reject immediately
                             px = 0.0
-                        
-                        
+                                                
                         if self.eagle_version == 1:
                             qx = cart_candidates_prob[j, i]
                             if qx <= 0:
@@ -717,16 +806,18 @@ class EaLumina_mGPT(nn.Module):
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                             accept_length += 1
                             best_candidate = j
+                            # print("accepting ", retrieve_indices[j,i], " j: ", j)
                             break
                         else:
-                            if xi in self.image_tokens :
-                                accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
-                                accept_length_fake =  accept_length + 1
-                                is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                                fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                                lev_sim_score = safe_topk_cosine_similarity(logits[fi, i-1].clone().squeeze(0), logits[fi_fake, i].clone().squeeze(0))
-                                if lev_sim_score > 0.625 and kl_draft < 5.0:
-                                    px =  min(qx, px + r * lev_sim_score)
+                        
+                            if xi in self.image_tokens and i == 1:
+                                # accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
+                                # accept_length_fake =  accept_length + 1
+                                # is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
+                                # fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
+                                # lev_sim_score = safe_topk_cosine_similarity(logits[fi, i-1].clone().squeeze(0), logits[fi_fake, i].clone().squeeze(0))
+                                # if lev_sim_score > 0.625 and kl_draft < 5.0:
+                                #     px =  min(qx, px + r * lev_sim_score)
                                 
                                 # print("kl_draft: ", kl_draft)
                                 if px < qx and m_bias_list is not None and kl_draft < 5.0: 
@@ -744,33 +835,36 @@ class EaLumina_mGPT(nn.Module):
                                     best_candidate = j
                                     break
                             
-                            assert not xi in self.image_syntax_tokens, "Image syntax tokens should not be rejected"
-                            
-                            if self.eagle_version == 1:
-                                q = original_prob[i - 1][p_indices[j][i]].clone()
-                                b = b_indices[j][i]
-                                if len(b) > 0:
-                                    mask = tree_candidates[0][b]
-                                    q[mask] = 0
-                                    q = q / q.sum()
-                            
-                            if self.eagle_version == 1:
-                                gtp = gtp - q
-                                gtp[gtp < 0] = 0
-                            else:
-                                gtp[xi] = 0
+                        assert not xi in self.image_syntax_tokens, "Image syntax tokens should not be rejected"
+                        
+                        if self.eagle_version == 1:
+                            q = original_prob[i - 1][p_indices[j][i]].clone()
+                            b = b_indices[j][i]
+                            if len(b) > 0:
+                                mask = tree_candidates[0][b]
+                                q[mask] = 0
+                                q = q / q.sum()
+                        
+                        if self.eagle_version == 1:
+                            gtp = gtp - q
+                            gtp[gtp < 0] = 0
+                        else:
+                            gtp[xi] = 0
 
-                            if gtp.sum() == 0:
-                                gtp = torch.ones_like(gtp)
-                            
-                            gtp /= gtp.sum()
-                            adjustflag = True
+                        if gtp.sum() == 0:
+                            gtp = torch.ones_like(gtp)
+                        
+                        gtp /= gtp.sum()
+                        adjustflag = True
 
             if adjustflag and accept_length != candidates.shape[1]:
                 sample_p = gtp
             else:
                 gt_logits = logits[best_candidate, accept_length-1]
-                sample_p = torch.softmax(gt_logits, dim=0)
+                # sample_p = torch.softmax(gt_logits, dim=0)
+                gt_logits_bonus = logits[best_candidate, accept_length - 1]
+                gtp_bonus       = torch.softmax(gt_logits_bonus, dim=-1)
+                sample_p = sharpen_to_draft(gtp_bonus, curr_draft_logits, gate_weight, alpha_max=0.15)
             
             return torch.tensor(best_candidate), accept_length-1, sample_p
         
@@ -859,9 +953,9 @@ class EaLumina_mGPT(nn.Module):
         logits_processors=None,
         eos_token_ids=None,
         lantern=False,
-        lantern_k=1000,
-        lantern_delta=0.1,
-        tree_choices=mc_sim_7b_63,
+        lantern_k=10,
+        lantern_delta=3.0,
+        tree_choices=naive_extend_57,
         **kwargs
     ):
         # initialize the logits processors
