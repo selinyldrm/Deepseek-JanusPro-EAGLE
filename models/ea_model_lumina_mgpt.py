@@ -820,7 +820,7 @@ class EaLumina_mGPT(nn.Module):
                                 #     px =  min(qx, px + r * lev_sim_score)
                                 
                                 # print("kl_draft: ", kl_draft)
-                                if px < qx and m_bias_list is not None and kl_draft < 5.0: 
+                                if px < qx and m_bias_list is not None and kl_draft < 4.0: 
                                     curr_tree_node_idx = retrieve_indices[j,i]
                                     for bias_idx, quadrant in enumerate(m_bias_list) :
                                         id1,id2, draft_prob, cosine_sim = quadrant
