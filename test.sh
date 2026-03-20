@@ -4,10 +4,8 @@
 #SBATCH --output=lumina-%j.log            # Output log file
 #SBATCH --error=lumina-%j.log              # Error log file
 #SBATCH --time=12:00:00                # Max runtime (HH:MM:SS)
-#SBATCH --partition=mi2508x          # Partition to submit to
+#SBATCH --partition=mi2101x          # Partition to submit to
 #SBATCH --nodes=1                      # Number of nodes
-#SBATCH --ntasks-per-node=8
-#SBATCH --cpus-per-task=8
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=seliny2@illinois.edu
 
@@ -24,7 +22,7 @@ HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 # python3  main.py generate_images --model llamagen2  --model_type eagle2  --model_path /work1/deming/shared/llamagen/LlamaGen-T2I-2/ --drafter_path /work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_20  --output_dir /work1/deming/shared/llamagen/eagle2-results/loss-scaled/10levels-drifting-withrecovery-0.9-0.625-kl4.0  --temperature 1  --top_k 2000 --top_p 1.0  --cfg 3.0 --lantern --lantern_k 10 --lantern_delta 3.0  --static_tree --tree_choices naive_extend_10lev   --prompt MSCOCO2017Val --multigpu > 10levels-drifting-withrecovery-merging-0.9-0.625-kl4.0.txt   2>&1
 # python3  main.py generate_images --model llamagen2  --model_type eagle2  --model_path /work1/deming/shared/llamagen/LlamaGen-T2I-2/ --drafter_path /work1/deming/shared/llamagen/eagle2-drafters/context-aware/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_mscoco2017train30k/state_20/  --output_dir /work1/deming/shared/llamagen/eagle2-results/context-aware/GSD-512  --temperature 1  --top_k 2000 --top_p 1.0  --cfg 3.0 --lantern --lantern_k 10 --lantern_delta 3.0  --static_tree --tree_choices naive_extend_57   --prompt MSCOCO2017Val  --multigpu > /work1/deming/shared/llamagen/eagle2-results/context-aware/GSD-512/GSD-512.txt 2>&1
-python3  main.py generate_images --model lumina_mgpt  --model_type eagle  --model_path /work1/deming/shared/lumina/Lumina-mGPT-7B-768/  --drafter_path /work1/deming/shared/lumina/LANTERN-Lumina-mGPT-7B-768   --output_dir /work1/deming/shared/lumina/inter-only-0.625-kl4.0  --temperature 1  --top_k 2000 --top_p 1.0  --cfg 3.0 --lantern --lantern_k 10 --lantern_delta 3.0  --static_tree --tree_choices naive_extend_57   --prompt MSCOCO2017Val --multigpu --s_idx  0 --e_idx 1000  > /work1/deming/shared/lumina/inter-only-0.625-kl4.0/0-1000.txt  2>&1
+python3  main.py generate_images --model lumina_mgpt  --model_type eagle  --model_path /work1/deming/shared/lumina/Lumina-mGPT-7B-768/  --drafter_path /work1/deming/shared/lumina/LANTERN-Lumina-mGPT-7B-768   --output_dir /work1/deming/shared/lumina/inter-only-0.625-kl4.0  --temperature 1  --top_k 2000 --top_p 1.0  --cfg 3.0 --lantern --lantern_k 10 --lantern_delta 3.0  --static_tree --tree_choices naive_extend_57   --prompt MSCOCO2017Val --multigpu --s_idx  2000 --e_idx 3000  > /work1/deming/shared/lumina/inter-only-0.625-kl4.0/2000-3000.txt  2>&1
 
 
 # python3  main.py generate_images --model llamagen2  --model_type eagle2  --model_path /work1/deming/shared/llamagen/LlamaGen-T2I-2/ --drafter_path /work1/deming/shared/llamagen/eagle2-drafters/context-aware/llamagen2_lr0.0001_p_w0.1_bsz8_gradacc_1_epochs20_mscoco2017train30k/state_20/  --output_dir /work1/deming/shared/llamagen/eagle2-results/context-aware/new-cosine   --temperature 1  --top_k 2000 --top_p 1.0  --cfg 3.0 --lantern --lantern_k 10 --lantern_delta 3.0  --static_tree --tree_choices naive_extend_57  --prompt MSCOCO2017Val --multigpu   > /work1/deming/shared/llamagen/eagle2-results/context-aware/new-cosine/new-cosine.txt 2>&1 

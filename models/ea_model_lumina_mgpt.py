@@ -725,24 +725,24 @@ class EaLumina_mGPT(nn.Module):
                                 is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
                                 fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
                                 lev_sim_score = safe_topk_cosine_similarity(logits[fi, i-1].clone().squeeze(0), logits[fi_fake, i].clone().squeeze(0))
-                                if lev_sim_score > 0.5 and kl_draft < 4.0 :
+                                if lev_sim_score > 0.625 and kl_draft < 5.0:
                                     px =  min(qx, px + r * lev_sim_score)
                                 
+                                # print("kl_draft: ", kl_draft)
+                                if px < qx and m_bias_list is not None and kl_draft < 5.0: 
+                                    curr_tree_node_idx = retrieve_indices[j,i]
+                                    for bias_idx, quadrant in enumerate(m_bias_list) :
+                                        id1,id2, draft_prob, cosine_sim = quadrant
+                                        if id1 == curr_tree_node_idx:
+                                            # similar_xi = tree_candidates[0][id2]
+                                            # px += r * gtp[similar_xi]
+                                            px =  min(qx, max(px + r * cosine_sim, px + r * draft_prob))
                                 acp = px / qx
                                 if r <= acp:
                                     accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                                     accept_length += 1
                                     best_candidate = j
                                     break
-                                
-                                # curr_tree_node_idx = retrieve_indices[j,i]
-                                # if m_bias_list is not None:
-                                #     if kl_draft < 3.0 :
-                                #         for bias_idx, tpl in enumerate(m_bias_list) :
-                                #             id1,id2 = tpl
-                                #             if id1 == curr_tree_node_idx:
-                                #                 similar_xi = tree_candidates[0][id2]
-                                #                 px += r * gtp[similar_xi]
                             
                             assert not xi in self.image_syntax_tokens, "Image syntax tokens should not be rejected"
                             
@@ -753,10 +753,6 @@ class EaLumina_mGPT(nn.Module):
                                     mask = tree_candidates[0][b]
                                     q[mask] = 0
                                     q = q / q.sum()
-                            
-                            # if lantern and (xi in self.image_tokens):
-                            #     if (indices != -1):
-                            #         gtp[self.nearest_latents[xi-self.image_token_offset, :lantern_k+1]+self.image_token_offset] = 0
                             
                             if self.eagle_version == 1:
                                 gtp = gtp - q
