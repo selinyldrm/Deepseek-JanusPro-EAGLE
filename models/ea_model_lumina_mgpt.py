@@ -708,6 +708,7 @@ class EaLumina_mGPT(nn.Module):
                 cart_candidates_prob = cart_candidates_prob.to(logits.device)
 
             # for-loop over levels
+            last_accepted_sharpened_logits = None
             for i in range(1, candidates.shape[1]):
                 if i != accept_length:
                     break
@@ -758,7 +759,7 @@ class EaLumina_mGPT(nn.Module):
                 # Every candidate at this level now benefits from the signal.
                 # ------------------------------------------------------------------
                 gtp_enhanced = sharpen_to_draft(gtp, curr_draft_logits, gate_weight, 0.05)
-                gtp = gtp_enhanced
+                gtp[self.image_tokens] = gtp_enhanced[self.image_tokens]
         
                 candidates_set = []
                 
@@ -793,19 +794,17 @@ class EaLumina_mGPT(nn.Module):
                             # reject immediately
                             px = 0.0
                                                 
-                        if self.eagle_version == 1:
-                            qx = cart_candidates_prob[j, i]
-                            if qx <= 0:
-                                continue
-                        else:
-                            qx = 1.0
-                        
+                        qx = cart_candidates_prob[j, i]
+                        if qx <= 0:
+                            continue
+                       
                         acp = px / qx
 
                         if r <= acp:
                             accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                             accept_length += 1
                             best_candidate = j
+                            last_accepted_sharpened_logits = gtp
                             # print("accepting ", retrieve_indices[j,i], " j: ", j)
                             break
                         else:
@@ -833,23 +832,21 @@ class EaLumina_mGPT(nn.Module):
                                     accept_cand = torch.cat((accept_cand, x[None]), dim=0)
                                     accept_length += 1
                                     best_candidate = j
+                                    last_accepted_sharpened_logits = gtp
                                     break
                             
                         assert not xi in self.image_syntax_tokens, "Image syntax tokens should not be rejected"
                         
-                        if self.eagle_version == 1:
-                            q = original_prob[i - 1][p_indices[j][i]].clone()
-                            b = b_indices[j][i]
-                            if len(b) > 0:
-                                mask = tree_candidates[0][b]
-                                q[mask] = 0
-                                q = q / q.sum()
+                        q = original_prob[i - 1][p_indices[j][i]].clone()
+                        b = b_indices[j][i]
+                        if len(b) > 0:
+                            mask = tree_candidates[0][b]
+                            q[mask] = 0
+                            q = q / q.sum()
                         
-                        if self.eagle_version == 1:
-                            gtp = gtp - q
-                            gtp[gtp < 0] = 0
-                        else:
-                            gtp[xi] = 0
+                        gtp = gtp - q
+                        gtp[gtp < 0] = 0
+                        
 
                         if gtp.sum() == 0:
                             gtp = torch.ones_like(gtp)
@@ -860,11 +857,9 @@ class EaLumina_mGPT(nn.Module):
             if adjustflag and accept_length != candidates.shape[1]:
                 sample_p = gtp
             else:
+                
                 gt_logits = logits[best_candidate, accept_length-1]
-                # sample_p = torch.softmax(gt_logits, dim=0)
-                gt_logits_bonus = logits[best_candidate, accept_length - 1]
-                gtp_bonus       = torch.softmax(gt_logits_bonus, dim=-1)
-                sample_p = sharpen_to_draft(gtp_bonus, curr_draft_logits, gate_weight, alpha_max=0.15)
+                sample_p = torch.softmax(gt_logits, dim=0)
             
             return torch.tensor(best_candidate), accept_length-1, sample_p
         
