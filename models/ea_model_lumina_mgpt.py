@@ -296,6 +296,27 @@ def safe_topk_cosine_similarity(logits_t, logits_next):
     p_normalized = F.normalize(p_t, p=2, dim=-1) # [B, 65536]
     p_next_normalized = F.normalize(p_next, p=2, dim=-1) # [B, 65536]
     return p_normalized @ p_next_normalized.T         
+   
+def compute_confidence_gate(gtp: torch.Tensor, mass_threshold: float = 0.90) -> float:
+    """Find the minimum probability a token needs to be in the top-90% mass set.
+    
+    Any token with gtp[xi] >= this threshold is one the target genuinely
+    considers. Boosts on these tokens cost less quality because the target
+    already has structural preference there.
+    
+    Returns a probability value, not an index.
+    """
+    # Sort descending — find the cutoff where cumulative mass hits threshold
+    sorted_probs, _ = torch.sort(gtp, descending=True)
+    cumsum = torch.cumsum(sorted_probs, dim=0)
+    
+    # First index where cumulative mass exceeds threshold
+    cutoff_idx = (cumsum >= mass_threshold).nonzero(as_tuple=True)[0]
+    if len(cutoff_idx) == 0:
+        return sorted_probs[-1].item()   # degenerate — use min prob
+    
+    # The probability at the cutoff is the dynamic threshold
+    return sorted_probs[cutoff_idx[0]].item()
     
 class EaLumina_mGPT(nn.Module):
 
@@ -720,23 +741,32 @@ class EaLumina_mGPT(nn.Module):
                             break
                         else:
                             if xi in self.image_tokens :
-                                accept_cand_fake = torch.cat((accept_cand, x[None]), dim=0)
-                                accept_length_fake =  accept_length + 1
-                                is_eq_fake = (candidates[:, :accept_length_fake] == accept_cand_fake).all(dim=1)
-                                fi_fake = torch.nonzero(is_eq_fake, as_tuple=True)[0][0]
-                                lev_sim_score = safe_topk_cosine_similarity(logits[fi, i-1].clone().squeeze(0), logits[fi_fake, i].clone().squeeze(0))
-                                if lev_sim_score > 0.625 and kl_draft < 5.0:
-                                    px =  min(qx, px + r * lev_sim_score)
+                                # H_t = -(gtp * gtp.clamp(min=1e-10).log()).sum().item()   # entropy of target
+                                # H_max = math.log(len(self.image_tokens))                  # max possible entropy
+
+                                # # Normalized entropy in [0, 1] — 1 means completely flat
+                                # entropy_ratio = H_t / H_max
+                                
+                                confidence_gate = compute_confidence_gate(gtp)
+
+                                accept_cand_prev = accept_cand[:-1]
+                                accept_length_prev =  accept_length - 1
+                                is_eq_prev = (candidates[:, :accept_length_prev] == accept_cand_prev).all(dim=1)
+                                fi_prev = torch.nonzero(is_eq_prev, as_tuple=True)[0][0]
+                                lev_sim_score = safe_topk_cosine_similarity(logits[fi_prev, i-2].clone().squeeze(0), logits[fi, i-1].clone().squeeze(0))
+                                if lev_sim_score > 0.625 and px >= confidence_gate: 
+                                    prev_px = candidates[j, i-1].item()
+                                    px =  min(qx, px + gtp[prev_px])
                                 
                                 # print("kl_draft: ", kl_draft)
-                                if px < qx and m_bias_list is not None and kl_draft < 5.0: 
+                                if px < qx and m_bias_list is not None and px >= confidence_gate: 
                                     curr_tree_node_idx = retrieve_indices[j,i]
                                     for bias_idx, quadrant in enumerate(m_bias_list) :
                                         id1,id2, draft_prob, cosine_sim = quadrant
                                         if id1 == curr_tree_node_idx:
-                                            # similar_xi = tree_candidates[0][id2]
+                                            similar_xi = tree_candidates[0][id2]
                                             # px += r * gtp[similar_xi]
-                                            px =  min(qx, max(px + r * cosine_sim, px + r * draft_prob))
+                                            px =  min(qx,  px  +  gtp[similar_xi])
                                 acp = px / qx
                                 if r <= acp:
                                     accept_cand = torch.cat((accept_cand, x[None]), dim=0)

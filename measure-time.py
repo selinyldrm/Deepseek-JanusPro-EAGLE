@@ -27,7 +27,7 @@ def average_generate_time(file_path: str) -> float:
     return sum(times) / len(times), len(times)
 
 if __name__ == "__main__":
-    file_path = "/work1/deming/shared/lumina/inter-only-0.625-kl4.0/4000-5000.txt"
+    file_path = "/work1/deming/shared/lumina/inter-only-0.625-kl4.0/0-1000.txt"
     avg_time, time_length = average_generate_time(file_path)
     print(f"\nAverage generate time: {avg_time:.6f} seconds")
     print(f"\t generation count{time_length:.6f} images")
