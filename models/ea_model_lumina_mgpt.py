@@ -756,7 +756,7 @@ class EaLumina_mGPT(nn.Module):
                                 lev_sim_score = safe_topk_cosine_similarity(logits[fi_prev, i-2].clone().squeeze(0), logits[fi, i-1].clone().squeeze(0))
                                 if lev_sim_score > 0.625 and px >= confidence_gate: 
                                     prev_px = candidates[j, i-1].item()
-                                    px =  min(qx, px + gtp[prev_px])
+                                    px =  min(qx, px + r * lev_sim_score)
                                 
                                 # print("kl_draft: ", kl_draft)
                                 if px < qx and m_bias_list is not None and px >= confidence_gate: 
