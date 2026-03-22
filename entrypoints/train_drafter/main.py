@@ -64,10 +64,8 @@ def parse_args():
     
     parser.add_argument('--max_len', type=int, default=4096)
     parser.add_argument('--eval_freq', type=int, default=1)
-    parser.add_argument('--save_freq', type=int, default=1)
+    parser.add_argument('--save_freq', type=int, default=5)
     parser.add_argument('--wandb', action='store_true', default=True)
-    # [SY]: important for model architecture
-    parser.add_argument('--eagle3', action='store_true', default=False)
 
     return parser
 
@@ -116,7 +114,6 @@ def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, 
         logdict[f'{phase}/top_{id + 1}_acc'] = i.item() / total
     if wandb_check:
         wandb.log(logdict)
-        
 
 def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup, train_mode=True):
     model.train() if train_mode else model.eval()
@@ -130,11 +127,12 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
         with torch.set_grad_enabled(train_mode):
             if train_mode:
                 optimizer.zero_grad()
-            predict, semantic_probs = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
+            predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
             # print("predict shape: ", predict.shape)
             
             with torch.no_grad():
-                target_head = head(data["target"])
+                hidden_states = data["target"]
+                target_head = head(hidden_states)
                 if args.cfg_loss:
                     """
                         Note that target_head[::2] is a conditioned logits and target_head[1::2] is an unconditioned logits.
@@ -148,49 +146,23 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                     target_head = target_head[::2] + args.cfg_scale * (target_head[::2] - target_head[1::2])
                     
                 target_p = nn.Softmax(dim=2)(target_head).detach()
-                # --- 1. Shannon Entropy (General Uncertainty) ---
-                # H(p) = -sum(p * log(p))
-                # Higher value = flatter distribution (higher uncertainty)
-                # entropy = -torch.sum(target_p * torch.log(target_p + 1e-10), dim=-1)
-                # high_entropy_mask = entropy > 5.0
-                # # low_entropy_mask = entropy < 2.0
-                # high_omega = 1.5  # Loss-scaling factor
-                # # low_omega = 0.5  # Loss-scaling factor
-                # w_mask = torch.ones_like(entropy)
-                # w_mask[high_entropy_mask] *= high_omega
-                # w_mask[low_entropy_mask] *= low_omega
                 
-            # target_p: [batch, seq, vocab] — target soft distributions
-            # out_prob: [batch, seq, vocab] — draft soft distributions
-
-            # Compute consecutive target similarity
-            gamma = 1.0
-            p_curr = target_head[:, :-1, :]   # [batch, seq-1, vocab]
-            p_next = target_head[:, 1:, :]    # [batch, seq-1, vocab]
-            s_t = F.cosine_similarity(p_curr, p_next, dim=-1)   # [batch, seq-1]
-            s_t = s_t.detach()   # do not backprop through target
-
-            # Compute consecutive draft similarity
-            q_curr = predict[:, :-1, :]   # [batch, seq-1, vocab]
-            q_next = predict[:, 1:, :]    # [batch, seq-1, vocab]
-            q_sim = F.cosine_similarity(q_curr, q_next, dim=-1)   # [batch, seq-1]
-            
-            # Penalize draft for being inconsistent where target is consistent
-            sim_loss = s_t * (1.0 - q_sim)   # [batch, seq-1]
-            
            
+            features = hidden_states.to(torch.float32) 
+            features_norm = F.normalize(features, p=2, dim=-1).to(torch.float32)
+
             # n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
-            # cosine_sim_matrix = torch.bmm(n_target_logits, n_target_logits.transpose(1, 2))
-            # B, L, _ = cosine_sim_matrix.shape
+            cosine_sim_matrix = torch.bmm(features_norm, features_norm.transpose(1, 2))
+            B, L, _ = cosine_sim_matrix.shape
 
-            # thresh = 0.625
-            # # build upper-triangular mask (i < j)
-            # upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
-            # upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
+            thresh = 0.625
+            # build upper-triangular mask (i < j)
+            upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
+            upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
 
-            # # combine with threshold condition
-            # logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
-            # token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
+            # combine with threshold condition
+            logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
+            token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
 
 
             out_head = head(predict)
@@ -203,53 +175,16 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 p_loss_mask = loss_mask[::2]
             else:
                 p_loss_mask = loss_mask
-                
-            # Weight by foreground mask — consistency matters more in foreground
-            seg_weight = 1.0 + gamma * data["binary_target"][:, :-1]   # [batch, seq-1]
-            sim_loss = torch.sum(
-                loss_mask[:, :-1].squeeze(-1) * seg_weight * sim_loss
-            ) / (loss_mask.sum() + 1e-5)
 
-            # weight = 2.0
-            # weighted_mask = p_loss_mask * w_mask
-            # weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
+            weight = 2.0
+            weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
+
             plogp = target_p * out_logp
-            # ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
+            ploss = -torch.sum(torch.sum(weighted_mask * plogp, 2)) / (weighted_mask.sum() + 1e-5)
 
             vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
-            # loss = vloss + args.p_w * ploss
+            loss = vloss + args.p_w * ploss
 
-            # --- NEW: Semantic Loss Calculation ---
-            # 1. Get the full-length semantic labels from the collator
-            # Shape: [Batch, Seq_Len] (includes zeros for text and padding)
-            semantic_targets = data["binary_target"] 
-
-            # 2. Use the existing loss_mask to ignore text and padding
-            # Squeeze if necessary to match (B, Seq_Len)
-            s_mask = data["loss_mask"] 
-
-            # 3. Compute the MSE only for the active image tokens
-            # We calculate element-wise error, then zero out the non-image parts
-            semantic_error = F.mse_loss(semantic_probs, semantic_targets, reduction='none')
-            masked_sem_error = semantic_error * s_mask
-
-            # 4. Average by the number of active image tokens
-            sem_loss = torch.sum(masked_sem_error) / (s_mask.sum() + 1e-5)
-
-            # # 5. Final Loss Combination
-            sim_w = 0.3
-            # # args.sem_w = 0.1 is your hyperparameter for the semantic task
-            # loss = vloss + args.p_w * ploss + sim_w * sem_loss
-            
-            perceptual_weight = 1.0 + gamma * data["binary_target"]         # [batch, seq]
-            ploss_per_token = -torch.sum(plogp, dim=2) 
-
-            ploss = torch.sum(
-                p_loss_mask.squeeze(-1) * perceptual_weight * ploss_per_token
-            ) / (p_loss_mask.sum() + 1e-5)
-
-            loss = vloss + args.p_w * ploss + sim_w * sim_loss + sim_w * sem_loss
-            
             if train_mode:
                 accelerator.backward(loss)
                 accelerator.clip_grad_value_(model.parameters(), args.grad_clip)
@@ -324,10 +259,7 @@ def run_train_drafter(args):
         base_config = ChameleonConfig.from_pretrained(args.base_path)
     elif "llamagen" in args.model:
         from transformers import AutoConfig
-        if args.eagle3: 
-            from models.drafters.cnets_llamagen import Model
-        else:
-            from models.drafters.cnets2_llamagen import Model
+        from models.drafters.cnets_llamagen import Model
         base_config = AutoConfig.from_pretrained(args.base_path)
     else:
         raise ValueError("Invalid model name.")
@@ -404,7 +336,7 @@ def run_train_drafter(args):
             os.makedirs(args.save_dir)
 
     config = EConfig.from_pretrained(args.config_path)
-    # ckpt_path = "/work1/deming/shared/lumina/drafter-lossscaled/lumina_mgpt_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_coupled_mscoco2017train30k/state_5/model.safetensors"
+    # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
     model = Model(config, load_emb=True, path=args.base_path)
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)

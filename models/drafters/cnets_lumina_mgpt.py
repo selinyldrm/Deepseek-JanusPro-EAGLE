@@ -1329,7 +1329,7 @@ class Model(nn.Module):
             last_headout_temp = last_headout.clone()
             cosine_sim_matrix =  safe_topk_cosine_similarity(last_headout_temp)
             # Keep scores where similarity > threshold
-            high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
+            high_sim_mask = cosine_sim_matrix > 0.5  # shape [B, B]
             # Get indices
             rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
             for r,c in zip(rows.tolist(), cols.tolist()):

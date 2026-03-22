@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --dependency=afterany:261557:261566:261567:261568:261569:261571:261572:261574:261575:261576
 #SBATCH --exclusive
 #SBATCH --job-name=train-lumina         # Name of the job
 #SBATCH --output=train-lumina%j.log            # Output log file
@@ -20,4 +19,5 @@ HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 # cd traineagle3
 # ./run_training.sh
 # accelerate launch -m entrypoints.train_drafter.main --model llamagen2 --base_path  /work1/deming/shared/llamagen/LlamaGen-T2I-2 --config_path /work1/deming/seliny2/LANTERN/data/configs/llamagen_t2i2_config.json   --data_dir /work1/deming/shared/llamagen/training-data  --save_dir /work1/deming/shared/llamagen/llamagen2-eagle3-fixedbase-fixedconfig-fixedds-length1 --bs 8 --save_freq 2  
-python3 main.py train_drafter --model lumina_mgpt --base_path /work1/deming/shared/lumina/Lumina-mGPT-7B-768 --data_dir /work1/deming/shared/lumina/lumina-training-data --save_dir /work1/deming/shared/lumina/drafter-lossscaled --coupled
+# python3 main.py train_drafter --model lumina_mgpt --base_path /work1/deming/shared/lumina/Lumina-mGPT-7B-768 --data_dir /work1/deming/shared/lumina/lumina-training-data --save_dir /work1/deming/shared/lumina/drafter-lossscaled --coupled
+python3 main.py train_drafter --base_path /work1/deming/shared/lumina/Lumina-mGPT-7B-768/ --data_dir /work1/deming/shared/lumina/lumina-training-data --save_dir /work1/deming/shared/lumina/drafter-lossscaled-hidden --coupled

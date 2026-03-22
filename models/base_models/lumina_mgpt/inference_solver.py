@@ -467,6 +467,7 @@ class FlexARInferenceSolver:
             eos_token_id=[8710],
             output_logits=True, # [SY]: added for observing logit similarity in base model
             return_dict_in_generate = True,
+            output_hidden_states = True,
         )
 
         if logits_processor is None:
@@ -478,6 +479,30 @@ class FlexARInferenceSolver:
         else:
             tqdm_loggers = None
 
+        def safe_hidden_state_cosine_similarity(a: torch.Tensor, b: torch.Tensor, k: int = 2048) -> float:
+            a = a.detach().flatten().float()
+            b = b.detach().flatten().float()
+
+            # Remove mean component — essential for hidden states
+            # Without this, all transformer hidden states have cosine sim ≈ 1.0
+            a = a - a.mean()
+            b = b - b.mean()
+
+            valid = torch.isfinite(a) & torch.isfinite(b)
+            if valid.sum() < 2:
+                return 0.0
+            a = a[valid]
+            b = b[valid]
+
+            k = min(k, a.shape[0])
+            _, idx = torch.topk(a.abs(), k)
+            a_k = a[idx]
+            b_k = b[idx]
+
+            norm_a = a_k.norm().clamp(min=1e-8)
+            norm_b = b_k.norm().clamp(min=1e-8)
+            return (torch.dot(a_k, b_k) / (norm_a * norm_b)).item()
+
         with torch.amp.autocast('cuda', dtype=self.dtype):
             start = time.time()
             generation_result = self.model.generate(
@@ -486,45 +511,13 @@ class FlexARInferenceSolver:
             )
             end = time.time()
             # [SY]
-            generated_tokens = generation_result.sequences[0][prompt_len:].tolist()
-            # count = generated_tokens.count(self.item_processor.token2id(self.item_processor.new_line_token))
-            # print("number of new line tokens: ", count)
-            
-            step_logits = generation_result.logits[3:2355]  # [SY]: list of logit_processed logits for keeping only top-k predictions. helps fix 1.0 similarity
-            # print("logits len: ", len(step_logits))
-            masked_logits = torch.stack(step_logits, dim=0).squeeze(1).to(torch.float64)
-            print("masked_logits shape: ", (masked_logits.shape))
-            
-            num_finite = torch.isfinite(masked_logits).sum()
-            print("Logit num_finite: ", num_finite)
-            # for idx in range(masked_logits.shape[0]):
-            #     num_nan = torch.isnan(masked_logits[idx]).sum().item()
-            #     num_posinf = torch.isposinf(masked_logits[idx]).sum().item()
-            #     num_neginf = torch.isneginf(masked_logits[idx]).sum().item()
-            #     print("idx: ", num_nan, num_posinf, num_neginf)
-            normalized = F.normalize(masked_logits, dim=-1, eps=1e-6).to(torch.float64)
-            cosine_sim_matrix = torch.matmul(normalized, normalized.T).to(torch.float64)
-            
-            num_finite = torch.isfinite(cosine_sim_matrix).sum()
-            print("cosine_sim_matrix num_finite: ", num_finite)
-            cosine_sim_matrix = cosine_sim_matrix.cpu().numpy()
-            
-            # topk_vals, topk_idx = torch.topk(masked_logits, 2000, dim=-1)
-            # logp = F.log_softmax(topk_vals, dim=-1)
-            # logp_centered = logp - logp.mean(dim=-1, keepdim=True)
-            # print("logp_centered shape: ", (logp_centered.shape))
-            # proj_dim = 256
-            # R = torch.randn(2000, proj_dim, device=topk_vals.device) / math.sqrt(4096)
-            # projected = logp_centered @ R
-            # cosine_sim_matrix = projected @ projected.T
-            
-            # norms = torch.norm(projected, dim=-1, keepdim=True)
-            # cos_centered = cosine_sim_matrix / (norms @ norms.T)
+            full_sequence_hidden = [step[-1].to(torch.float32) for step in generation_result.hidden_states] # [seq, layers, 4096] --> [seq, 1, 4096]
+            last_hidden = torch.cat(full_sequence_hidden, dim=1).squeeze(0) # [seq_len, 4096]
 
-            # cosine_sim_matrix = cos_centered.to(torch.float32)
-            # lower_tri = torch.tril(cosine_sim_matrix) # 2352 vs 2352
-            # mean_val = lower_tri.sum() / (cosine_sim_matrix.shape[0] * (cosine_sim_matrix.shape[0] + 1) // 2)
-            # cosine_sim_matrix = cosine_sim_matrix.cpu().numpy() # 2352 vs 2352
+            features = last_hidden.to(torch.float32) 
+            features_norm = F.normalize(features, p=2, dim=-1).to(torch.float32)
+
+            cosine_sim_matrix = torch.mm(features_norm, features_norm.t()).to(torch.float32).cpu().numpy()
             
             # import os
             # for row in range(48):
@@ -554,8 +547,8 @@ class FlexARInferenceSolver:
                 plt.ylabel("cosine_similarity")
                 plt.grid()
                 prompt_name = sanitize_filename(prompt_text)
-                os.makedirs(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/", exist_ok=True)
-                plt.savefig(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/row-{row}.png")
+                os.makedirs(f"/work1/deming/shared/lumina/base-mi250-test/features/{prompt_name}/", exist_ok=True)
+                plt.savefig(f"/work1/deming/shared/lumina/base-mi250-test/features/{prompt_name}/row-{row}.png")
                 plt.close()
             plt.imshow(cosine_sim_matrix, cmap='coolwarm')
             plt.colorbar()
@@ -564,13 +557,14 @@ class FlexARInferenceSolver:
             plt.ylabel("cosine_similarity")
             plt.grid()
             prompt_name = sanitize_filename(prompt_text)
-            os.makedirs(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/", exist_ok=True)
-            plt.savefig(f"/work1/deming/shared/lumina/base-mi250-test/logits/{prompt_name}/full.png")
+            os.makedirs(f"/work1/deming/shared/lumina/base-mi250-test/features/{prompt_name}/", exist_ok=True)
+            plt.savefig(f"/work1/deming/shared/lumina/base-mi250-test/features/{prompt_name}/full.png")
             plt.close()
             
 
             step_compression = 1.0 
             latency = end - start
+            generated_tokens = generation_result.sequences[0][prompt_len:].tolist()
             # print(f"Latency: {latency:.2f}s")
 
             # generation_result = generation_result[0][prompt_len:].tolist()

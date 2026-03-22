@@ -297,7 +297,7 @@ def safe_topk_cosine_similarity(logits_t, logits_next):
     p_next_normalized = F.normalize(p_next, p=2, dim=-1) # [B, 65536]
     return p_normalized @ p_next_normalized.T         
    
-def compute_confidence_gate(gtp: torch.Tensor, mass_threshold: float = 0.90) -> float:
+def compute_confidence_gate(gtp: torch.Tensor, mass_threshold: float = 0.80) -> float:
     """Find the minimum probability a token needs to be in the top-90% mass set.
     
     Any token with gtp[xi] >= this threshold is one the target genuinely
@@ -318,6 +318,30 @@ def compute_confidence_gate(gtp: torch.Tensor, mass_threshold: float = 0.90) -> 
     # The probability at the cutoff is the dynamic threshold
     return sorted_probs[cutoff_idx[0]].item()
     
+def safe_hidden_state_cosine_similarity(a: torch.Tensor, b: torch.Tensor, k: int = 2048) -> float:
+    a = a.detach().flatten().float()
+    b = b.detach().flatten().float()
+
+    # Remove mean component — essential for hidden states
+    # Without this, all transformer hidden states have cosine sim ≈ 1.0
+    a = a - a.mean()
+    b = b - b.mean()
+
+    valid = torch.isfinite(a) & torch.isfinite(b)
+    if valid.sum() < 2:
+        return 0.0
+    a = a[valid]
+    b = b[valid]
+
+    k = min(k, a.shape[0])
+    _, idx = torch.topk(a.abs(), k)
+    a_k = a[idx]
+    b_k = b[idx]
+
+    norm_a = a_k.norm().clamp(min=1e-8)
+    norm_b = b_k.norm().clamp(min=1e-8)
+    return (torch.dot(a_k, b_k) / (norm_a * norm_b)).item()
+
 class EaLumina_mGPT(nn.Module):
 
     def __init__(
@@ -365,7 +389,11 @@ class EaLumina_mGPT(nn.Module):
         self.image_tokens = torch.arange(4, 8196, device="cuda")
         self.image_syntax_tokens = torch.tensor([8196, 8197, 8803, 8828], device="cuda")
         self.image_start_token_id = 8197
-
+        
+        text_range = torch.arange(8196, self.vocab_size, device="cuda")
+        is_image_syntax = torch.isin(text_range, self.image_syntax_tokens)
+        self.text_tokens = text_range[~is_image_syntax]
+        
         low_memory=False
 
         device = base_model.model.layers[-1].self_attn.q_proj.weight.device
@@ -637,7 +665,7 @@ class EaLumina_mGPT(nn.Module):
             )
 
         cfg_tree_logits = uncond_tree_logits + self.cfg_scale * (tree_logits - uncond_tree_logits)
-
+        
         # MultiModalLogitsProcessor
         cfg_tree_logits = self.internal_logits_processors[0](
             cfg_tree_logits[0], image_start_token_id_index=self.image_start_token_id_index, position_ids=position_ids + 1
@@ -647,9 +675,11 @@ class EaLumina_mGPT(nn.Module):
         cfg_tree_logits = self.internal_logits_processors[1](cfg_tree_logits)
         
         logits = cfg_tree_logits[retrieve_indices]
-        return logits, hidden_states, uncond_hidden_states
 
-    def evaluate_posterior(self, bias_list , l_node_counts,logits, tree_logits, retrieve_indices,
+        hidden_states_retrieved = hidden_states[-1][retrieve_indices]
+        return logits, hidden_states, uncond_hidden_states, hidden_states_retrieved
+
+    def evaluate_posterior(self, bias_list , l_node_counts,logits, tree_logits, hidden_states_retrieved, retrieve_indices,
                             candidates, cart_candidates_prob=None, original_prob=None,
                             p_indices=None, tree_candidates=None, b_indices=None,
                             do_sample=True, lantern=False, lantern_k=1000, lantern_delta=0.1):
@@ -748,25 +778,30 @@ class EaLumina_mGPT(nn.Module):
                                 # entropy_ratio = H_t / H_max
                                 
                                 confidence_gate = compute_confidence_gate(gtp)
-
-                                accept_cand_prev = accept_cand[:-1]
-                                accept_length_prev =  accept_length - 1
-                                is_eq_prev = (candidates[:, :accept_length_prev] == accept_cand_prev).all(dim=1)
-                                fi_prev = torch.nonzero(is_eq_prev, as_tuple=True)[0][0]
-                                lev_sim_score = safe_topk_cosine_similarity(logits[fi_prev, i-2].clone().squeeze(0), logits[fi, i-1].clone().squeeze(0))
-                                if lev_sim_score > 0.625 and px >= confidence_gate: 
-                                    prev_px = candidates[j, i-1].item()
-                                    px =  min(qx, px + r * lev_sim_score)
+                                px_orig = px.clone()
+                                if i > 1 :
+                                    # accept_cand_prev = accept_cand[:-1]
+                                    # accept_length_prev =  accept_length - 1
+                                    # is_eq_prev = (candidates[:, :accept_length_prev] == accept_cand_prev).all(dim=1)
+                                    # fi_prev = torch.nonzero(is_eq_prev, as_tuple=True)[0][0]
+                                    
+                                    gt_hidden_states = hidden_states_retrieved[fi, i-1]
+                                    gt_hidden_states_prev = hidden_states_retrieved[fi, i-2]
+                                    
+                                    lev_sim_score = safe_topk_cosine_similarity(gt_hidden_states_prev.squeeze(0), gt_hidden_states.squeeze(0))
+                                    if lev_sim_score > 0.9 and px_orig >= confidence_gate : 
+                                        # prev_px = candidates[j, i-1].item()
+                                        px =  min(qx, px + r * lev_sim_score)
                                 
                                 # print("kl_draft: ", kl_draft)
-                                if px < qx and m_bias_list is not None and px >= confidence_gate: 
+                                if px < qx and m_bias_list is not None and px_orig >= confidence_gate: 
                                     curr_tree_node_idx = retrieve_indices[j,i]
                                     for bias_idx, quadrant in enumerate(m_bias_list) :
                                         id1,id2, draft_prob, cosine_sim = quadrant
                                         if id1 == curr_tree_node_idx:
                                             similar_xi = tree_candidates[0][id2]
                                             # px += r * gtp[similar_xi]
-                                            px =  min(qx,  px  +  gtp[similar_xi])
+                                            px =  min(qx,  px  +  r * gtp[similar_xi])
                                 acp = px / qx
                                 if r <= acp:
                                     accept_cand = torch.cat((accept_cand, x[None]), dim=0)
@@ -1029,7 +1064,7 @@ class EaLumina_mGPT(nn.Module):
                 self.base_model.model.tree_mask = tree_mask
                 tree_candidates = tree_candidates.to(input_ids.device)
             
-            logits, hidden_states_new, uncond_hidden_states_new = self.tree_decoding(
+            logits, hidden_states_new, uncond_hidden_states_new, hidden_states_retrieved = self.tree_decoding(
                 tree_candidates=tree_candidates,
                 attention_mask=attn_mask,
                 past_key_values=past_key_values,
@@ -1056,6 +1091,7 @@ class EaLumina_mGPT(nn.Module):
                 tree_buffers["per_level_node_counts"],
                 logits,
                 tree_logits,
+                hidden_states_retrieved,
                 tree_buffers["retrieve_indices"],
                 candidates=candidates,
                 cart_candidates_prob=cart_candidates_prob,
