@@ -14,6 +14,7 @@ from torchvision.utils import save_image
 import math
 import matplotlib.pyplot as plt
 
+from PIL import Image
 
 from .kv_variants.modeling_llamagen_kv import LlamaForCausalLM as KVLlamaForCausalLM
 from .drafters.utils import *
@@ -26,7 +27,7 @@ from .drafters.choices import *
 
 import torch.nn.functional as F
 import copy
-
+    
 def cfg_logit_process(combined_logits, cfg_scale=4.0):
     cond_logits, uncond_logits = torch.split(combined_logits, len(combined_logits) // 2, dim=0)
     logits = uncond_logits + (cond_logits - uncond_logits) * cfg_scale
@@ -1461,6 +1462,7 @@ class EaModel(nn.Module):
             r = [i for r in analysis_r for i in r]
 
             return input_ids[:, 120:120+max_length], time.time()-st, accept_list, p , pp, r , overhead_list, accepted_logits, img_sim_list
+        
         return input_ids[:, 120:120+max_length], time.time()-st, accept_list
     
     @torch.no_grad()

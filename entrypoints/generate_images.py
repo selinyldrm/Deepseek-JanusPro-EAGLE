@@ -16,6 +16,7 @@ from torchvision.utils import save_image
 import seaborn as sns
 import torch.nn.functional as F
 from tqdm import tqdm
+import cv2
 
 world_size = 8
 USE_EXPERIMENTAL_FEATURES = os.getenv("USE_EXPERIMENTAL_FEATURES", "0") == "1"
@@ -87,6 +88,19 @@ def set_seed(seed):
     torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.benchmark = False
 
+def sanitize_filename(text, max_len=256):
+    # Remove unsafe characters and trim long prompts
+    # Remove prefix: "Generate an image of 768x768 according to the following prompt"
+    text = re.sub(
+        r'^\s*generate\s+an?\s+image\s+of\s+\d+x\d+\s+(according\s+to\s+the\s+following\s+prompt[:,]?\s*)?',
+        '',
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(r'[\/:*?"<>|]', '', text).strip().replace(' ', '_')
+    return text[:max_len]
+    
 def load_model(args):
     if args.model == "lumina_mgpt":
         if args.model_type == "vllm":
@@ -162,6 +176,15 @@ def load_model(args):
             model.eval()
         else:
             raise ValueError(f"Model type {args.model_type} is not supported for model {args.model}")
+    elif "januspro" in args.model:
+        if args.model_type == 'eagle':
+            from models.specdec_januspro import JanusEaModel
+            dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.precision]
+            # dtype = torch.float32
+            model = JanusEaModel.from_pretrained().to(dtype=dtype, device='cuda')
+            model.eval()
+        else:
+            raise ValueError(f"Model type {args.model_type} is not supported for model {args.model}")
     else:
         raise NotImplementedError(f"Model {args.model} is not supported")
     
@@ -221,6 +244,15 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
             "cfg": kwargs["cfg"],
             "static_tree": kwargs["static_tree"],
         }
+    elif model_name == "januspro":
+        generate_params = {
+            "prompt": [prompt],
+            # "max_length": max_gen_len,
+            "temperature": kwargs["temperature"],
+            "top_k": kwargs["top_k"],
+            "top_p": kwargs["top_p"],
+            "cfg_scale": kwargs["cfg"],
+        }
     else:
         raise NotImplementedError(f"Model {model_name} is not supported for image generation.")
     
@@ -243,23 +275,118 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         # generated_tokens, latency, accpt, tvd_image  = model.generate(**generate_params)
         # generated_tokens, latency, accpt, model_conf_img  = model.generate(**generate_params)
         # print(f"generate time={latency} seconds\n", flush=True)
-        generated_tokens, latency, accpt  = model.generate(**generate_params)
-        
-    _, generated_image = model.decode_ids(generated_tokens)
-    print("generated_image len: ", len(generated_image))
+        def generate_pseudo_video(
+            model,           
+            prompt: str,
+            n_keyframes: int = 4,
+            fps: int = 24,
+            duration_sec: int = 4,
+            output_path: str = "/work1/deming/seliny2/LANTERN/output.mp4",
+            **generate_params,
+        ):
+            """Generate video by interpolating between LlamaGen keyframes.
+            
+            No training required. Quality limited to slow-motion scenes
+            where optical flow interpolation is plausible.
+            """
+            
+            # Step 1: Generate keyframes with slight prompt variation
+            keyframes = []
+            prompt = prompt[0]
+            prompt_variants = [
+                prompt,
+                prompt + ", slightly different angle",
+                prompt + ", moment later",
+                prompt + ", from the other angle",
+            ]
+            
+            for i, p in enumerate(prompt_variants[:n_keyframes]):
+                generate_params["prompt"] = [p]
+                tokens, _, _ = model.generate(**generate_params)
+                # tokens, _, _ = ea_model.generate(
+                #     prompt=p,
+                #     temperature=1.0 - i * 0.05,  # slight temperature variation
+                #     cfg_scale=5.0,
+                # )
+                _, img = model.decode_ids(tokens)
+                
+                # img is (B, 3, H, W) tensor in [-1, 1]
+                # Convert to (H, W, 3) uint8 for OpenCV
+                img_np = img[0]                              # take first in batch: (3, H, W)
+                img_np = img_np.float().cpu().numpy()        # (3, H, W) float
+                img_np = img_np.transpose(1, 2, 0)          # (H, W, 3)
+                img_np = np.clip((img_np + 1) / 2 * 255, 0, 255).astype(np.uint8)  # uint8
 
-    def sanitize_filename(text, max_len=256):
-        # Remove unsafe characters and trim long prompts
-        # Remove prefix: "Generate an image of 768x768 according to the following prompt"
-        text = re.sub(
-            r'^\s*generate\s+an?\s+image\s+of\s+\d+x\d+\s+(according\s+to\s+the\s+following\s+prompt[:,]?\s*)?',
-            '',
-            text,
-            flags=re.IGNORECASE
+                keyframes.append(img_np)
+                
+                filename = sanitize_filename(p)
+                save_image(img, f"{output_dir}/{filename}.png", normalize=True, value_range=(-1, 1))
+            
+            # Step 2: Interpolate between keyframes using optical flow
+            total_frames = fps * duration_sec
+            frames_per_segment = total_frames // (n_keyframes - 1)
+            all_frames = []
+            
+            for i in range(len(keyframes) - 1):
+                src = keyframes[i].astype(np.float32)
+                dst = keyframes[i + 1].astype(np.float32)
+                
+                src_gray = cv2.cvtColor(keyframes[i], cv2.COLOR_RGB2GRAY)
+                dst_gray = cv2.cvtColor(keyframes[i + 1], cv2.COLOR_RGB2GRAY)
+                
+                # Dense optical flow
+                flow = cv2.calcOpticalFlowFarneback(
+                    src_gray, dst_gray, None,
+                    pyr_scale=0.5, levels=3, winsize=15,
+                    iterations=3, poly_n=5, poly_sigma=1.2, flags=0
+                )
+                
+                for t_idx in range(frames_per_segment):
+                    alpha = t_idx / frames_per_segment
+                    
+                    # Warp source frame toward destination using flow
+                    h, w = flow.shape[:2]
+                    map_x = np.tile(np.arange(w), (h, 1)).astype(np.float32)
+                    map_y = np.tile(np.arange(h), (w, 1)).T.astype(np.float32)
+                    
+                    map_x_warped = map_x + flow[:, :, 0] * alpha
+                    map_y_warped = map_y + flow[:, :, 1] * alpha
+                    
+                    warped = cv2.remap(
+                        src, map_x_warped, map_y_warped,
+                        interpolation=cv2.INTER_LINEAR,
+                        borderMode=cv2.BORDER_REFLECT,
+                    )
+                    
+                    # Cross-dissolve between warped src and dst
+                    blended = ((1 - alpha) * warped + alpha * dst).clip(0, 255).astype(np.uint8)
+                    all_frames.append(blended)
+            
+            all_frames.append(keyframes[-1])
+            
+            # Write video
+            h, w = all_frames[0].shape[:2]
+            writer = cv2.VideoWriter(
+                output_path,
+                cv2.VideoWriter_fourcc(*"mp4v"),
+                fps,
+                (w, h),
+            )
+            for frame in all_frames:
+                writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+            writer.release()
+            print(f"Saved: {output_path}  ({len(all_frames)} frames @ {fps}fps)")
+            return all_frames
+
+        generate_pseudo_video(
+            model,  
+            **generate_params,
         )
-    
-        text = re.sub(r'[\/:*?"<>|]', '', text).strip().replace(' ', '_')
-        return text[:max_len]
+    #     generated_tokens, latency, accpt  = model.generate(**generate_params)
+        
+    # _, generated_image = model.decode_ids(generated_tokens)
+    # print("generated_image len: ", len(generated_image))
+
     import statistics
     if model_name in ["lumina_mgpt", "anole"]:
         os.makedirs(f"{output_dir}", exist_ok=True)

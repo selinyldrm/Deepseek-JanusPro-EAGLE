@@ -171,7 +171,6 @@ def generate_tree_buffers(tree_choices, device="cuda"):
         "position_ids":position_ids,
         "repeat_nums":repeat_nums
     }
-    print("tree_indices: ", tree_indices_list)
 
     # Move the tensors in the dictionary to the specified device
     tree_buffers = {
