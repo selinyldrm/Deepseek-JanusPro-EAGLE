@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from torch.utils.data import Dataset
 import random
+from pathlib import Path
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate data for drafter training')
@@ -21,7 +22,8 @@ def parse_args():
     parser.add_argument('--output_dir', type=str, default='data/drafter_train_data/lumina_mgpt')
     parser.add_argument('--num_samples', type=int, default=200000)
     parser.add_argument("--precision", type=str, default="bf16")
-
+    parser.add_argument('--start', type=int, default=0)
+    parser.add_argument('--end', type=int, default=30000)
     return parser
 
 class SupervisedDataset(Dataset):
@@ -49,19 +51,31 @@ class SupervisedDataset(Dataset):
             input_ids = np.load(os.path.join(self.code_base_path, self.code_data[0]))
             input_ids = torch.from_numpy(input_ids).long()
             self.input_length = input_ids.shape[1]
+        elif "januspro" in self.model:
+            # Assuming codes/ contains image tokens and text_features/ contains prompt ids
+            self.code_data = sorted(os.listdir(os.path.join(data_path, "codes")))
+            self.text_data = sorted(os.listdir(os.path.join(data_path, "text_features")))
+            self.code_base_path = os.path.join(data_path, "codes")
+            self.text_base_path = os.path.join(data_path, "text_features")
+            
+            # Use first sample to determine dimensions
+            sample_code = np.load(os.path.join(self.code_base_path, self.code_data[0]))
+            # For Janus, this should be (1, 576) or (576,)
+            self.input_length = sample_code.flatten().shape[0]
         else:
             raise NotImplementedError(f"Model {model} not supported")
         
     def __len__(self):
         if self.model == "lumina_mgpt" or self.model == "anole":
             return len(self.dataset)
-        elif "llamagen" in self.model:
+        elif "llamagen" in self.model or  "januspro" in self.model:
             return len(self.code_data)
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
         if self.model == "lumina_mgpt" or self.model == "anole":
             return {"prompt_token_ids" : torch.tensor(self.dataset[i]["prompt_token_ids"]).long().unsqueeze(0),
                     "out_token_ids": torch.tensor(self.dataset[i]["out_token_ids"]).long().unsqueeze(0)}
+        
         elif "llamagen" in self.model:
             assert os.path.basename(self.code_data[i]) == os.path.basename(self.text_data[i])
             input_ids = np.load(os.path.join(self.code_base_path, self.code_data[i]))
@@ -86,6 +100,23 @@ class SupervisedDataset(Dataset):
                 loss_mask=loss_mask,
                 fname=p.stem,
             )
+        elif "januspro" in self.model:
+            # Shared logic for file-based models
+            assert os.path.basename(self.code_data[i]) == os.path.basename(self.text_data[i])
+            fname_stem = Path(self.code_data[i]).stem
+            
+            # Load Image Tokens (The "Codes")
+            image_tokens = np.load(os.path.join(self.code_base_path, self.code_data[i]))
+            image_tokens = torch.from_numpy(image_tokens).long().view(1, -1) # [1, 576]
+            # Load Prompt Token IDs (The "Text Features")
+            prompt_ids = np.load(os.path.join(self.text_base_path, self.text_data[i]))
+            prompt_ids = torch.from_numpy(prompt_ids).long().view(1, -1) # [1, Seq_Len]
+            
+            return {
+                "prompt_token_ids": prompt_ids,
+                "out_token_ids": image_tokens,
+                "fname": fname_stem
+            }
 
     def shuffle(self, seed: Optional[int] = None):
         if seed is not None:
@@ -93,7 +124,7 @@ class SupervisedDataset(Dataset):
         if self.model == "lumina_mgpt" or self.model == "anole":
             perm = np.random.permutation(len(self.dataset))
             self.dataset = [self.dataset[i] for i in perm]
-        elif "llamagen" in self.model:
+        elif "llamagen" in self.model or "januspro" in self.model:
             perm = np.random.permutation(len(self.code_data))
             self.code_data = [self.code_data[i] for i in perm]
             self.text_data = [self.text_data[i] for i in perm]
@@ -104,7 +135,7 @@ class SupervisedDataset(Dataset):
     def select(self, indices: Sequence[int]):
         if self.model == "lumina_mgpt" or self.model == "anole":
             self.dataset = [self.dataset[i] for i in indices]
-        elif "llamagen" in self.model:
+        elif "llamagen" in self.model or "januspro" in self.model :
             self.code_data = [self.code_data[i] for i in indices]
             self.text_data = [self.text_data[i] for i in indices]
         return self
@@ -148,6 +179,42 @@ def generate_data(model, data, model_type):
         hidden_state_big = outs_big.hidden_states[-1]
         return {"cond_idx":cond_idx, "input_ids":input_ids.cpu()[0],"hidden_state":hidden_state_big.cpu()[0],
                 "loss_mask":loss_mask.cpu()[0],'attention_mask':attention_mask[0]}
+    elif "januspro" in model_type:
+        model.eval()
+    
+        # 1. Prepare the Sequence (Teacher Forcing)
+        prompt_ids = torch.tensor(data['prompt_token_ids']).cuda() # [1, L]
+        image_ids = torch.tensor(data['out_token_ids']).cuda()   # [1, 576]
+        
+        # We need to simulate the exact inference embedding path
+        prompt_embeds = model.language_model.get_input_embeddings()(prompt_ids)
+        image_embeds = model.prepare_gen_img_embeds(image_ids) # [1, 576, 4096]
+        
+        full_embeds = torch.cat([prompt_embeds, image_embeds], dim=1)
+
+        # 2. Run the 7B Model to extract "Ground Truth" Hidden States
+        # We only care about the last layer's hidden states
+        outputs = model.language_model.model(
+            inputs_embeds=full_embeds, 
+            output_hidden_states=True, 
+            use_cache=False
+        )
+        
+        # Get the last layer hidden states: [1, Total_Seq, 4096]
+        hidden_states = outputs.hidden_states[-1]
+
+        # 3. Align for EAGLE Training
+        # The Drafter predicts H_{t+1} using H_t and Token_{t+1}.
+        # We slice to keep only the image generation portion.
+        prompt_len = prompt_ids.shape[1]
+        
+        # Image hidden states (what the 7B model produced for each image token)
+        image_hidden = hidden_states[:, prompt_len-1:, :] # [1, 576, 4096]
+
+        return {
+            "target_hidden": image_hidden.cpu(),    # Target for regression [1, 576, 4096]
+            "input_embeds": image_embeds.cpu(),# Context for drafter [1, 576, 4096]
+        }
     else:
         raise NotImplementedError(f"Model {model_type} not supported")
 def writedata(name, data_point, fname):
@@ -183,13 +250,30 @@ def run_generate_data(args):
         from models.kv_variants.modeling_llamagen_kv import LlamaForCausalLM
         model = LlamaForCausalLM.from_pretrained('/work1/deming/shared/llamagen/LlamaGen-T2I-2').to(dtype=dtype, device='cuda')
         uncond_embedding = model.model.cls_embedding.uncond_embedding.to(dtype=dtype, device='cuda')
+    elif args.model == "januspro":
+        from transformers import AutoModelForCausalLM
+        from janus.models import MultiModalityCausalLM, VLChatProcessor
+        model_path = "/work1/deming/shared/Janus-Pro-7B"
+        model: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(
+            model_path, trust_remote_code=True
+        )
+        model = model.to(torch.bfloat16).cuda().eval()
+        
     else:
         raise NotImplementedError(f"Model {args.model} not supported")
     model.eval()
     
-    ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
+    if args.model == "januspro":
+        ds = SupervisedDataset(args.data_path, args.model, None)
+    else:
+        ds = SupervisedDataset(args.data_path, args.model, uncond_embedding)
     ds = ds.shuffle(seed=42)
-    ds = ds.select(range(min(args.num_samples, len(ds))))
+    print(args.start)
+    print(args.end)
+    ds = ds.select(range(args.start, 
+                            min(args.end, len(ds))
+                        )
+                    )
     
 
     if not os.path.exists(args.output_dir):

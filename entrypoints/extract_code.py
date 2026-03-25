@@ -15,6 +15,12 @@ from PIL import Image
 from models.base_models.llamagen.vq_model import VQ_16
 from models.base_models.llamagen.t5 import T5Embedder
 import yaml
+from pathlib import Path
+
+from janus.models import MultiModalityCausalLM, VLChatProcessor
+import numpy as np
+import os
+from transformers import AutoModelForCausalLM
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate data for drafter training')
@@ -23,6 +29,8 @@ def parse_args():
                         default="data/laion_coco")
     parser.add_argument('--output_dir', type=str, default='data/extracted_code/llamagen')
     parser.add_argument('--num_samples', type=int, default=1000000)
+    parser.add_argument('--start', type=int, default=0)
+    parser.add_argument('--end', type=int, default=30000)
 
     return parser
 
@@ -78,7 +86,7 @@ class SupervisedDataset(Dataset):
         caption = open(os.path.join(self.base_path, self.captions[i])).read().strip()
         if self.transform is not None:
             img = self.transform(img)
-        p = Path(self.code_data[i])
+        p = Path(self.images[i].split(".")[0])
         return {"image": img, "caption": caption, "fname": p.stem}
         
 
@@ -124,6 +132,51 @@ def generate_data_anole(vq_model, tokenizer, data, device):
         "out_token_ids": indices
     }
     
+@torch.no_grad()
+def generate_data_januspro(mmgpt, vl_chat_processor, data):
+    """
+    Args:
+        mmgpt: The Janus-Pro MultiModalityCausalLM
+        vl_chat_processor: The VLChatProcessor
+        data: Dict containing 'caption' (str) and 'image' (PIL or Tensor)
+    """
+    # 1. Handle Text Prompt (Caption)
+    # Format into Janus SFT template: User: <caption...> Assistant: <image_start>
+    conversation = [
+        {"role": "User", "content": data['caption']},
+        {"role": "Assistant", "content": ""},
+    ]
+    
+    sft_format = vl_chat_processor.apply_sft_template_for_multi_turn_prompts(
+        conversations=conversation,
+        sft_format=vl_chat_processor.sft_format,
+        system_prompt="",
+    )
+    
+    # Prepend the image start tag as per your inference code
+    prompt = sft_format + vl_chat_processor.image_start_tag
+    prompt_token_ids = vl_chat_processor.tokenizer.encode(prompt)
+    
+    # 2. Handle Image Tokens
+    # Prepare image: Ensure it's a tensor in [B, 3, H, W] format, normalized to [-1, 1]
+    img = data['image'].unsqueeze(0)
+    # print("transformed img.shape: ", img.shape)
+    img = img.to(device=mmgpt.device, dtype=torch.bfloat16)
+
+    # Encode image to visual tokens using MAGVIT-2
+    # Janus-Pro usually produces 576 tokens (24x24 patch grid)
+    encoding_results = mmgpt.gen_vision_model.encode(img)     
+    _, _, info = encoding_results 
+    _, _, min_encoding_indices = info
+    # print("min_encoding_indices.shape: ", min_encoding_indices.shape)
+    # Now .view will work because out_token_ids is a Tensor
+    out_token_ids = min_encoding_indices.view(1, -1)
+
+    return {
+        'caption_emb': prompt_token_ids,           # List of ints
+        'codes': out_token_ids.cpu().numpy(),  # Array [1, 576]
+    }
+    
 def writedata(name, data_point, fname):
     if not os.path.exists(name):
         os.makedirs(name)
@@ -138,6 +191,8 @@ def run_extract_code(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if args.model == "llamagen":
         image_size = 256
+    elif args.model == "januspro":
+        image_size = 384
     else:
         image_size = 512
     transform = transforms.Compose([
@@ -148,7 +203,7 @@ def run_extract_code(args):
     
     ds = SupervisedDataset(args.data_path, transform)
     ds = ds.shuffle(seed=42)
-    ds = ds.select(range(min(len(ds), args.num_samples)))
+    ds = ds.select(range(args.start, min(args.end, len(ds))))
     if "llamagen" in args.model:
         vq_model = VQ_16(codebook_size=16384, codebook_embed_dim=8)
         vq_model.to(device)
@@ -174,7 +229,24 @@ def run_extract_code(args):
             outdata = generate_data_llamagen(vq_model, t5_model, data)
             if outdata is not None:
                 writedata(args.output_dir, outdata, data['fname'])
+    elif "januspro" in args.model:
+        model_path = "/work1/deming/shared/Janus-Pro-7B"
+        vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(model_path)
+        tokenizer = vl_chat_processor.tokenizer
 
+        vl_gpt: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(
+            model_path, trust_remote_code=True
+        )
+        vl_gpt = vl_gpt.to(torch.bfloat16).cuda().eval()
+
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
+            os.makedirs(os.path.join(args.output_dir, 'codes'))
+            os.makedirs(os.path.join(args.output_dir, 'text_features'))
+        for data in tqdm(ds):
+            outdata = generate_data_januspro(vl_gpt, vl_chat_processor, data)
+            if outdata is not None:
+                writedata(args.output_dir, outdata, data['fname'])
     elif args.model == "anole":
         from models.base_models.anole.chameleon_vae_ori.vqgan import VQModel
         from transformers import AutoTokenizer

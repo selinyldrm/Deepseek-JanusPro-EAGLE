@@ -36,6 +36,28 @@ from transformers import AutoModelForCausalLM, AutoConfig
 from janus.models import MultiModalityCausalLM, VLChatProcessor
 from models.drafters.choices import naive_extend_57
 
+import copy
+import json
+import time
+from typing import List, Optional
+
+from torchvision.utils import save_image
+import math
+import matplotlib.pyplot as plt
+
+from PIL import Image
+
+from .drafters.utils import *
+from .drafters.kv_cache import initialize_past_key_values
+
+from .drafters.cnets_januspro import Model, cfg_logit_process
+from .configs.configs import EConfig
+
+from .drafters.choices import *
+
+import torch.nn.functional as F
+import copy
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -73,22 +95,6 @@ def top_k_top_p_filtering(
         )
         logits[indices_to_remove] = filter_value
     return logits
-
-
-def cfg_logit_process(
-    combined_logits: torch.Tensor,
-    cfg_scale: float = 5.0,
-) -> torch.Tensor:
-    """CFG for Janus-Pro — even rows are cond, odd rows are uncond.
-
-    Matches the official reference:
-        logit_cond   = logits[0::2]
-        logit_uncond = logits[1::2]
-        out = logit_uncond + cfg_scale * (logit_cond - logit_uncond)
-    """
-    logit_cond   = combined_logits[0::2]
-    logit_uncond = combined_logits[1::2]
-    return logit_uncond + cfg_scale * (logit_cond - logit_uncond)
 
 
 def mask_non_image_logits(logits: torch.Tensor) -> torch.Tensor:
@@ -158,334 +164,12 @@ def initialize_past_key_values(model: MultiModalityCausalLM):
 
     return past_key_values, past_key_values_data, current_length_data
 
-class node:
-    def __init__(self,parent=None,value=None,dict_key=None):
-        self.parent=parent
-        self.value=value
-        if parent:
-            self.depth=parent.depth+1
-            parent.children.append(self)
-        else:
-            self.depth=0
-        self.children=[]
-        self.dict_key=dict_key
-    def is_leaf(self):
-        return len(self.children)==0
-
-    def all_index(self):
-        if not self.parent.parent:
-            return [self.index]
-        else:
-            return self.parent.all_index()+[self.index]
-
-class Tree:
-    def __init__(self,tree_list):
-        sorted_tree_list = sorted(tree_list, key=lambda x: (len(x), x))
-        self.root=node()
-        self.node_dic={}
-        for tree_node in sorted_tree_list:
-            cur_value=tree_node[-1]
-            if len(tree_node)==1:
-                cur_node=node(parent=self.root,value=cur_value,dict_key=tuple(tree_node))
-            else:
-                cur_parent=self.node_dic[tuple(tree_node[:-1])]
-                cur_node = node(parent=cur_parent, value=cur_value,dict_key=tuple(tree_node))
-            self.node_dic[tuple(tree_node)] = cur_node
-        self.indexnode()
-
-    def max_depth(self):
-        return max([item.depth for item in self.node_dic.values()])
-
-    def num_node_wchild(self):
-        num_c=0
-        for item in self.node_dic.values():
-            if not item.is_leaf():
-                num_c+=1
-        return num_c
-
-    def get_node_wchild(self):
-        ns=[]
-        for item in self.node_dic.values():
-            if not item.is_leaf():
-                ns.append(item)
-        return ns
-
-    def indexnode(self):
-        cur_index=0
-        for key in self.node_dic:
-            cur_node=self.node_dic[key]
-            if not cur_node.is_leaf():
-                cur_node.index=cur_index
-                cur_index+=1
-# ---------------------------------------------------------------------------
-# Drafter: Janus-Pro-1B running the same gen_head pipeline
-# ---------------------------------------------------------------------------
-
-class JanusDrafterLayer(nn.Module):
-    """Wraps Janus-Pro-1B as the EAGLE drafter tree generator.
-
-    Mirrors cnets2_llamagen.py Model.topK_genrate_v1 but uses:
-    - prepare_gen_img_embeds  instead of token embeddings for image tokens
-    - gen_head                instead of lm_head
-    - cfg_logit_process       matching Janus-Pro CFG (even=cond, odd=uncond)
-    """
-
-    def __init__(
-        self,
-        model: MultiModalityCausalLM,
-        top_k: int   = 10,
-        depth: int   = 5,
-        total_tokens: int = 59,
-        threshold: float  = 1.0,
-    ):
-        super().__init__()
-        self.model        = model
-        self.top_k        = top_k
-        self.depth        = depth
-        self.total_tokens = total_tokens
-        self.threshold    = threshold
-        self.tree_buffer: dict = {}
-        self.tree_mask: Optional[torch.Tensor] = None
-        self.diff_device  = False
-
-    def init_tree(self, tree_choices, device="cuda"):
-        self.tree_buffer = self._build_tree_buffers(tree_choices, device)
-
-    def _build_tree_buffers(self, tree_choices, device):
-        tree=Tree(tree_choices)
-        sorted_tree_choices = sorted(tree_choices, key=lambda x: (len(x), x))
-        # print("eagle tree: choices ", sorted_tree_choices)
-        tree_len = tree.num_node_wchild() # num of node with child
-
-
-        max_depth=tree.max_depth()
-        # print("max_depth: ", max_depth)
-        # print("tree_len: ", tree_len)
-        nodes_wc=tree.get_node_wchild() # all nodes with child
-
-        depth_counts=[0 for _ in range(max_depth-1)]
-        # print("depth_counts: ", depth_counts)
-        for x in nodes_wc:
-            depth_counts[x.depth-1]+=1
-        depth_counts_sum = [sum(depth_counts[:i + 1]) for i in range(len(depth_counts))]
-        # print("depth_counts_sum: ", depth_counts_sum)
-
-
-        tree_attn_mask = torch.eye(tree_len, tree_len)
-
-        for id,x in enumerate(nodes_wc):
-            tree_attn_mask[id,x.all_index()]=1
-
-
-
-
-        tree_attn_mask_list0=[tree_attn_mask[:ml,:ml] for ml in depth_counts_sum]
-        tree_attn_mask_list=[]
-        for id,x in enumerate(tree_attn_mask_list0):
-            x=x[-depth_counts[id]:]
-            tree_attn_mask_list.append(x)
-
-
-
-        tree_indices_list = [torch.zeros(ml, dtype=torch.long) for ml in depth_counts]
-        repeat_nums=[[] for _ in depth_counts]
-        start = 0
-        bias = 0
-        for i in range(len(depth_counts)):
-            bias = 0
-            repeat_j=0
-            for j in range(depth_counts[i]):
-                cur_node = nodes_wc[start + j]
-                cur_parent = cur_node.parent
-
-                if j != 0:
-                    if cur_parent != parent:
-                        bias += 1
-                        parent = cur_parent
-                        repeat_nums[i].append(j-repeat_j)
-                        repeat_j=j
-                else:
-                    parent = cur_parent
-                tree_indices_list[i][j] = cur_node.value + TOPK * (bias)
-            repeat_nums[i].append(j - repeat_j+1)
-            start += depth_counts[i]
-
-        position_ids = [torch.zeros(ml, dtype=torch.long) for ml in depth_counts]
-
-        # start = 0
-        # for i in range(len(depth_counts)):
-        #     position_ids[start: start + depth_counts[i]] = i
-        #     start += depth_counts[i]
-        # print("eagle tree: tree_indices ", tree_indices_list)
-        # print("eagle tree: position_ids ", position_ids)
-
-        tree_buffers = {
-            "attn_mask": [i.unsqueeze(0).unsqueeze(0) for i in tree_attn_mask_list],
-            "tree_indices": tree_indices_list,
-            "position_ids":position_ids,
-            "repeat_nums":repeat_nums
-        }
-
-        # Move the tensors in the dictionary to the specified device
-        tree_buffers = {
-            k: [i.clone().to(device) for i in v]
-            if isinstance(v[0], torch.Tensor)
-            else (
-                torch.tensor(v, device=device)
-                if isinstance(v, torch.Tensor)
-                else v
-            )
-            for k, v in tree_buffers.items()
-        }
-        return tree_buffers
-
-    def repeat_hidden(self, hidden: torch.Tensor, repeat_nums: torch.Tensor) -> torch.Tensor:
-        """Repeat each hidden state slice according to branching counts."""
-        parts = []
-        for i, n in enumerate(repeat_nums):
-            idx = min(i, hidden.shape[1] - 1)
-            parts.append(hidden[:, idx:idx+1, :].expand(-1, n, -1))
-        return torch.cat(parts, dim=1)
-
-    def sample(self, logits, k=1):
-       
-        probabilities = torch.nn.functional.softmax(logits, dim=1)
-
-        sampled_indices = torch.multinomial(probabilities, k, replacement=False)
-        sampled_probs = torch.gather(probabilities, 1, sampled_indices)
-
-        cumulative_sum = torch.cumsum(sampled_probs, dim=1)
-        cumulative_sum = torch.cat(
-            (torch.zeros(cumulative_sum.shape[0], 1, device=cumulative_sum.device), cumulative_sum[:, :-1]), dim=-1)
-
-        sampled_probs = sampled_probs / (1 - cumulative_sum)
-        sampled_probs[torch.isinf(sampled_probs)] = -1
-        sampled_probs[torch.isnan(sampled_probs)] = -1
-
-        sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
-        return sampled_indices, sampled_probs,probabilities
-    
-    @torch.no_grad()
-    def topK_genrate(
-        self,
-        hidden_state: torch.Tensor,     # (2, T, D) — hidden states at accepted positions
-        input_ids: torch.Tensor,        # (2, seq_len) — cond + uncond, with last token
-        head,                           # gen_head from target (or drafter — same interface)
-        cfg_scale: float,
-        past_key_values=None,
-    ) -> Tuple[tuple, list, list]:
-        """Generate draft token tree.
-
-        input_ids is (2, T): row 0 = cond, row 1 = uncond (same as LlamaGen's
-        batch-duplicated input). The drafter runs both in one pass and splits
-        logits with cfg_logit_process.
-        """
-        device   = input_ids.device
-        ss_token = []
-        ss_prob  = []
-        ss_op    = []
-
-        # Initial drafter hidden state = target's accepted hidden state
-        out_hidden = hidden_state          # (2, T, D)
-        len_posi   = input_ids.shape[1] - 1
-
-        # First gen_head call on target hidden state
-        last_headout = head(out_hidden[:, -1:, :]).squeeze(1)   # (2, 1, V)
-        last_headout = cfg_logit_process(last_headout, cfg_scale)   
-        print("last_headout shape: ", last_headout.shape, flush=True)# (1, V) after CFG
-        # last_headout = mask_non_image_logits(last_headout)
-        for x in range(len(self.tree_buffer["tree_indices"])):
-            print(f"self.tree_buffer['tree_indices'][{x}]: ", self.tree_buffer["tree_indices"][x], flush=True)
-        for i in range(len(self.tree_buffer["tree_indices"])):
-            topk_index,topk_prob,op  = self.sample(last_headout, 10)
-
-            ss_token.append(topk_index)
-            ss_prob.append(topk_prob)
-            ss_op.append(op)
-
-            # Build input_ids for this level — select tree nodes
-            topk_flat  = topk_index.view(-1)
-            print("topk_flat shape: ", topk_flat.shape, flush=True)
-            select_ids = topk_flat[self.tree_buffer["tree_indices"][i]]   # (n_nodes,)
-            print("select_ids shape: ", select_ids.shape, flush=True)
-
-            # Embed using prepare_gen_img_embeds — same as official inference
-            # Duplicate for cond + uncond (same token, CFG handled by interleaving)
-            select_ids_cfg = select_ids.unsqueeze(0).repeat(2,1)   # (2*n_nodes,)
-            print("select_ids_cfg shape: ", select_ids_cfg.shape, flush=True)
-            node_embeds    = self.model.prepare_gen_img_embeds(select_ids_cfg)
-            print("node_embeds shape: ", node_embeds.shape, flush=True)
-            # # (2*n_nodes, D) — reshape to (2, n_nodes, D) then (1, n_nodes, D) per pass
-            # # For drafter single batch: use (1, n_nodes, D) shape
-            # node_embeds_cond = node_embeds[0::2].unsqueeze(0)   # (1, n_nodes, D)
-
-            # Repeat hidden states to match tree branching
-            if i == 0:
-                h_step = out_hidden[:, -1:]
-            else:
-                h_step = out_hidden
-            print("h_step shape: ", h_step.shape, flush=True)
-            print("self.tree_buffer['repeat_nums'][i]: ", self.tree_buffer["repeat_nums"][i], flush=True)
-            h_step = self.repeat_hidden(h_step, self.tree_buffer["repeat_nums"][i])
-            print("repeated h_step shape: ", h_step.shape, flush=True)
-
-            # Set tree attention mask
-            self.tree_mask = self.tree_buffer["attn_mask"][i]
-            position_ids_step = len_posi + self.tree_buffer["position_ids"][i]
-
-            # Drafter forward — inputs_embeds from prepare_gen_img_embeds
-            drafter_out = self.model.language_model.model(
-                inputs_embeds   = node_embeds,
-                past_key_values = past_key_values,
-                position_ids    = position_ids_step.unsqueeze(0),
-                use_cache       = True,
-            )
-            out_hidden       = drafter_out.last_hidden_state   
-            print("repeated out_hidden shape: ", out_hidden.shape, flush=True)
-            past_key_values  = drafter_out.past_key_values
-            len_posi        += 1
-
-            # gen_head on drafter output, then CFG
-            raw_headout   = head(out_hidden)
-            last_headout  = cfg_logit_process(raw_headout, cfg_scale)  # (n_nodes, V)
-            # last_headout  = mask_non_image_logits(last_headout)
-
-        # Final level
-        topk_index,topk_prob,op  = self.sample(last_headout, 10)
-
-        ss_token.append(topk_index)
-        ss_prob.append(topk_prob)
-        ss_op.append(op)
-       
-        return (torch.cat(ss_token), torch.cat(ss_prob), ss_op)
-
-    def _sample(self, logits, logits_processor, k):
-        processed = mask_non_image_logits(logits_processor(None, logits.clone()))
-        probs     = F.softmax(processed, dim=-1)
-        top       = torch.topk(probs, k, dim=-1)
-
-        # Compute neighbor bias pairs — same as LlamaGen bias_list
-        bias = []
-        if logits.shape[0] > 1:
-            norms  = logits.float().norm(dim=-1, keepdim=True).clamp(min=1e-8)
-            normed = logits.float() / norms
-            sim    = torch.mm(normed, normed.T)
-            n = sim.shape[0]
-            for a in range(n):
-                for b in range(a + 1, n):
-                    s = sim[a, b].item()
-                    if s > 0.5:
-                        dp = top.values[a, 0].item()
-                        bias.append((a, b, dp, s))
-
-        return top.indices, top.values, probs, bias
-
 
 # ---------------------------------------------------------------------------
 # Main EaModel for Janus-Pro
 # ---------------------------------------------------------------------------
 
-class JanusEaModel(nn.Module):
+class EaModel(nn.Module):
     """EAGLE speculative decoding for Janus-Pro.
 
     Mirrors ea2_model_llamagen.py EaModel with Janus-Pro-specific:
@@ -512,7 +196,7 @@ class JanusEaModel(nn.Module):
         self.hidden_size = base_model.language_model.config.hidden_size
         self.vocab_size  = base_model.language_model.config.vocab_size
 
-        self.ea_layer = JanusDrafterLayer(
+        self.ea_layer = Model(
             model         = drafter_model.eval(),
             top_k         = top_k,
             depth         = depth,
@@ -543,7 +227,7 @@ class JanusEaModel(nn.Module):
         depth:        int   = 5,
         threshold:    float = 1.0,
         **kwargs,
-    ) -> "JanusEaModel":
+    ) -> "Model":
         print(f"Loading target:  {base_model_path}")
         
         base_model: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(

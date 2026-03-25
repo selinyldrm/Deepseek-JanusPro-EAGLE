@@ -1,0 +1,8 @@
+/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/requests/__init__.py:86: RequestsDependencyWarning: Unable to find acceptable character detection dependency (chardet or charset_normalizer).
+  warnings.warn(
+Traceback (most recent call last):
+  File "/work1/deming/seliny2/LANTERN/main.py", line 14, in <module>
+    import entrypoints.extract_code as extract_code
+  File "/work1/deming/seliny2/LANTERN/entrypoints/extract_code.py", line 20, in <module>
+    from janus.models import MultiModalityCausalLM, VLChatProcessor
+ModuleNotFoundError: No module named 'janus'

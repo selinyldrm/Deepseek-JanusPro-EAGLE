@@ -82,6 +82,29 @@ def top_accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
         res.append(correct_k)
     return res
+def update_metrics_janus(out_head, target_head, top_3acc):
+    # out_head: [B, S, Vocab]
+    # target_head: [B, S, Vocab] (or the 7B model's soft/hard targets)
+    
+    _, predicted = torch.max(out_head, 2)
+    _, target = torch.max(target_head, 2)
+    
+    # Total is just Batch * Sequence_Length
+    total = target.numel()
+    
+    # Correct is where they match
+    correct = (predicted == target).sum().item()
+
+    # For Top-K accuracy, just flatten the whole thing
+    out_head_flat = out_head.view(-1, out_head.shape[-1])
+    target_flat = target.view(-1)
+    
+    topkacc = top_accuracy(out_head_flat, target_flat, (1, 2, 3))
+
+    for top_i in range(len(topkacc)):
+        top_3acc[top_i] += topkacc[top_i]
+
+    return correct, total
 
 def update_metrics(out_head, target_head, loss_mask, top_3acc):
     _, predicted = torch.max(out_head, 2)
@@ -114,6 +137,78 @@ def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, 
         logdict[f'{phase}/top_{id + 1}_acc'] = i.item() / total
     if wandb_check:
         wandb.log(logdict)
+        
+def run_epoch_januspro(args, model, data_loader, optimizer, scheduler, criterion, gen_head, accelerator, is_warmup, train_mode=True):
+    model.train() if train_mode else model.eval()
+    # Ensure the 7B's Gen Head is in eval mode and frozen
+    gen_head.eval() 
+    
+    epoch_loss = 0
+    num_batches = 0
+
+    for data in tqdm(data_loader):
+        # data["hidden_states"]: [B, 576, 4096] - The Target 7B states (H_t)
+        # data["input_ids"]:     [B, 576]       - The Image tokens (T_{t+1})
+        # data["target_h"]:      [B, 576, 4096] - The Target 7B next states (H_{t+1})
+        # data["target_ids"]:    [B, 576]       - Labels for classification
+
+        with torch.set_grad_enabled(train_mode):
+            if train_mode:
+                optimizer.zero_grad()
+            
+            # 1. Drafter Forward Pass
+            # This internally does: self.fc(torch.cat([H_t, Embed(T_{t+1})]))
+            predict_h = model(
+                hidden_states=data["target_hidden"], 
+                input_ids=data["input_embeds"]
+            )
+            
+            # 2. Regression Loss (V-Loss)
+            # How well does the drafter predict the next 4096-dim vector?
+            v_loss = criterion(predict_h, data["target_hidden"])
+            v_loss = v_loss.mean()
+
+            # 3. Classification Loss (P-Loss)
+            # We pass the predicted hidden state through the frozen 7B Gen Head
+            with torch.no_grad():
+                # Get Ground Truth Logits from the actual 7B hidden states
+                target_logits = gen_head(data["target_hidden"]) # [B, 576, 16384]
+                
+                if args.cfg_loss:
+                    # Janus CFG: even = cond, odd = uncond
+                    # Logic: uncond + scale * (cond - uncond)
+                    target_logits = target_logits[1::2] + args.cfg_scale * (target_logits[0::2] - target_logits[1::2])
+                
+                target_p = F.softmax(target_logits, dim=-1).detach()
+
+            # Drafter's predicted logits
+            out_logits = gen_head(predict_h)
+            
+            if args.cfg_loss:
+                # Apply same CFG to drafter output to align distributions
+                out_logits = out_logits[1::2] + args.cfg_scale * (out_logits[0::2] - out_logits[1::2])
+            
+            out_logp = F.log_softmax(out_logits, dim=-1)
+
+            # KL Divergence / Soft-CrossEntropy Loss
+            # This forces the drafter's "predicted" vector to represent the correct token
+            ploss = -torch.sum(target_p * out_logp, dim=-1).mean()
+
+            # 4. Total Combined Loss
+            # args.p_w (Probability Weight) balances regression vs classification
+            loss = v_loss + args.p_w * ploss
+
+            if train_mode:
+                accelerator.backward(loss)
+                accelerator.clip_grad_norm_(model.parameters(), args.grad_clip)
+                optimizer.step()
+                if is_warmup:
+                    scheduler.step()
+
+        epoch_loss += loss.item()
+        num_batches += 1
+
+    return epoch_loss / num_batches
 
 def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup, train_mode=True):
     model.train() if train_mode else model.eval()
@@ -127,62 +222,68 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
         with torch.set_grad_enabled(train_mode):
             if train_mode:
                 optimizer.zero_grad()
-            predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
+            
+            if args.model == "januspro":
+                predict = model(
+                    hidden_states=data["target_hidden"][:, :-1, :] , 
+                    input_embeds=data["input_embeds"][:, :-1, :]
+                )
+            else:
+                predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
             # print("predict shape: ", predict.shape)
             
             with torch.no_grad():
-                hidden_states = data["target"]
-                target_head = head(hidden_states)
-                if args.cfg_loss:
-                    """
-                        Note that target_head[::2] is a conditioned logits and target_head[1::2] is an unconditioned logits.
-                        Although the original formula for the CFG is cond + scale * (cond - uncond), we found that
-                        the official implementation of Lumina-mGPT uses uncond + scale * (cond - uncond) instead and
-                        thus we follow the same implementation. (This is equivalent to cond + (scale-1) * (cond - uncond)).
-                        
-                        Note that here the size of target_head is half of the original target_head.
-                    """
+                if args.model == "januspro":
+                    hidden_states = data["target_hidden"][:, 1:, :]
+                    target_head = head(hidden_states) # [B, 576, 16384]
+                    if args.cfg_loss:
+                        target_head = target_head[1::2] + args.cfg_scale * (target_head[0::2] - target_head[1::2])
+                else:
+                    hidden_states = data["target"]
+                    target_head = head(hidden_states)
+                    if args.cfg_loss:
+                        """
+                            Note that target_head[::2] is a conditioned logits and target_head[1::2] is an unconditioned logits.
+                            Although the original formula for the CFG is cond + scale * (cond - uncond), we found that
+                            the official implementation of Lumina-mGPT uses uncond + scale * (cond - uncond) instead and
+                            thus we follow the same implementation. (This is equivalent to cond + (scale-1) * (cond - uncond)).
+                            
+                            Note that here the size of target_head is half of the original target_head.
+                        """
 
-                    target_head = target_head[::2] + args.cfg_scale * (target_head[::2] - target_head[1::2])
+                        target_head = target_head[::2] + args.cfg_scale * (target_head[::2] - target_head[1::2])
                     
-                target_p = nn.Softmax(dim=2)(target_head).detach()
+                target_p = nn.Softmax(dim=-1)(target_head).detach()
                 
-           
-            features = hidden_states.to(torch.float32) 
-            features_norm = F.normalize(features, p=2, dim=-1).to(torch.float32)
-
-            # n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
-            cosine_sim_matrix = torch.bmm(features_norm, features_norm.transpose(1, 2))
-            B, L, _ = cosine_sim_matrix.shape
-
-            thresh = 0.625
-            # build upper-triangular mask (i < j)
-            upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
-            upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
-
-            # combine with threshold condition
-            logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
-            token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
-
-
             out_head = head(predict)
-            if args.cfg_loss:
-                out_head = out_head[::2] + args.cfg_scale * (out_head[::2] - out_head[1::2])
+            if args.model == "januspro":
+                if args.cfg_loss:
+                    out_head = out_head[1::2] + args.cfg_scale * (out_head[0::2] - out_head[1::2])
+            else:
+                if args.cfg_loss:
+                    out_head = out_head[::2] + args.cfg_scale * (out_head[::2] - out_head[1::2])
             
             out_logp = nn.LogSoftmax(dim=2)(out_head)
-            loss_mask = data["loss_mask"][:, :, None]
-            if args.cfg_loss:
-                p_loss_mask = loss_mask[::2]
+            if args.model != "januspro":
+                loss_mask = data["loss_mask"][:, :, None]
+                if args.cfg_loss:
+                    p_loss_mask = loss_mask[::2]
+                else:
+                    p_loss_mask = loss_mask
+
+                # weight = 2.0
+                # weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
+
+                plogp = target_p * out_logp
+                ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
+
+                vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
             else:
-                p_loss_mask = loss_mask
-
-            weight = 2.0
-            weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
-
-            plogp = target_p * out_logp
-            ploss = -torch.sum(torch.sum(weighted_mask * plogp, 2)) / (weighted_mask.sum() + 1e-5)
-
-            vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
+                ploss = -torch.sum(target_p * out_logp, dim=-1).mean()
+                vloss = criterion(predict, data["target_hidden"][:, 1:, :])
+                vloss = vloss.mean()
+                # 4. Total Combined Loss
+                # args.p_w (Probability Weight) balances regression vs classification
             loss = vloss + args.p_w * ploss
 
             if train_mode:
@@ -202,12 +303,19 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 out_head = out_head[::2] + args.cfg_scale * (out_head[::2] - out_head[1::2])
                 p_loss_mask = loss_mask[::2]
 
-            correct_batch, total_batch = update_metrics(out_head, target_head, p_loss_mask, top_3acc)
+            if args.model == "januspro":
+                correct_batch, total_batch = update_metrics_janus(out_head, target_head, top_3acc)
+            else: 
+                correct_batch, total_batch = update_metrics(out_head, target_head, p_loss_mask, top_3acc)
             correct += correct_batch
             total += total_batch
 
-        if accelerator.is_main_process and loss_mask.sum().item() != 0 and train_mode:
-            log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, "train", args.wandb)
+        if accelerator.is_main_process:
+            if args.model == "januspro" and train_mode:
+                log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, "train", args.wandb)
+            else:
+                if loss_mask.sum().item() != 0 and train_mode:
+                    log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, "train", args.wandb)
 
         epoch_loss += loss.item()
         num_batches += 1
@@ -261,37 +369,81 @@ def run_train_drafter(args):
         from transformers import AutoConfig
         from models.drafters.cnets_llamagen import Model
         base_config = AutoConfig.from_pretrained(args.base_path)
+    elif "januspro" in args.model:
+        from transformers import AutoConfig
+        from models.drafters.cnets_januspro import Model
+        base_config = AutoConfig.from_pretrained(args.base_path)
     else:
         raise ValueError("Invalid model name.")
 
     ### LOAD `lm_head` ########################################################################
-    head = torch.nn.Linear(base_config.hidden_size, base_config.vocab_size, bias=False)
-
-    try:
-        with open(os.path.join(args.base_path, "model.safetensors.index.json"), "r") as f:
-            index_json = json.loads(f.read())
-            head_path = index_json["weight_map"]["lm_head.weight"]
-        with safe_open(os.path.join(args.base_path, head_path),
-                    framework="pt",
-                    device="cpu") as f:
-            tensor_slice = f.get_slice("lm_head.weight")
-            _, hidden_dim = tensor_slice.get_shape()
-            tensor = tensor_slice[:, :hidden_dim].float()
-    except:
-        try:
-            head_path = "model.safetensors"
-            with safe_open(os.path.join(args.base_path, head_path),
-                        framework="pt",
-                        device="cpu") as f:
-                tensor_slice = f.get_slice("lm_head.weight")
-                vocab_size, hidden_dim = tensor_slice.get_shape()
-                tensor = tensor_slice[:, :hidden_dim].float()
-        except:
-            head_path = "pytorch_model.bin"
-            weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
-            tensor = weights["lm_head.weight"].float()
-    head.weight.data = tensor
-    head.eval()
+    # head = torch.nn.Linear(base_config.gen_head_config.params.n_embed, base_config.language_config.vocab_size, bias=False)
+    from janus.models.modeling_vlm import vision_head
+    head = vision_head(base_config.gen_head_config.params)
+    
+    def load_head_weights(head, base_model_path, drafter_h=4096):
+        # 1. Path to the shard containing the head (usually shard 00002)
+        # Check for both .safetensors (modern) or .bin (legacy)
+        shard_name = "pytorch_model-00001-of-00002.bin" 
+        shard_path = os.path.join(base_model_path, shard_name)
+        
+        # 2. Load the weights to CPU
+        state_dict = torch.load(shard_path, map_location="cpu", weights_only=True)
+        
+        # 3. Load the Projector (The first layer of the head)
+        proj_w = state_dict["gen_head.output_mlp_projector.weight"]
+        proj_b = state_dict["gen_head.output_mlp_projector.bias"]
+        
+        # Slicing the input dimension (dim 1) to match Drafter width
+        if proj_w.shape[1] != drafter_h:
+            proj_w = proj_w[:, :drafter_h].contiguous()
+        
+        head.output_mlp_projector.weight.data.copy_(proj_w)
+        head.output_mlp_projector.bias.data.copy_(proj_b)
+        for param in head.output_mlp_projector.parameters():
+            param.requires_grad = False
+        
+        # 4. Load the Vision Head (The final classification layer)
+        # This remains [16384, 4096], no slicing needed.
+        head.vision_head.weight.data.copy_(state_dict["gen_head.vision_head.weight"])
+        head.vision_head.bias.data.copy_(state_dict["gen_head.vision_head.bias"])
+        for param in head.vision_head.parameters():
+            param.requires_grad = False
+        
+        head.eval() # Set to evaluation mode
+        return head
+        
+    # try:
+    #     with open(os.path.join(args.base_path, "model.safetensors.index.json"), "r") as f:
+    #         index_json = json.loads(f.read())
+    #         head_path = index_json["weight_map"]["lm_head.weight"]
+    #     with safe_open(os.path.join(args.base_path, head_path),
+    #                 framework="pt",
+    #                 device="cpu") as f:
+    #         tensor_slice = f.get_slice("lm_head.weight")
+    #         _, hidden_dim = tensor_slice.get_shape()
+    #         tensor = tensor_slice[:, :hidden_dim].float()
+    # except:
+    #     try:
+    #         head_path = "model.safetensors"
+    #         with safe_open(os.path.join(args.base_path, head_path),
+    #                     framework="pt",
+    #                     device="cpu") as f:
+    #             tensor_slice = f.get_slice("lm_head.weight")
+    #             vocab_size, hidden_dim = tensor_slice.get_shape()
+    #             tensor = tensor_slice[:, :hidden_dim].float()
+    #     except:
+    #         if args.model == "januspro":
+    #             head_path = "pytorch_model-00001-of-00002.bin"
+    #             weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
+    #             head = vision_head(weights["vision_head"])
+    #         else:
+    #             head_path = "pytorch_model.bin"
+    #             weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
+    #             tensor = weights["lm_head.weight"].float()
+    head = load_head_weights(head, args.base_path)
+    # head.weight.data = tensor
+    # head.eval()
 
     for param in head.parameters():
         param.requires_grad = False
@@ -337,7 +489,8 @@ def run_train_drafter(args):
 
     config = EConfig.from_pretrained(args.config_path)
     # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
-    model = Model(config, load_emb=True, path=args.base_path)
+    model = Model(config, head)
+    
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)
     # model.load_state_dict(state_dict, strict=True)
