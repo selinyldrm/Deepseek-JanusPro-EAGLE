@@ -29,7 +29,6 @@ from safetensors import safe_open
 import torch
 import torch.nn as nn
 from typing import Tuple, List, Optional
-from transformers.models.llama.modeling_llama import LlamaDecoderLayer # The 7B-compatible layer
 from janus.models.modeling_vlm import MultiModalityCausalLM
 
 def cfg_logit_process(
@@ -96,7 +95,7 @@ class Model(MultiModalityCausalLM):
             
         return torch.cat([torch.cat(new_cond, dim=1), torch.cat(new_uncond, dim=1)], dim=0)
 
-    def forward(self, hidden_states, input_embeds, **kwargs) :
+    def forward(self, hidden_states, input_embeds, past_key_values=None, position_ids=None, use_cache=True, **kwargs) :
         """Standard Forward Pass for Training/Inference."""
         # 1. Get embeddings for the tokens using the inherited Janus method
         # This uses the Drafter's (lightweight) embedding layer
@@ -106,17 +105,37 @@ class Model(MultiModalityCausalLM):
         combined = torch.cat([hidden_states, input_embeds], dim=-1)
         fused_states = self.fusion_act(self.fusion(combined))
         
+        batch_size, seq_length, _ = hidden_states.shape
+        seq_length_with_past = seq_length
+        past_key_values_length = 0
+        if past_key_values is not None:
+            past_key_values_length = past_key_values[0][0].shape[2]
+            seq_length_with_past = seq_length_with_past + past_key_values_length
+            
+        if position_ids is None:
+            device = hidden_states.device if hidden_states is not None else input_embeds.device
+            position_ids = torch.arange(
+                past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device
+            )
+            position_ids = position_ids.unsqueeze(0).view(-1, seq_length)
+        else:
+            position_ids = position_ids.view(-1, seq_length).long()
+        
         # 3. Pass through the 1-layer Transformer
         # We call the language_model (Llama) inherited from MultiModalityCausalLM
+        
         outputs = self.language_model.model(
             inputs_embeds=fused_states,
+            past_key_values=past_key_values, 
+            position_ids=position_ids,
+            use_cache=use_cache,
             **kwargs
         )
         
-        return outputs.last_hidden_state
-    def sample(self, logits, k=1):
+        return outputs.last_hidden_state, outputs.past_key_values
+    def sample(self, logits, k, temperature):
        
-        probabilities = torch.nn.functional.softmax(logits, dim=1)
+        probabilities = torch.nn.functional.softmax(logits/ temperature, dim=1)
 
         sampled_indices = torch.multinomial(probabilities, k, replacement=False)
         sampled_probs = torch.gather(probabilities, 1, sampled_indices)
@@ -132,14 +151,18 @@ class Model(MultiModalityCausalLM):
         sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
         return sampled_indices, sampled_probs,probabilities
     
+    def init_tree_v1(self, tree_choices):
+        self.tree = tree_choices
+        self.tree_buffer=generate_tree_buffers(self.tree, "cuda")
+        
     @torch.no_grad()
     def topK_genrate(
         self,
         hidden_state: torch.Tensor,     # (2, T, D) — hidden states at accepted positions
-        input_ids: torch.Tensor,        # (2, seq_len) — cond + uncond, with last token
+        image_embeds: torch.Tensor,        # (2, seq_len) — cond + uncond, with last token
         head,                           # gen_head from target (or drafter — same interface)
         cfg_scale: float,
-        past_key_values=None,
+        temperature=1.0,
     ) -> Tuple[tuple, list, list]:
         """Generate draft token tree.
 
@@ -147,24 +170,37 @@ class Model(MultiModalityCausalLM):
         batch-duplicated input). The drafter runs both in one pass and splits
         logits with cfg_logit_process.
         """
-        device   = input_ids.device
+        image_embeds = image_embeds.to(hidden_state.device)
+        image_embeds = image_embeds[:, 1:, :]
         ss_token = []
         ss_prob  = []
         ss_op    = []
 
         # Initial drafter hidden state = target's accepted hidden state
-        out_hidden = hidden_state          # (2, T, D)
-        len_posi   = input_ids.shape[1] - 1
-
-        # First gen_head call on target hidden state
-        last_headout = head(out_hidden[:, -1:, :]).squeeze(1)   # (2, 1, V)
-        last_headout = cfg_logit_process(last_headout, cfg_scale)   
-        print("last_headout shape: ", last_headout.shape, flush=True)# (1, V) after CFG
+        len_posi   = image_embeds.shape[1]
+        
+        if hidden_state.shape[1] != image_embeds.shape[1]:
+            # get rid of unnecessary input embeddings 
+            #once gfull position ids are tracked
+            last_image_embeds = image_embeds[:, -hidden_state.shape[1]:, :] 
+            out_hidden, past_key_values = self(
+                hidden_state, 
+                last_image_embeds,
+                use_cache  = True,
+            )
+        else: 
+            out_hidden, past_key_values = self(
+                hidden_state, 
+                image_embeds,
+                use_cache  = True,
+            )
+        last_hidden = out_hidden[:, -1]
+        last_hidden = head(last_hidden)
+        last_headout = cfg_logit_process(last_hidden, cfg_scale)   
+        
         # last_headout = mask_non_image_logits(last_headout)
-        for x in range(len(self.tree_buffer["tree_indices"])):
-            print(f"self.tree_buffer['tree_indices'][{x}]: ", self.tree_buffer["tree_indices"][x], flush=True)
         for i in range(len(self.tree_buffer["tree_indices"])):
-            topk_index,topk_prob,op  = self.sample(last_headout, 10)
+            topk_index,topk_prob,op  = self.sample(last_headout, 10, temperature)
 
             ss_token.append(topk_index)
             ss_prob.append(topk_prob)
@@ -172,53 +208,39 @@ class Model(MultiModalityCausalLM):
 
             # Build input_ids for this level — select tree nodes
             topk_flat  = topk_index.view(-1)
-            print("topk_flat shape: ", topk_flat.shape, flush=True)
-            select_ids = topk_flat[self.tree_buffer["tree_indices"][i]]   # (n_nodes,)
-            print("select_ids shape: ", select_ids.shape, flush=True)
+            select_index = topk_flat[self.tree_buffer["tree_indices"][i]]   # (n_nodes,)
 
-            # Embed using prepare_gen_img_embeds — same as official inference
-            # Duplicate for cond + uncond (same token, CFG handled by interleaving)
-            select_ids_cfg = select_ids.unsqueeze(0).repeat(2,1)   # (2*n_nodes,)
-            print("select_ids_cfg shape: ", select_ids_cfg.shape, flush=True)
-            node_embeds    = self.prepare_gen_img_embeds(select_ids_cfg)
-            print("node_embeds shape: ", node_embeds.shape, flush=True)
-            # # (2*n_nodes, D) — reshape to (2, n_nodes, D) then (1, n_nodes, D) per pass
-            # # For drafter single batch: use (1, n_nodes, D) shape
-            # node_embeds_cond = node_embeds[0::2].unsqueeze(0)   # (1, n_nodes, D)
+            input_ids = select_index[None,:]
+            input_ids = torch.cat([input_ids, input_ids])
+            inputs_embeds    = self.prepare_gen_img_embeds(input_ids)
 
             # Repeat hidden states to match tree branching
             if i == 0:
-                h_step = out_hidden[:, -1:]
+                hidden_states = out_hidden[:, -1:]
             else:
-                h_step = out_hidden
-            print("h_step shape: ", h_step.shape, flush=True)
-            print("self.tree_buffer['repeat_nums'][i]: ", self.tree_buffer["repeat_nums"][i], flush=True)
-            h_step = self.repeat_hidden(h_step, self.tree_buffer["repeat_nums"][i])
-            print("repeated h_step shape: ", h_step.shape, flush=True)
+                hidden_states = out_hidden
+            hidden_states = self.repeat_hidden(hidden_states, self.tree_buffer["repeat_nums"][i])
 
             # Set tree attention mask
             self.tree_mask = self.tree_buffer["attn_mask"][i]
             position_ids_step = len_posi + self.tree_buffer["position_ids"][i]
 
             # Drafter forward — inputs_embeds from prepare_gen_img_embeds
-            drafter_out = self.language_model.model(
-                inputs_embeds   = node_embeds,
-                past_key_values = past_key_values,
-                position_ids    = position_ids_step.unsqueeze(0),
+            out_hidden, past_key_values = self(
+                hidden_states, 
+                inputs_embeds,
+                past_key_values, 
+                position_ids_step,
                 use_cache       = True,
             )
-            out_hidden       = drafter_out.last_hidden_state   
-            print("repeated out_hidden shape: ", out_hidden.shape, flush=True)
-            past_key_values  = drafter_out.past_key_values
             len_posi        += 1
 
             # gen_head on drafter output, then CFG
-            raw_headout   = head(out_hidden)
-            last_headout  = cfg_logit_process(raw_headout, cfg_scale)  # (n_nodes, V)
-            # last_headout  = mask_non_image_logits(last_headout)
+            last_headout   = head(out_hidden)
+            last_headout  = cfg_logit_process(last_headout, cfg_scale).squeeze(0)  # (n_nodes, V)
 
         # Final level
-        topk_index,topk_prob,op  = self.sample(last_headout, 10)
+        topk_index,topk_prob,op  = self.sample(last_headout, 10, temperature)
 
         ss_token.append(topk_index)
         ss_prob.append(topk_prob)

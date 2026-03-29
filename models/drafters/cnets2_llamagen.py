@@ -1070,6 +1070,9 @@ class Model(nn.Module):
             position_ids=len_posi+self.tree_buffer["position_ids"][i]
             out_hidden, past_key_values = self(hidden_states, input_ids=input_ids, past_key_values=past_key_values, position_ids=position_ids, use_cache=True)
             len_posi += 1
+            print("len_posi: ", len_posi)
+            print("self.tree_buffer['position_ids'][i]: ", self.tree_buffer["position_ids"][i])
+            print("position_ids_step: ", position_ids)
 
             if not self.diff_device:
                 last_headout = head(out_hidden)

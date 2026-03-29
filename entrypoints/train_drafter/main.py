@@ -64,7 +64,7 @@ def parse_args():
     
     parser.add_argument('--max_len', type=int, default=4096)
     parser.add_argument('--eval_freq', type=int, default=1)
-    parser.add_argument('--save_freq', type=int, default=5)
+    parser.add_argument('--save_freq', type=int, default=1)
     parser.add_argument('--wandb', action='store_true', default=True)
 
     return parser
@@ -224,7 +224,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 optimizer.zero_grad()
             
             if args.model == "januspro":
-                predict = model(
+                predict, _= model(
                     hidden_states=data["target_hidden"][:, :-1, :] , 
                     input_embeds=data["input_embeds"][:, :-1, :]
                 )
@@ -311,8 +311,9 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             total += total_batch
 
         if accelerator.is_main_process:
-            if args.model == "januspro" and train_mode:
-                log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, "train", args.wandb)
+            if args.model == "januspro":
+                if train_mode:
+                    log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, "train", args.wandb)
             else:
                 if loss_mask.sum().item() != 0 and train_mode:
                     log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, "train", args.wandb)
@@ -490,6 +491,9 @@ def run_train_drafter(args):
     config = EConfig.from_pretrained(args.config_path)
     # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
     model = Model(config, head)
+    model.gen_head = head
+    for param in model.gen_head.parameters():
+        param.requires_grad = False
     
     # from safetensors.torch import load_file
     # state_dict = load_file(ckpt_path)

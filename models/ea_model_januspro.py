@@ -15,7 +15,6 @@ CFG implementation (from official Janus-Pro inference code):
 This is identical to LlamaGen's batch-duplication CFG, just with:
     - gen_head instead of lm_head
     - prepare_gen_img_embeds instead of tok_embeddings for image tokens
-    - Image tokens at vocab indices [IMAGE_TOKEN_START, IMAGE_TOKEN_END)
     - get_input_embeddings() for the prompt prefix (not T5 prefix tokens)
 """
 
@@ -61,9 +60,6 @@ import copy
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-
-IMAGE_TOKEN_START = 100015
-IMAGE_TOKEN_END   = 116399   # exclusive
 TOPK = 10                    # default draft top-k, overridden by EaModel.top_k
 
 
@@ -97,11 +93,6 @@ def top_k_top_p_filtering(
     return logits
 
 
-def mask_non_image_logits(logits: torch.Tensor) -> torch.Tensor:
-    """Zero out all vocab positions outside image token range."""
-    logits[..., :IMAGE_TOKEN_START] = -float("Inf")
-    logits[..., IMAGE_TOKEN_END:]   = -float("Inf")
-    return logits
 
 
 def sample(
@@ -182,7 +173,7 @@ class EaModel(nn.Module):
     def __init__(
         self,
         base_model: MultiModalityCausalLM,
-        drafter_model: MultiModalityCausalLM,
+        drafter_config: AutoConfig,
         processor: VLChatProcessor,
         top_k: int   = 10,
         total_tokens: int = 59,
@@ -196,21 +187,32 @@ class EaModel(nn.Module):
         self.hidden_size = base_model.language_model.config.hidden_size
         self.vocab_size  = base_model.language_model.config.vocab_size
 
+        print(f"Loading drafter")
         self.ea_layer = Model(
-            model         = drafter_model.eval(),
-            top_k         = top_k,
-            depth         = depth,
-            total_tokens  = total_tokens,
-            threshold     = threshold,
-        )
+            drafter_config,
+            base_model.gen_head
+        ).eval()
+        
+        for param in self.base_model.parameters():
+            param.requires_grad = False
+            
+        for param in self.base_model.gen_vision_model.parameters():
+            param.requires_grad = False
+        for param in self.base_model.language_model.parameters():
+            param.requires_grad = False
+        for param in self.base_model.gen_embed.parameters():
+            param.requires_grad = False
+        for param in self.base_model.vision_model.parameters():
+            param.requires_grad = False
+            
 
         device = "cuda"
         # Check if gen_head is on a different device (model parallelism)
         try:
-            head_device = base_model.gen_head.weight.device
+            head_device = base_model.device
             if head_device != device:
                 self.ea_layer.diff_device = True
-                self.ea_layer.headweight  = base_model.gen_head.weight.clone().to(device)
+                self.ea_layer.gen_head  = base_model.gen_head.to(device)
         except AttributeError:
             pass
 
@@ -221,7 +223,7 @@ class EaModel(nn.Module):
     def from_pretrained(
         cls,
         base_model_path:    str = "/work1/deming/shared/Janus-Pro-7B",
-        drafter_model_path: str = "/work1/deming/shared/Janus-Pro-1B",
+        drafter_model_path: str = "/work1/deming/shared/Eagle-Janus-Pro",
         top_k:        int   = 10,
         total_tokens: int   = 59,
         depth:        int   = 5,
@@ -234,19 +236,47 @@ class EaModel(nn.Module):
             base_model_path, trust_remote_code=True,
             torch_dtype=torch.bfloat16, **kwargs
         ).cuda().eval()
-
-        print(f"Loading drafter: {drafter_model_path}")
         
-        drafter: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(
-            drafter_model_path, trust_remote_code=True,
-            torch_dtype=torch.bfloat16, **kwargs
-        ).cuda().eval()
+        
+
+        
+        drafter_config = AutoConfig.from_pretrained(drafter_model_path)
 
         processor = VLChatProcessor.from_pretrained(base_model_path)
+        model = cls(
+            base_model,
+            drafter_config,
+            processor,
+            top_k, total_tokens, depth, threshold)
 
-        return cls(base_model, drafter, processor,
-                   top_k, total_tokens, depth, threshold)
+        return model
 
+    def pad_path(self, path: List[int], length: int, pad_value: int = -2) -> List[int]:
+        """
+        Pad the given path list with a specific value up to a specified length.
+
+        Parameters:
+        - path (list): The original list that needs padding.
+        - length (int): The desired length of the padded list.
+        - pad_value (optional, default=-2): The value to use for padding.
+
+        Returns:
+        - list: A new list based on the original path but padded to the desired length.
+
+        Example:
+        >>> pad_path([1,2,3], 5)
+        [1, 2, 3, -2, -2]
+
+        Note:
+        If the given path is already longer than the specified length,
+        then no padding occurs, and the original path is returned.
+        """
+
+        # Calculate the number of padding values needed by subtracting the length
+        # of the path from the desired length.
+        # Append the padding values to the original path and return the new list.
+        return path + [pad_value] * (length - len(path))
+    
     # ------------------------------------------------------------------
     # Target forward — mirrors ea2_model_llamagen.py forward()
     # ------------------------------------------------------------------
@@ -290,6 +320,188 @@ class EaModel(nn.Module):
 
         return outputs, hidden_states
 
+    @torch.no_grad()
+    def generate_tree_buffers(self, tree_choices, level_t, device="cuda"):
+        sorted_tree_choices = sorted(tree_choices, key=lambda x: (len(x), x))
+        if level_t is not None:
+            sorted_tree_choices = [x for x in sorted_tree_choices if len(x) <= level_t]
+        tree_len = len(sorted_tree_choices) + 1
+
+        # Initialize depth_counts to keep track of how many choices have a particular depth
+        depth_counts = []
+        prev_depth = 0
+        for path in sorted_tree_choices:
+            depth = len(path)
+            if depth != prev_depth:
+                depth_counts.append(0)
+            depth_counts[depth - 1] += 1
+            prev_depth = depth
+
+        tree_attn_mask = torch.eye(tree_len, tree_len)
+        tree_attn_mask[:, 0] = 1
+        start = 0
+        for i in range(len(depth_counts)):
+            for j in range(depth_counts[i]):
+                cur_tree_choice = sorted_tree_choices[start + j]
+                # retrieve ancestor position
+                if len(cur_tree_choice) == 1:
+                    continue
+                ancestor_idx = []
+                for c in range(len(cur_tree_choice) - 1):
+                    ancestor_idx.append(sorted_tree_choices.index(cur_tree_choice[:c + 1]) + 1)
+                tree_attn_mask[j + start + 1, ancestor_idx] = 1
+            start += depth_counts[i]
+
+        tree_indices = torch.zeros(tree_len, dtype=torch.long)
+        p_indices = [0 for _ in range(tree_len - 1)]
+        b_indices = [[] for _ in range(tree_len - 1)]
+        tree_indices[0] = 0
+        start = 0
+        bias = 0
+        for i in range(len(depth_counts)):
+            inlayer_bias = 0
+            b = []
+            for j in range(depth_counts[i]):
+                cur_tree_choice = sorted_tree_choices[start + j]
+                cur_parent = cur_tree_choice[:-1]
+                if j != 0:
+                    if cur_parent != parent:
+                        bias += 1
+                        inlayer_bias += 1
+                        parent = cur_parent
+                        b = []
+                else:
+                    parent = cur_parent
+                tree_indices[start + j + 1] = cur_tree_choice[-1] + TOPK * (i + bias) + 1
+                p_indices[start + j] = inlayer_bias
+                if len(b) > 0:
+                    b_indices[start + j] = copy.deepcopy(b)
+                else:
+                    b_indices[start + j] = []
+                b.append(cur_tree_choice[-1] + TOPK * (i + bias) + 1)
+            start += depth_counts[i]
+
+        p_indices = [-1] + p_indices
+        tree_position_ids = torch.zeros(tree_len, dtype=torch.long)
+        start = 0
+        for i in range(len(depth_counts)):
+            tree_position_ids[start + 1: start + depth_counts[i] + 1] = i + 1
+            start += depth_counts[i]
+
+        retrieve_indices_nest = []
+        retrieve_paths = []
+        for i in range(len(sorted_tree_choices)):
+            cur_tree_choice = sorted_tree_choices[-i - 1]
+            retrieve_indice = []
+            if cur_tree_choice in retrieve_paths:
+                continue
+            else:
+                for c in range(len(cur_tree_choice)):
+                    retrieve_indice.append(sorted_tree_choices.index(cur_tree_choice[:c + 1]))
+                    retrieve_paths.append(cur_tree_choice[:c + 1])
+            retrieve_indices_nest.append(retrieve_indice)
+        max_length = max([len(x) for x in retrieve_indices_nest])
+        retrieve_indices = [self.pad_path(path, max_length) for path in retrieve_indices_nest]
+        retrieve_indices = torch.tensor(retrieve_indices, dtype=torch.long)
+        retrieve_indices = retrieve_indices + 1
+        retrieve_indices = torch.cat([torch.zeros((retrieve_indices.shape[0], 1), dtype=torch.long), retrieve_indices],
+                                    dim=1)
+
+        maxitem = retrieve_indices.max().item() + 5
+
+        def custom_sort(lst):
+            # sort_keys=[len(list)]
+            sort_keys = []
+            for i in range(len(lst)):
+                sort_keys.append(lst[i] if lst[i] >= 0 else maxitem)
+            return sort_keys
+
+        retrieve_indices = retrieve_indices.tolist()
+        retrieve_indices = sorted(retrieve_indices, key=custom_sort)
+        retrieve_indices = torch.tensor(retrieve_indices, dtype=torch.long)
+
+        p_indices = torch.tensor(p_indices)
+        p_indices_new = p_indices[retrieve_indices]
+        p_indices_new = p_indices_new.tolist()
+
+        b_indices = [[]] + b_indices
+        b_indices_new = []
+        for ib in range(retrieve_indices.shape[0]):
+            iblist = []
+            for jb in range(retrieve_indices.shape[1]):
+                index = retrieve_indices[ib, jb]
+                if index == -1:
+                    iblist.append([])
+                else:
+                    b = b_indices[index]
+                    if len(b) > 0:
+                        bt = []
+                        for bi in b:
+                            bt.append(torch.where(tree_indices == bi)[0].item())
+                        iblist.append(torch.tensor(bt, device=device))
+                    else:
+                        iblist.append(b)
+            b_indices_new.append(iblist)
+
+        levels = torch.unique(tree_position_ids)
+        per_level_node_counts = {int(level.item()): int((tree_position_ids == level).nonzero(as_tuple=True)[0][0]) for level in levels}
+
+        # Aggregate the generated buffers into a dictionary
+        tree_buffers = {
+            "tree_attn_mask": tree_attn_mask.unsqueeze(0).unsqueeze(0),
+            "tree_indices": tree_indices,
+            "tree_position_ids": tree_position_ids,
+            "retrieve_indices": retrieve_indices,
+        }
+
+        # Move the tensors in the dictionary to the specified device
+        tree_buffers = {
+            k: v.clone().to(device)
+            if isinstance(v, torch.Tensor)
+            else torch.tensor(v, device=device)
+            for k, v in tree_buffers.items()
+        }
+        tree_buffers["p_indices"] = p_indices_new
+        tree_buffers["b_indices"] = b_indices_new
+        tree_buffers["per_level_node_counts"] = per_level_node_counts
+        return tree_buffers, sorted_tree_choices
+    
+    def initialize_tree_v1(self, inputs_embeds, tokens, tree_choices, tree_attn_mask, past_key_values, temperature, top_k, top_p, cfg_scale=3.0):
+        prefix_out = self.base_model.language_model.model(
+            inputs_embeds   = inputs_embeds,
+            past_key_values = past_key_values,
+            use_cache       = True,
+        )
+        hidden_states = prefix_out.last_hidden_state   # (2*B, prompt_len, D)
+        past_key_values = prefix_out.past_key_values
+
+        # First token
+        logits_first  = self.base_model.gen_head(hidden_states[:, -1, :])   # (2*B, V)
+            
+        cfg_logits    = cfg_logit_process(logits_first, cfg_scale)           # (B, V)
+        sample_token, _ = sample(cfg_logits, temperature, top_k, top_p)     # (B, 1)
+
+        next_token = torch.cat([sample_token.unsqueeze(dim=1), sample_token.unsqueeze(dim=1)], dim=1).view(-1)
+        img_embeds = self.base_model.prepare_gen_img_embeds(next_token)
+        input_ids_gen = torch.cat([tokens, next_token.unsqueeze(1)], dim=1)  # (2*B, prompt+1)
+        inputs_embeds = torch.cat([inputs_embeds, img_embeds.unsqueeze(1)], dim=1)  # (2*B, prompt+1)
+        
+        # ------------------------------------------------------------------
+        # 3. Init tree and first draft pass
+        # ------------------------------------------------------------------
+        self.ea_layer.init_tree_v1(tree_choices)
+        self.base_model.tree_mask = tree_attn_mask
+        
+        tree_logits = self.ea_layer.topK_genrate(
+            hidden_state     = hidden_states,
+            image_embeds     = inputs_embeds,
+            head             = self.base_model.gen_head,
+            cfg_scale        = cfg_scale,
+            temperature      = temperature,
+        )
+        return tree_logits, cfg_logits, sample_token, input_ids_gen, inputs_embeds
+       
+    
     # ------------------------------------------------------------------
     # Tree decoding — single pass, mirrors tree_decoding() in LlamaGen
     # ------------------------------------------------------------------
@@ -314,20 +526,19 @@ class EaModel(nn.Module):
         """
         seq_len    = input_ids.shape[1]
         position_ids = tree_position_ids + seq_len
+        position_ids = position_ids.view(-1, position_ids.shape[-1]).long()
 
-        if attention_mask is not None:
-            n_extra = tree_candidates.shape[1]
-            extra   = torch.ones(
-                (attention_mask.shape[0], n_extra),
-                dtype=torch.long, device=attention_mask.device
-            )
-            attention_mask = torch.cat([attention_mask, extra], dim=1)
-
+        if attention_mask is not None: # [2, 120]
+            remaining_length = input_ids.shape[1] + tree_candidates.shape[1] - attention_mask.shape[1]
+            one_padding = torch.ones((attention_mask.shape[0], remaining_length), dtype=torch.long, device=attention_mask.device)
+            attention_mask = torch.cat([attention_mask, one_padding], dim=1)         
+        
         # Embed tree candidates
         tree_embeds = self.base_model.prepare_gen_img_embeds(
             tree_candidates.view(-1)
         ).view(tree_candidates.shape[0], tree_candidates.shape[1], -1)
-
+        
+        
         outputs, tree_logits, hidden_state = self(
             inputs_embeds   = tree_embeds,
             output_orig     = True,
@@ -355,7 +566,6 @@ class EaModel(nn.Module):
         tree_indices,
         retrieve_indices,
         sample_token,
-        logits_processor,
     ):
         """Identical to LlamaGen generate_candidates."""
         sample_token = sample_token.to(tree_indices.device)
@@ -370,22 +580,21 @@ class EaModel(nn.Module):
         )
         cart_candidates = tree_candidates_ext[retrieve_indices]
 
-        if logits_processor is not None:
-            candidates_prob = torch.cat(
-                [torch.ones(1, device=tree_logits[1].device, dtype=torch.float32),
-                 tree_logits[1].view(-1)],
-                dim=-1
-            )
-            tree_prob_ext = torch.cat(
-                [candidates_prob[tree_indices],
-                 torch.ones(1, dtype=torch.float32, device=candidates_prob.device)],
-                dim=0
-            )
-            cart_candidates_prob = tree_prob_ext[retrieve_indices]
-        else:
-            cart_candidates_prob = None
-
-        return cart_candidates, cart_candidates_prob, tree_candidates.unsqueeze(0)
+        candidates_prob = torch.cat(
+            [torch.ones(1, device=tree_logits[1].device, dtype=torch.float32),
+                tree_logits[1].view(-1)],
+            dim=-1
+        )
+        tree_prob_ext = torch.cat(
+            [candidates_prob[tree_indices],
+                torch.ones(1, dtype=torch.float32, device=candidates_prob.device)],
+            dim=0
+        )
+        cart_candidates_prob = tree_prob_ext[retrieve_indices]
+        
+         # Unsqueeze the tree candidates for dimension consistency.
+        tree_candidates = tree_candidates.unsqueeze(0)
+        return cart_candidates, cart_candidates_prob, tree_candidates
 
     # ------------------------------------------------------------------
     # Posterior evaluation
@@ -393,10 +602,11 @@ class EaModel(nn.Module):
 
     def evaluate_posterior(
         self,
-        bias_list,
+        # bias_list,
         l_node_counts,
         logits,
         tree_logits,
+        temperature,
         retrieve_indices,
         candidates,
         cart_candidates_prob,
@@ -404,7 +614,6 @@ class EaModel(nn.Module):
         p_indices,
         tree_candidates,
         b_indices,
-        logits_processor=None,
     ) -> Tuple[torch.Tensor, int, torch.Tensor]:
         """Accept/reject draft tokens via speculative sampling.
 
@@ -426,19 +635,17 @@ class EaModel(nn.Module):
             fi    = torch.nonzero(is_eq, as_tuple=True)[0][0]
 
             gt_logits = logits[fi, i - 1][None]
-            if logits_processor is not None:
-                gt_logits = logits_processor(None, gt_logits)
-            gt_logits = mask_non_image_logits(gt_logits[0].clone())
-            gtp = torch.softmax(gt_logits, dim=0)
+            gt_logits = gt_logits[0]
+            gtp = torch.softmax(gt_logits / temperature, dim=0)
 
             m_bias_list = None
             past_nodes  = l_node_counts[i]
-            if i < len(bias_list) and len(bias_list[i]):
-                m_bias_list = copy.deepcopy(bias_list[i])
-                m_bias_list = [
-                    (a + past_nodes, b + past_nodes, dp, cs)
-                    for a, b, dp, cs in m_bias_list
-                ]
+            # if i < len(bias_list) and len(bias_list[i]):
+            #     m_bias_list = copy.deepcopy(bias_list[i])
+            #     m_bias_list = [
+            #         (a + past_nodes, b + past_nodes, dp, cs)
+            #         for a, b, dp, cs in m_bias_list
+            #     ]
 
             candidates_set = []
 
@@ -455,10 +662,6 @@ class EaModel(nn.Module):
 
                 r  = random.random()
                 px = gtp[xi]
-
-                # Hard-reject non-image tokens
-                if not (IMAGE_TOKEN_START <= xi < IMAGE_TOKEN_END):
-                    px = torch.tensor(0.0, device=logits.device)
 
                 qx = cart_candidates_prob[j, i]
                 if qx <= 0:
@@ -496,13 +699,11 @@ class EaModel(nn.Module):
                     adjustflag = True
 
         if adjustflag and accept_length != candidates.shape[1]:
-            sample_p = gtp
+            sample_p = gtp 
         else:
             gt_logits = logits[best_candidate, accept_length - 1][None]
-            if logits_processor is not None:
-                gt_logits = logits_processor(None, gt_logits)
-            gt_logits = mask_non_image_logits(gt_logits[0].clone())
-            sample_p  = torch.softmax(gt_logits, dim=0)
+            gt_logits = gt_logits[0]
+            sample_p  = torch.softmax(gt_logits / temperature, dim=0)
 
         return torch.tensor(best_candidate), accept_length - 1, sample_p
 
@@ -515,11 +716,11 @@ class EaModel(nn.Module):
         self,
         idx,
         input_ids:         torch.Tensor,
+        inputs_embeds:     torch.Tensor,
         candidates:        torch.Tensor,
         best_candidate:    torch.Tensor,
         accept_length:     int,
         retrieve_indices:  torch.Tensor,
-        logits_processor,
         new_token:         int,
         past_key_values_data_list,
         current_length_data,
@@ -538,7 +739,10 @@ class EaModel(nn.Module):
 
         # Append accepted tokens — input_ids is (2, T) for cond+uncond
         accepted_toks = candidates[None, best_candidate, :accept_length + 1]
-        input_ids     = torch.cat([input_ids, accepted_toks.repeat(2, 1)], dim=-1)
+        accepted_toks = accepted_toks.repeat(2, 1)
+        accepted_toks_embed = self.base_model.prepare_gen_img_embeds(accepted_toks)
+        input_ids     = torch.cat([input_ids, accepted_toks], dim=-1)
+        inputs_embeds = torch.cat([inputs_embeds, accepted_toks_embed], dim = 1) # sequence dimension
 
         # Update KV cache in-place
         for past_kv_data in past_key_values_data_list:
@@ -546,7 +750,7 @@ class EaModel(nn.Module):
             dst = past_kv_data[..., prev_input_len:prev_input_len + tgt.shape[-2], :]
             dst.copy_(tgt, non_blocking=True)
 
-        current_length_data.fill_(prev_input_len + accept_length + 1)
+        current_length_data.fill_(prev_input_len + tgt.shape[-2])
 
         # Extract accepted hidden state
         retrieve_hs  = hidden_state_new[:, retrieve_indices]
@@ -554,25 +758,18 @@ class EaModel(nn.Module):
 
         # Sample bonus token
         token = torch.multinomial(sample_p, 1)[None]   # (1, 1)
-
-        # Build drafter input — (2, T+1) cond+uncond with bonus token
-        ea_input_ids = torch.cat(
-            (input_ids, token.repeat(2, 1).to(input_ids.device)), dim=1
+        token = token.repeat(2, 1)
+        new_token_embed = self.base_model.prepare_gen_img_embeds(token)
+        ea_inputs_embeds = torch.concat([inputs_embeds, new_token_embed], dim = 1) # seq dimension
+        
+        tree_logits = self.ea_layer.topK_genrate(
+            hidden_state     = accept_hs,
+            image_embeds     = ea_inputs_embeds,
+            head             = self.base_model.gen_head,
+            cfg_scale        = cfg_scale,
         )
-
-        if static_tree:
-            tree_logits = self.ea_layer.topK_genrate(
-                hidden_state     = accept_hs,
-                input_ids        = ea_input_ids,
-                head             = self.base_model.gen_head,
-                logits_processor = logits_processor,
-                cfg_scale        = cfg_scale,
-            )
-            new_token += accept_length + 1
-            return input_ids, tree_logits, new_token, None, token
-
-        # Dynamic tree not implemented here — extend if needed
-        raise NotImplementedError("Dynamic tree not yet implemented for Janus-Pro")
+        new_token += accept_length + 1
+        return input_ids, tree_logits, new_token, token, inputs_embeds
 
     # ------------------------------------------------------------------
     # Main generate loop — mirrors generate() from ea2_model_llamagen.py
@@ -629,7 +826,6 @@ class EaModel(nn.Module):
         # (2*parallel_size, prompt_len) — even=cond, odd=uncond
         B2 = parallel_size * 2
         tokens = torch.zeros((B2, len(input_ids_raw)), dtype=torch.int, device=device)
-        print("input tokens.shape: ", tokens.shape, flush=True)
         for i in range(B2):
             tokens[i, :] = input_ids_raw
             if i % 2 != 0:
@@ -637,68 +833,43 @@ class EaModel(nn.Module):
                 tokens[i, 1:-1] = self.processor.pad_id
 
         # Embed prompt
-        inputs_embeds = self.base_model.language_model.get_input_embeddings()(tokens)
-        print("inputs_embeds.shape: ", inputs_embeds.shape, flush=True)
+        inputs_embeds = self.base_model.language_model.get_input_embeddings()(tokens)        
+            
         # ------------------------------------------------------------------
         # 2. Run prefix forward pass to fill KV cache
         # ------------------------------------------------------------------
         past_key_values, past_key_values_data, current_length_data = \
             initialize_past_key_values(self.base_model)
 
-       
+        tree_buffers, _ = self.generate_tree_buffers(
+                tree_choices, None, device="cuda"
+        )
+        tree_buffers["retrieve_indices_head"] = tree_buffers["retrieve_indices"].to(self.base_model.device)
+        self.tree_choices = tree_choices
+        self.tree_buffers = tree_buffers
+        
+        tree_logits, logits, sample_token, input_ids_gen, inputs_embeds = self.initialize_tree_v1(
+            inputs_embeds, tokens, tree_choices, tree_buffers['tree_attn_mask'], past_key_values, temperature, top_k, top_p, cfg_scale
+        )
+         # generated_tokens accumulates accepted image tokens
+        generated_tokens = torch.zeros(
+            (1, max_length), dtype=torch.int, device="cuda"
+        )
+        # generated_tokens[:, 0] = sample_token.squeeze(-1)
+            
         # Scale KV cache batch dim to parallel_size * 2
         if parallel_size > 1:
             past_key_values_data = [
                 t.repeat(parallel_size, 1, 1, 1) for t in past_key_values_data
             ]
 
-        prefix_out = self.base_model.language_model.model(
-            inputs_embeds   = inputs_embeds,
-            past_key_values = past_key_values,
-            use_cache       = True,
-        )
-
-        hidden_states = prefix_out.last_hidden_state   # (2*B, prompt_len, D)
-        print("hidden_states.shape: ", hidden_states.shape, flush=True)
-        past_key_values = prefix_out.past_key_values
-
-        # First token
-        logits_first  = self.base_model.gen_head(hidden_states[:, -1, :])   # (2*B, V)
-        print("logits_first.shape: ", logits_first.shape, flush=True)
-        cfg_logits    = cfg_logit_process(logits_first, cfg_scale)           # (B, V)
-        sample_token, _ = sample(cfg_logits, temperature, top_k, top_p)     # (B, 1)
-
-        # generated_tokens accumulates accepted image tokens
-        generated_tokens = torch.zeros(
-            (parallel_size, max_length), dtype=torch.int, device=device
-        )
-        generated_tokens[:, 0] = sample_token.squeeze(-1)
-
-        # Build input_ids for the generation loop — (2, prompt_len + 1)
-        # Append first token in cond+uncond pattern
-        first_tok_cfg = sample_token.repeat_interleave(2, dim=0)   # (2*B, 1)
-        input_ids_gen = torch.cat([tokens, first_tok_cfg], dim=1)  # (2*B, prompt+1)
-
-        # ------------------------------------------------------------------
-        # 3. Init tree and first draft
-        # ------------------------------------------------------------------
-        tree_buffers = self.ea_layer._build_tree_buffers(tree_choices, device)
-        self.ea_layer.init_tree(tree_choices, device)
-
-        tree_logits = self.ea_layer.topK_genrate(
-            hidden_state     = hidden_states,
-            input_ids        = input_ids_gen,
-            head             = self.base_model.gen_head,
-            cfg_scale        = cfg_scale,
-        )
-        print("tree_logits.shape: ", tree_logits.shape, flush=True)
-
-        new_token  = 1
+        new_token  = 0
         accept_list = []
 
         # ------------------------------------------------------------------
         # 4. Speculative decoding loop
         # ------------------------------------------------------------------
+        st = time.time()
         for idx in range(1, max_length):
 
             candidates, cart_candidates_prob, tree_candidates = self.generate_candidates(
@@ -710,6 +881,7 @@ class EaModel(nn.Module):
 
             # Duplicate candidates for cond + uncond
             tree_candidates_cfg = tree_candidates.repeat(2, 1)
+            
 
             logits, hidden_state_new, _ = self.tree_decoding(
                 tree_candidates_cfg,
@@ -721,10 +893,11 @@ class EaModel(nn.Module):
             )
 
             best_candidate, accept_length, sample_p = self.evaluate_posterior(
-                bias_list,
+                # bias_list,
                 tree_buffers["per_level_node_counts"],
                 logits,
                 tree_logits,
+                temperature,
                 tree_buffers["retrieve_indices"],
                 candidates,
                 cart_candidates_prob,
@@ -733,7 +906,7 @@ class EaModel(nn.Module):
                 tree_candidates,
                 tree_buffers["b_indices"],
             )
-
+            
             accept_list.append(accept_length)
 
             # Store accepted tokens
@@ -741,11 +914,11 @@ class EaModel(nn.Module):
             end_pos = min(new_token + accept_length + 1, max_length)
             fill_len = end_pos - new_token
             generated_tokens[:, new_token:end_pos] = accepted_toks[:fill_len].unsqueeze(0)
-
-            input_ids_gen, tree_logits, new_token, _, sample_token, bias_list, _ = \
+            input_ids_gen, tree_logits, new_token, sample_token, inputs_embeds = \
                 self.update_inference_inputs(
                     idx,
                     input_ids_gen,
+                    inputs_embeds,
                     candidates,
                     best_candidate,
                     accept_length,
@@ -765,29 +938,3 @@ class EaModel(nn.Module):
                 break
 
         return generated_tokens, time.time() - st, accept_list
-
-    # ------------------------------------------------------------------
-    # Decode image tokens to pixel image — mirrors decode_ids() in LlamaGen
-    # ------------------------------------------------------------------
-
-    @torch.no_grad()
-    def decode_ids(
-        self,
-        generated_tokens: torch.Tensor,   # (B, max_length)
-        img_size:   int = 384,
-        patch_size: int = 16,
-    ) -> np.ndarray:
-        """Decode VQ token ids to RGB image array.
-
-        Uses gen_vision_model.decode_code — same as official inference.
-        """
-        B     = generated_tokens.shape[0]
-        codes = generated_tokens.to(dtype=torch.int)
-
-        dec = self.base_model.gen_vision_model.decode_code(
-            codes,
-            shape=[B, 8, img_size // patch_size, img_size // patch_size],
-        )
-        dec = dec.to(torch.float32).cpu().numpy().transpose(0, 2, 3, 1)
-        dec = np.clip((dec + 1) / 2 * 255, 0, 255).astype(np.uint8)
-        return dec
