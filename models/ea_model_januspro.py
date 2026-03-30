@@ -32,8 +32,16 @@ import torch.nn.functional as F
 import numpy as np
 
 from transformers import AutoModelForCausalLM, AutoConfig
-from janus.models import MultiModalityCausalLM, VLChatProcessor
+
+# from .base_models.januspro.image_processing_vlm import VLMImageProcessor
+from models.base_models.januspro.modeling_vlm import MultiModalityCausalLM # [SY]: This imports models/kv_variants/januspro/LlamaForCausalLM
+from models.base_models.januspro.processing_vlm import VLChatProcessor
+
 from models.drafters.choices import naive_extend_57
+
+from safetensors.torch import load_file
+import os
+from huggingface_hub import hf_hub_download
 
 import copy
 import json
@@ -47,7 +55,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 from .drafters.utils import *
-from .drafters.kv_cache import initialize_past_key_values
 
 from .drafters.cnets_januspro import Model, cfg_logit_process
 from .configs.configs import EConfig
@@ -66,6 +73,154 @@ TOPK = 10                    # default draft top-k, overridden by EaModel.top_k
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+class KVCache:
+    """
+    A key-value cache for the model.
+
+    This class provides a mechanism to maintain a growing cache of keys and values,
+    particularly useful for models that benefit from caching previous states,
+    like transformers during autoregressive decoding.
+
+    Attributes:
+        data (torch.Tensor): The tensor storing keys and values.
+        current_length (int): Current length of the data being stored.
+    """
+
+    def __init__(self, data, current_length):
+        """
+        Initialize the KVCache.
+
+        Args:
+            data (torch.Tensor): Initial tensor to store the keys and values.
+            current_length (int): Initial length of the data.
+        """
+        self.data = data
+        self.current_length = current_length
+
+    @property
+    def shape(self):
+        """Return the shape of the data tensor with updated length."""
+        return (
+            self.data.shape[0],
+            self.data.shape[1],
+            self.current_length.item(),
+            self.data.shape[3],
+        )
+    def get_seq_length(self):
+        # Transformers calls this to find where to start appending
+        return self.current_length.item()
+
+    def copy(self, indices: torch.Tensor, prev_length: int, dim: int = 2):
+        """
+        Copy values from the current data at specified indices to a new location.
+
+        Args:
+            indices (torch.Tensor): Indices of the data tensor to be copied.
+            prev_length (int): Previous length before adding new data.
+            dim (int, optional): Dimension along which copying should be performed. Default is 2.
+        """
+        tgt = self.data.index_select(dim, indices)
+        dst = self.data.narrow(dim, prev_length, tgt.shape[dim])
+        dst.copy_(tgt, non_blocking=True)
+        self.current_length.fill_(prev_length + tgt.shape[dim])
+
+    def cat(self, tensor: torch.Tensor, dim: int = 2):
+        """
+        Concatenate the given tensor with the current data.
+
+        Args:
+            tensor (torch.Tensor): The tensor to be concatenated.
+            dim (int, optional): The dimension along which concatenation should be done. Default is 2.
+
+        Returns:
+            torch.Tensor: The data tensor after concatenation up to the current length.
+        """
+        dst = self.data.narrow(dim, self.current_length, tensor.shape[dim])
+        dst.copy_(tensor)
+        self.current_length.add_(tensor.shape[dim])
+        return torch.narrow(self.data, 2, 0, self.current_length)
+
+def januspro_initialize_past_key_values(model: MultiModalityCausalLM):
+    """Pre-allocate a static KV cache for Janus-Pro's language_model.
+
+    Janus-Pro uses language_model (DeepSeek-based LLM) which has standard
+    (key, value) per-layer KV cache. Batch size = parallel_size * 2 for CFG.
+    """
+    config       = model.language_model.config
+    num_layers   = config.num_hidden_layers
+    num_kv_heads = config.num_key_value_heads
+    head_dim     = config.hidden_size // config.num_attention_heads
+    max_length   = 4096
+    device       = next(model.language_model.parameters()).device
+    dtype        = next(model.language_model.parameters()).dtype
+    batch_size   = 2   # cond + uncond; scaled by parallel_size in generate()
+
+    startnum=0
+    devices=[]
+    for i in range(num_layers):
+        try:
+            device = model.language_model.model.layers[i].self_attn.q_proj.weight.device
+        except:
+            device=model.language_model.model.layers[i].self_attn.q_proj.weight.device
+        devices.append(device)
+    startdevice=devices[0]
+    past_key_values_data_list=[]
+    for id,i in enumerate(devices):
+        if startdevice!=i:
+            past_key_values_data = torch.zeros(
+                startnum * 2,
+                batch_size,
+                config.num_key_value_heads,
+                config.max_position_embeddings,
+                config.hidden_size // config.num_attention_heads,
+                device=startdevice,
+                dtype=model.dtype,
+            )
+            past_key_values_data_list.append(past_key_values_data)
+            startdevice = i
+            startnum=0
+        startnum += 1
+    past_key_values_data = torch.zeros(
+        startnum * 2,
+        batch_size,
+        config.num_key_value_heads,
+        config.max_position_embeddings,
+        config.hidden_size // config.num_attention_heads,
+        device=startdevice,
+        dtype=model.dtype,
+    )
+    past_key_values_data_list.append(past_key_values_data)
+    past_key_values = [] * config.num_hidden_layers
+    current_length_data = torch.zeros(
+        num_layers * 2, dtype=torch.long, device="cpu"
+    )
+
+    bias=0
+    start_data_m=devices[0].index
+    for i in range(config.num_hidden_layers):
+        data_m=devices[i].index
+        if data_m!=start_data_m:
+            bias=0
+            start_data_m=data_m
+        try:
+            past_key_values.append(
+                [
+                    KVCache(past_key_values_data_list[data_m-devices[0].index][2*bias + j], current_length_data[i * 2 + j])
+                    for j in range(2)
+                ]
+            )
+        except:
+            past_key_values.append(
+                [
+                    KVCache(past_key_values_data_list[0][2 * bias + j],
+                            current_length_data[i * 2 + j])
+                    for j in range(2)
+                ]
+            )
+        bias+=1
+
+    return past_key_values, past_key_values_data, current_length_data
 
 def top_k_top_p_filtering(
     logits: torch.Tensor,
@@ -123,40 +278,6 @@ def sample(
 
 
 # ---------------------------------------------------------------------------
-# KV cache (mirrors kv_cache.py from LlamaGen)
-# ---------------------------------------------------------------------------
-
-def initialize_past_key_values(model: MultiModalityCausalLM):
-    """Pre-allocate a static KV cache for Janus-Pro's language_model.
-
-    Janus-Pro uses language_model (DeepSeek-based LLM) which has standard
-    (key, value) per-layer KV cache. Batch size = parallel_size * 2 for CFG.
-    """
-    config       = model.language_model.config
-    num_layers   = config.num_hidden_layers
-    num_kv_heads = config.num_key_value_heads
-    head_dim     = config.hidden_size // config.num_attention_heads
-    max_length   = 4096
-    device       = next(model.language_model.parameters()).device
-    dtype        = next(model.language_model.parameters()).dtype
-    batch_size   = 2   # cond + uncond; scaled by parallel_size in generate()
-
-    past_key_values_data = []
-    past_key_values      = []
-    current_length_data  = torch.zeros(1, dtype=torch.long, device=device)
-
-    for _ in range(num_layers):
-        k = torch.zeros(batch_size, num_kv_heads, max_length, head_dim,
-                        device=device, dtype=dtype)
-        v = torch.zeros(batch_size, num_kv_heads, max_length, head_dim,
-                        device=device, dtype=dtype)
-        past_key_values_data.extend([k, v])
-        past_key_values.append([k, v])
-
-    return past_key_values, past_key_values_data, current_length_data
-
-
-# ---------------------------------------------------------------------------
 # Main EaModel for Janus-Pro
 # ---------------------------------------------------------------------------
 
@@ -174,6 +295,7 @@ class EaModel(nn.Module):
         self,
         base_model: MultiModalityCausalLM,
         drafter_config: AutoConfig,
+        ea_layer_state_dict: torch.Tensor,
         processor: VLChatProcessor,
         top_k: int   = 10,
         total_tokens: int = 59,
@@ -190,8 +312,19 @@ class EaModel(nn.Module):
         print(f"Loading drafter")
         self.ea_layer = Model(
             drafter_config,
-            base_model.gen_head
+            base_model.gen_head,
+            top_k ,
+            total_tokens,
+            depth,
+            threshold,
         ).eval()
+        
+        self.ea_layer.load_state_dict(ea_layer_state_dict, strict=True)
+        device = "cuda"
+        self.ea_layer.to(self.base_model.dtype).to(device)
+        self.ea_layer.init_tree()
+        self.ea_layer.to(base_model.language_model.dtype).to(device)
+        self.device = device
         
         for param in self.base_model.parameters():
             param.requires_grad = False
@@ -205,8 +338,6 @@ class EaModel(nn.Module):
         for param in self.base_model.vision_model.parameters():
             param.requires_grad = False
             
-
-        device = "cuda"
         # Check if gen_head is on a different device (model parallelism)
         try:
             head_device = base_model.device
@@ -215,9 +346,7 @@ class EaModel(nn.Module):
                 self.ea_layer.gen_head  = base_model.gen_head.to(device)
         except AttributeError:
             pass
-
-        self.ea_layer.to(base_model.language_model.dtype).to(device)
-        self.device = device
+        
 
     @classmethod
     def from_pretrained(
@@ -238,14 +367,18 @@ class EaModel(nn.Module):
         ).cuda().eval()
         
         
-
-        
         drafter_config = AutoConfig.from_pretrained(drafter_model_path)
+        
+        load_model_path = os.path.join(drafter_model_path, "model.safetensors")
+        if not os.path.exists(load_model_path):
+            load_model_path = hf_hub_download(drafter_model_path, "model.safetensors")
+        ea_layer_state_dict = load_file(load_model_path)
 
         processor = VLChatProcessor.from_pretrained(base_model_path)
         model = cls(
             base_model,
             drafter_config,
+            ea_layer_state_dict,
             processor,
             top_k, total_tokens, depth, threshold)
 
@@ -280,13 +413,12 @@ class EaModel(nn.Module):
     # ------------------------------------------------------------------
     # Target forward — mirrors ea2_model_llamagen.py forward()
     # ------------------------------------------------------------------
-
     def forward(
         self,
         input_ids:       Optional[torch.Tensor] = None,
         inputs_embeds:   Optional[torch.Tensor] = None,
         attention_mask:  Optional[torch.Tensor] = None,
-        past_key_values = None,
+        past_key_values: Optional[torch.Tensor] = None,
         output_orig:     bool = False,
         position_ids:    Optional[torch.Tensor] = None,
     ):
@@ -466,14 +598,11 @@ class EaModel(nn.Module):
         tree_buffers["per_level_node_counts"] = per_level_node_counts
         return tree_buffers, sorted_tree_choices
     
-    def initialize_tree_v1(self, inputs_embeds, tokens, tree_choices, tree_attn_mask, past_key_values, temperature, top_k, top_p, cfg_scale=3.0):
-        prefix_out = self.base_model.language_model.model(
+    def initialize_tree_v1(self, inputs_embeds, tokens, tree_choices, past_key_values, tree_attn_mask, temperature, top_k, top_p, cfg_scale=3.0):
+        _, hidden_states = self(
             inputs_embeds   = inputs_embeds,
             past_key_values = past_key_values,
-            use_cache       = True,
         )
-        hidden_states = prefix_out.last_hidden_state   # (2*B, prompt_len, D)
-        past_key_values = prefix_out.past_key_values
 
         # First token
         logits_first  = self.base_model.gen_head(hidden_states[:, -1, :])   # (2*B, V)
@@ -483,7 +612,6 @@ class EaModel(nn.Module):
 
         next_token = torch.cat([sample_token.unsqueeze(dim=1), sample_token.unsqueeze(dim=1)], dim=1).view(-1)
         img_embeds = self.base_model.prepare_gen_img_embeds(next_token)
-        input_ids_gen = torch.cat([tokens, next_token.unsqueeze(1)], dim=1)  # (2*B, prompt+1)
         inputs_embeds = torch.cat([inputs_embeds, img_embeds.unsqueeze(1)], dim=1)  # (2*B, prompt+1)
         
         # ------------------------------------------------------------------
@@ -493,13 +621,13 @@ class EaModel(nn.Module):
         self.base_model.tree_mask = tree_attn_mask
         
         tree_logits = self.ea_layer.topK_genrate(
-            hidden_state     = hidden_states,
-            image_embeds     = inputs_embeds,
+            hidden_state     = hidden_states[:, -1:, :],
+            image_embeds     = inputs_embeds[:, self.prompt_len:, :],
             head             = self.base_model.gen_head,
             cfg_scale        = cfg_scale,
             temperature      = temperature,
         )
-        return tree_logits, cfg_logits, sample_token, input_ids_gen, inputs_embeds
+        return tree_logits, cfg_logits, sample_token
        
     
     # ------------------------------------------------------------------
@@ -524,19 +652,28 @@ class EaModel(nn.Module):
         - gen_head instead of lm_head
         - cfg_logit_process with even/odd split instead of batch-split
         """
-        seq_len    = input_ids.shape[1]
+        seq_len    = input_ids.shape[1] 
+        print("tree_decoding\n\n")
+        print("seq_len: ", seq_len)
         position_ids = tree_position_ids + seq_len
-        position_ids = position_ids.view(-1, position_ids.shape[-1]).long()
+        print("position_ids: ", position_ids)
+        # position_ids = position_ids.view(-1, position_ids.shape[-1]).long()
+        position_ids = position_ids.unsqueeze(0).expand(
+            tree_candidates.shape[0], -1
+        ).long()   # (2, n_nodes) — correct batch size
+        print("position_ids.shape: ", position_ids.shape)
 
         if attention_mask is not None: # [2, 120]
             remaining_length = input_ids.shape[1] + tree_candidates.shape[1] - attention_mask.shape[1]
             one_padding = torch.ones((attention_mask.shape[0], remaining_length), dtype=torch.long, device=attention_mask.device)
-            attention_mask = torch.cat([attention_mask, one_padding], dim=1)         
+            attention_mask = torch.cat([attention_mask, one_padding], dim=1)        
+            print("attention_mask.shape: ", attention_mask.shape) 
         
         # Embed tree candidates
         tree_embeds = self.base_model.prepare_gen_img_embeds(
             tree_candidates.view(-1)
         ).view(tree_candidates.shape[0], tree_candidates.shape[1], -1)
+        print("tree_embeds.shape: ", tree_embeds.shape) 
         
         
         outputs, tree_logits, hidden_state = self(
@@ -546,9 +683,11 @@ class EaModel(nn.Module):
             position_ids    = position_ids,
             attention_mask  = attention_mask,
         )
+        print("tree_logits.shape: ", tree_logits.shape) 
 
         # Apply CFG (even=cond, odd=uncond)
         cfg_tree_logits = cfg_logit_process(tree_logits, cfg_scale)
+        print("cfg_tree_logits.shape: ", cfg_tree_logits.shape) 
 
         # Retrieve logits along candidate paths
         # cfg_tree_logits: (B, n_nodes, V) after CFG — use first batch element
@@ -634,9 +773,8 @@ class EaModel(nn.Module):
             is_eq = (candidates[:, :accept_length] == accept_cand).all(dim=1)
             fi    = torch.nonzero(is_eq, as_tuple=True)[0][0]
 
-            gt_logits = logits[fi, i - 1][None]
-            gt_logits = gt_logits[0]
-            gtp = torch.softmax(gt_logits / temperature, dim=0)
+            gt_logits = logits[fi, i - 1]
+            gtp = torch.softmax(gt_logits / temperature, dim=-1)
 
             m_bias_list = None
             past_nodes  = l_node_counts[i]
@@ -701,9 +839,8 @@ class EaModel(nn.Module):
         if adjustflag and accept_length != candidates.shape[1]:
             sample_p = gtp 
         else:
-            gt_logits = logits[best_candidate, accept_length - 1][None]
-            gt_logits = gt_logits[0]
-            sample_p  = torch.softmax(gt_logits / temperature, dim=0)
+            gt_logits = logits[best_candidate, accept_length - 1]
+            sample_p  = torch.softmax(gt_logits / temperature, dim=-1)
 
         return torch.tensor(best_candidate), accept_length - 1, sample_p
 
@@ -761,10 +898,11 @@ class EaModel(nn.Module):
         token = token.repeat(2, 1)
         new_token_embed = self.base_model.prepare_gen_img_embeds(token)
         ea_inputs_embeds = torch.concat([inputs_embeds, new_token_embed], dim = 1) # seq dimension
+        print("ea_inputs_embeds.shape: ", ea_inputs_embeds.shape)
         
         tree_logits = self.ea_layer.topK_genrate(
-            hidden_state     = accept_hs,
-            image_embeds     = ea_inputs_embeds,
+            hidden_state     = accept_hs[:, -1:, :],
+            image_embeds     = ea_inputs_embeds[:, self.prompt_len:, :],
             head             = self.base_model.gen_head,
             cfg_scale        = cfg_scale,
         )
@@ -833,23 +971,28 @@ class EaModel(nn.Module):
                 tokens[i, 1:-1] = self.processor.pad_id
 
         # Embed prompt
-        inputs_embeds = self.base_model.language_model.get_input_embeddings()(tokens)        
+        inputs_embeds = self.base_model.language_model.get_input_embeddings()(tokens)  
+        input_ids = tokens     
+        prompt_len =  inputs_embeds.shape[1]
+        self.prompt_len = prompt_len
             
         # ------------------------------------------------------------------
-        # 2. Run prefix forward pass to fill KV cache
+        # 2. Run prefix forward pass to fill KV cache in initialize_tree_v1
         # ------------------------------------------------------------------
-        past_key_values, past_key_values_data, current_length_data = \
-            initialize_past_key_values(self.base_model)
-
+        past_key_values, past_key_values_data, current_length_data = januspro_initialize_past_key_values(self.base_model)
+        self.base_model.past_key_values = past_key_values
+        self.base_model.past_key_values_data = past_key_values_data
+        self.base_model.current_length_data = current_length_data
+            
         tree_buffers, _ = self.generate_tree_buffers(
-                tree_choices, None, device="cuda"
+            tree_choices, None, device="cuda"
         )
         tree_buffers["retrieve_indices_head"] = tree_buffers["retrieve_indices"].to(self.base_model.device)
         self.tree_choices = tree_choices
         self.tree_buffers = tree_buffers
         
-        tree_logits, logits, sample_token, input_ids_gen, inputs_embeds = self.initialize_tree_v1(
-            inputs_embeds, tokens, tree_choices, tree_buffers['tree_attn_mask'], past_key_values, temperature, top_k, top_p, cfg_scale
+        tree_logits, logits, sample_token = self.initialize_tree_v1(
+            inputs_embeds, tokens, tree_choices, past_key_values, tree_buffers['tree_attn_mask'], temperature, top_k, top_p, cfg_scale
         )
          # generated_tokens accumulates accepted image tokens
         generated_tokens = torch.zeros(
@@ -878,6 +1021,7 @@ class EaModel(nn.Module):
                 tree_buffers["retrieve_indices"],
                 sample_token,
             )
+            print("candidates.shape: ", candidates.shape)
 
             # Duplicate candidates for cond + uncond
             tree_candidates_cfg = tree_candidates.repeat(2, 1)
@@ -887,37 +1031,40 @@ class EaModel(nn.Module):
                 tree_candidates_cfg,
                 past_key_values,
                 tree_buffers["tree_position_ids"],
-                input_ids_gen,
+                input_ids,
                 tree_buffers["retrieve_indices_head"],
                 cfg_scale,
             )
 
-            best_candidate, accept_length, sample_p = self.evaluate_posterior(
-                # bias_list,
-                tree_buffers["per_level_node_counts"],
-                logits,
-                tree_logits,
-                temperature,
-                tree_buffers["retrieve_indices"],
-                candidates,
-                cart_candidates_prob,
-                tree_logits[2],
-                tree_buffers["p_indices"],
-                tree_candidates,
-                tree_buffers["b_indices"],
-            )
+            # best_candidate, accept_length, sample_p = self.evaluate_posterior(
+            #     # bias_list,
+            #     tree_buffers["per_level_node_counts"],
+            #     logits,
+            #     tree_logits,
+            #     temperature,
+            #     tree_buffers["retrieve_indices"],
+            #     candidates,
+            #     cart_candidates_prob,
+            #     tree_logits[2],
+            #     tree_buffers["p_indices"],
+            #     tree_candidates,
+            #     tree_buffers["b_indices"],
+            # )
+            accept_length = 0
+            best_candidate = 0
+            sample_p = torch.softmax(logits[0, 0] / temperature, dim=-1)
             
             accept_list.append(accept_length)
-
+            print("accept_length: ", accept_length)
             # Store accepted tokens
-            accepted_toks = candidates[best_candidate, :accept_length + 1]
+            accepted_toks = candidates[None, best_candidate, :accept_length + 1] 
             end_pos = min(new_token + accept_length + 1, max_length)
             fill_len = end_pos - new_token
-            generated_tokens[:, new_token:end_pos] = accepted_toks[:fill_len].unsqueeze(0)
-            input_ids_gen, tree_logits, new_token, sample_token, inputs_embeds = \
+            generated_tokens[:, new_token:end_pos] = accepted_toks[:, :fill_len]
+            input_ids, tree_logits, new_token, sample_token, inputs_embeds = \
                 self.update_inference_inputs(
                     idx,
-                    input_ids_gen,
+                    input_ids,
                     inputs_embeds,
                     candidates,
                     best_candidate,

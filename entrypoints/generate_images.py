@@ -408,7 +408,6 @@ def generate_and_save_image(output_dir, model, model_name, prompt, img_save_path
         visual_img = np.zeros((1, 384, 384, 3), dtype=np.uint8)
         visual_img[:, :, :] = dec
 
-        os.makedirs('generated_samples', exist_ok=True)
         for i in range(1):
             import PIL.Image
             from pathlib import Path

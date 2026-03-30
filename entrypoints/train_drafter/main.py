@@ -138,77 +138,6 @@ def log_metrics(optimizer, ploss, vloss, loss, correct, total, top_3acc, phase, 
     if wandb_check:
         wandb.log(logdict)
         
-def run_epoch_januspro(args, model, data_loader, optimizer, scheduler, criterion, gen_head, accelerator, is_warmup, train_mode=True):
-    model.train() if train_mode else model.eval()
-    # Ensure the 7B's Gen Head is in eval mode and frozen
-    gen_head.eval() 
-    
-    epoch_loss = 0
-    num_batches = 0
-
-    for data in tqdm(data_loader):
-        # data["hidden_states"]: [B, 576, 4096] - The Target 7B states (H_t)
-        # data["input_ids"]:     [B, 576]       - The Image tokens (T_{t+1})
-        # data["target_h"]:      [B, 576, 4096] - The Target 7B next states (H_{t+1})
-        # data["target_ids"]:    [B, 576]       - Labels for classification
-
-        with torch.set_grad_enabled(train_mode):
-            if train_mode:
-                optimizer.zero_grad()
-            
-            # 1. Drafter Forward Pass
-            # This internally does: self.fc(torch.cat([H_t, Embed(T_{t+1})]))
-            predict_h = model(
-                hidden_states=data["target_hidden"], 
-                input_ids=data["input_embeds"]
-            )
-            
-            # 2. Regression Loss (V-Loss)
-            # How well does the drafter predict the next 4096-dim vector?
-            v_loss = criterion(predict_h, data["target_hidden"])
-            v_loss = v_loss.mean()
-
-            # 3. Classification Loss (P-Loss)
-            # We pass the predicted hidden state through the frozen 7B Gen Head
-            with torch.no_grad():
-                # Get Ground Truth Logits from the actual 7B hidden states
-                target_logits = gen_head(data["target_hidden"]) # [B, 576, 16384]
-                
-                if args.cfg_loss:
-                    # Janus CFG: even = cond, odd = uncond
-                    # Logic: uncond + scale * (cond - uncond)
-                    target_logits = target_logits[1::2] + args.cfg_scale * (target_logits[0::2] - target_logits[1::2])
-                
-                target_p = F.softmax(target_logits, dim=-1).detach()
-
-            # Drafter's predicted logits
-            out_logits = gen_head(predict_h)
-            
-            if args.cfg_loss:
-                # Apply same CFG to drafter output to align distributions
-                out_logits = out_logits[1::2] + args.cfg_scale * (out_logits[0::2] - out_logits[1::2])
-            
-            out_logp = F.log_softmax(out_logits, dim=-1)
-
-            # KL Divergence / Soft-CrossEntropy Loss
-            # This forces the drafter's "predicted" vector to represent the correct token
-            ploss = -torch.sum(target_p * out_logp, dim=-1).mean()
-
-            # 4. Total Combined Loss
-            # args.p_w (Probability Weight) balances regression vs classification
-            loss = v_loss + args.p_w * ploss
-
-            if train_mode:
-                accelerator.backward(loss)
-                accelerator.clip_grad_norm_(model.parameters(), args.grad_clip)
-                optimizer.step()
-                if is_warmup:
-                    scheduler.step()
-
-        epoch_loss += loss.item()
-        num_batches += 1
-
-    return epoch_loss / num_batches
 
 def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, accelerator, is_warmup, train_mode=True):
     model.train() if train_mode else model.eval()
@@ -223,6 +152,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             if train_mode:
                 optimizer.zero_grad()
             
+            # drafter pass here
             if args.model == "januspro":
                 predict, _= model(
                     hidden_states=data["target_hidden"][:, :-1, :] , 
@@ -232,6 +162,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
             # print("predict shape: ", predict.shape)
             
+            # target pass here
             with torch.no_grad():
                 if args.model == "januspro":
                     hidden_states = data["target_hidden"][:, 1:, :]

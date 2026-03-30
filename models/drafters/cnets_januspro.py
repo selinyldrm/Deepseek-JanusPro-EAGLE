@@ -9,7 +9,7 @@ from torch import nn
 import json
 from .utils_c import *
 from transformers import AutoModelForCausalLM, AutoConfig
-from janus.models.modeling_vlm import (
+from models.base_models.januspro.modeling_vlm import (
     MultiModalityCausalLM, 
     VisionConfig, AlignerConfig, GenVisionConfig, 
     GenAlignerConfig, GenHeadConfig
@@ -29,7 +29,6 @@ from safetensors import safe_open
 import torch
 import torch.nn as nn
 from typing import Tuple, List, Optional
-from janus.models.modeling_vlm import MultiModalityCausalLM
 
 def cfg_logit_process(
     combined_logits: torch.Tensor,
@@ -47,7 +46,7 @@ def cfg_logit_process(
     return logit_uncond + cfg_scale * (logit_cond - logit_uncond)
 
 class Model(MultiModalityCausalLM):
-    def __init__(self, drafter_config, head, target_hidden_size=4096):
+    def __init__(self, drafter_config, head, top_k, total_tokens, depth, threshold, target_hidden_size=4096):
         # 1. Ensure all sub-configs are the correct Object Types
         # This prevents the "'dict' object has no attribute 'cls'" error
         
@@ -70,6 +69,11 @@ class Model(MultiModalityCausalLM):
 
         # 2. Now call super() - Janus will now find the .cls and .params attributes
         super().__init__(drafter_config)
+        
+        self.top_k = top_k
+        self.total_tokens = total_tokens - 1
+        self.depth = depth
+        self.threshold = math.log(threshold)
 
         # 3. Setup EAGLE specific components
         # Use target_hidden_size * 2 because we concat (H_t and E_{t+1})
@@ -108,10 +112,11 @@ class Model(MultiModalityCausalLM):
         batch_size, seq_length, _ = hidden_states.shape
         seq_length_with_past = seq_length
         past_key_values_length = 0
+
         if past_key_values is not None:
             past_key_values_length = past_key_values[0][0].shape[2]
             seq_length_with_past = seq_length_with_past + past_key_values_length
-            
+
         if position_ids is None:
             device = hidden_states.device if hidden_states is not None else input_embeds.device
             position_ids = torch.arange(
@@ -120,7 +125,8 @@ class Model(MultiModalityCausalLM):
             position_ids = position_ids.unsqueeze(0).view(-1, seq_length)
         else:
             position_ids = position_ids.view(-1, seq_length).long()
-        
+
+
         # 3. Pass through the 1-layer Transformer
         # We call the language_model (Llama) inherited from MultiModalityCausalLM
         
@@ -133,6 +139,7 @@ class Model(MultiModalityCausalLM):
         )
         
         return outputs.last_hidden_state, outputs.past_key_values
+    
     def sample(self, logits, k, temperature):
        
         probabilities = torch.nn.functional.softmax(logits/ temperature, dim=1)
@@ -151,6 +158,10 @@ class Model(MultiModalityCausalLM):
         sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
         return sampled_indices, sampled_probs,probabilities
     
+    def init_tree(self):
+        self.tree_mask_init = torch.eye(self.top_k, device=self.device)[None, None]
+        self.position_ids = torch.zeros(self.top_k, device=self.device, dtype=torch.long)
+
     def init_tree_v1(self, tree_choices):
         self.tree = tree_choices
         self.tree_buffer=generate_tree_buffers(self.tree, "cuda")
@@ -171,29 +182,34 @@ class Model(MultiModalityCausalLM):
         logits with cfg_logit_process.
         """
         image_embeds = image_embeds.to(hidden_state.device)
-        image_embeds = image_embeds[:, 1:, :]
+        # image_embeds = image_embeds[:, 1:, :]
         ss_token = []
         ss_prob  = []
         ss_op    = []
 
         # Initial drafter hidden state = target's accepted hidden state
-        len_posi   = image_embeds.shape[1]
+        len_posi   = image_embeds.shape[1] 
+        # print("drafter len_posi: ", len_posi)
+        image_embeds = image_embeds[:, -1:, :] # always see the very last token 
+        # print("hidden_state.shape: ", hidden_state.shape)
+        # print("image_embeds.shape: ", image_embeds.shape)
         
-        if hidden_state.shape[1] != image_embeds.shape[1]:
-            # get rid of unnecessary input embeddings 
-            #once gfull position ids are tracked
-            last_image_embeds = image_embeds[:, -hidden_state.shape[1]:, :] 
-            out_hidden, past_key_values = self(
-                hidden_state, 
-                last_image_embeds,
-                use_cache  = True,
-            )
-        else: 
-            out_hidden, past_key_values = self(
-                hidden_state, 
-                image_embeds,
-                use_cache  = True,
-            )
+        # if hidden_state.shape[1] != image_embeds.shape[1]:
+        #     # get rid of unnecessary input embeddings 
+        #     #once gfull position ids are tracked
+        #     last_image_embeds = image_embeds[:, -hidden_state.shape[1]:, :] 
+        #     out_hidden, past_key_values = self(
+        #         hidden_state, 
+        #         last_image_embeds,
+        #         use_cache  = True,
+        #     )
+        # else: 
+        # past_key_values = (key_value,) for only one layer
+        out_hidden, past_key_values = self(
+            hidden_state, 
+            image_embeds,
+            use_cache  = True,
+        )
         last_hidden = out_hidden[:, -1]
         last_hidden = head(last_hidden)
         last_headout = cfg_logit_process(last_hidden, cfg_scale)   
