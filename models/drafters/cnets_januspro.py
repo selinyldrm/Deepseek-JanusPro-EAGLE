@@ -189,21 +189,8 @@ class Model(MultiModalityCausalLM):
 
         # Initial drafter hidden state = target's accepted hidden state
         len_posi   = image_embeds.shape[1] 
-        # print("drafter len_posi: ", len_posi)
         image_embeds = image_embeds[:, -1:, :] # always see the very last token 
-        # print("hidden_state.shape: ", hidden_state.shape)
-        # print("image_embeds.shape: ", image_embeds.shape)
         
-        # if hidden_state.shape[1] != image_embeds.shape[1]:
-        #     # get rid of unnecessary input embeddings 
-        #     #once gfull position ids are tracked
-        #     last_image_embeds = image_embeds[:, -hidden_state.shape[1]:, :] 
-        #     out_hidden, past_key_values = self(
-        #         hidden_state, 
-        #         last_image_embeds,
-        #         use_cache  = True,
-        #     )
-        # else: 
         # past_key_values = (key_value,) for only one layer
         out_hidden, past_key_values = self(
             hidden_state, 

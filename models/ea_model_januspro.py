@@ -309,7 +309,6 @@ class EaModel(nn.Module):
         self.hidden_size = base_model.language_model.config.hidden_size
         self.vocab_size  = base_model.language_model.config.vocab_size
 
-        print(f"Loading drafter")
         self.ea_layer = Model(
             drafter_config,
             base_model.gen_head,
@@ -359,7 +358,6 @@ class EaModel(nn.Module):
         threshold:    float = 1.0,
         **kwargs,
     ) -> "Model":
-        print(f"Loading target:  {base_model_path}")
         
         base_model: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(
             base_model_path, trust_remote_code=True,
@@ -653,28 +651,21 @@ class EaModel(nn.Module):
         - cfg_logit_process with even/odd split instead of batch-split
         """
         seq_len    = input_ids.shape[1] 
-        print("tree_decoding\n\n")
-        print("seq_len: ", seq_len)
         position_ids = tree_position_ids + seq_len
-        print("position_ids: ", position_ids)
         # position_ids = position_ids.view(-1, position_ids.shape[-1]).long()
         position_ids = position_ids.unsqueeze(0).expand(
             tree_candidates.shape[0], -1
         ).long()   # (2, n_nodes) — correct batch size
-        print("position_ids.shape: ", position_ids.shape)
 
         if attention_mask is not None: # [2, 120]
             remaining_length = input_ids.shape[1] + tree_candidates.shape[1] - attention_mask.shape[1]
             one_padding = torch.ones((attention_mask.shape[0], remaining_length), dtype=torch.long, device=attention_mask.device)
             attention_mask = torch.cat([attention_mask, one_padding], dim=1)        
-            print("attention_mask.shape: ", attention_mask.shape) 
         
         # Embed tree candidates
         tree_embeds = self.base_model.prepare_gen_img_embeds(
             tree_candidates.view(-1)
         ).view(tree_candidates.shape[0], tree_candidates.shape[1], -1)
-        print("tree_embeds.shape: ", tree_embeds.shape) 
-        
         
         outputs, tree_logits, hidden_state = self(
             inputs_embeds   = tree_embeds,
@@ -683,11 +674,9 @@ class EaModel(nn.Module):
             position_ids    = position_ids,
             attention_mask  = attention_mask,
         )
-        print("tree_logits.shape: ", tree_logits.shape) 
 
         # Apply CFG (even=cond, odd=uncond)
         cfg_tree_logits = cfg_logit_process(tree_logits, cfg_scale)
-        print("cfg_tree_logits.shape: ", cfg_tree_logits.shape) 
 
         # Retrieve logits along candidate paths
         # cfg_tree_logits: (B, n_nodes, V) after CFG — use first batch element
@@ -898,7 +887,6 @@ class EaModel(nn.Module):
         token = token.repeat(2, 1)
         new_token_embed = self.base_model.prepare_gen_img_embeds(token)
         ea_inputs_embeds = torch.concat([inputs_embeds, new_token_embed], dim = 1) # seq dimension
-        print("ea_inputs_embeds.shape: ", ea_inputs_embeds.shape)
         
         tree_logits = self.ea_layer.topK_genrate(
             hidden_state     = accept_hs[:, -1:, :],
@@ -1021,7 +1009,6 @@ class EaModel(nn.Module):
                 tree_buffers["retrieve_indices"],
                 sample_token,
             )
-            print("candidates.shape: ", candidates.shape)
 
             # Duplicate candidates for cond + uncond
             tree_candidates_cfg = tree_candidates.repeat(2, 1)
@@ -1036,26 +1023,25 @@ class EaModel(nn.Module):
                 cfg_scale,
             )
 
-            # best_candidate, accept_length, sample_p = self.evaluate_posterior(
-            #     # bias_list,
-            #     tree_buffers["per_level_node_counts"],
-            #     logits,
-            #     tree_logits,
-            #     temperature,
-            #     tree_buffers["retrieve_indices"],
-            #     candidates,
-            #     cart_candidates_prob,
-            #     tree_logits[2],
-            #     tree_buffers["p_indices"],
-            #     tree_candidates,
-            #     tree_buffers["b_indices"],
-            # )
-            accept_length = 0
-            best_candidate = 0
-            sample_p = torch.softmax(logits[0, 0] / temperature, dim=-1)
+            best_candidate, accept_length, sample_p = self.evaluate_posterior(
+                # bias_list,
+                tree_buffers["per_level_node_counts"],
+                logits,
+                tree_logits,
+                temperature,
+                tree_buffers["retrieve_indices"],
+                candidates,
+                cart_candidates_prob,
+                tree_logits[2],
+                tree_buffers["p_indices"],
+                tree_candidates,
+                tree_buffers["b_indices"],
+            )
+            # accept_length = 0
+            # best_candidate = 0
+            # sample_p = torch.softmax(logits[0, 0] / temperature, dim=-1)
             
             accept_list.append(accept_length)
-            print("accept_length: ", accept_length)
             # Store accepted tokens
             accepted_toks = candidates[None, best_candidate, :accept_length + 1] 
             end_pos = min(new_token + accept_length + 1, max_length)
