@@ -1,58 +1,0 @@
-/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/requests/__init__.py:86: RequestsDependencyWarning: Unable to find acceptable character detection dependency (chardet or charset_normalizer).
-  warnings.warn(
-/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/transformers/models/auto/image_processing_auto.py:517: FutureWarning: The image_processor_class argument is deprecated and will be removed in v4.42. Please use `slow_image_processor_class`, or `fast_image_processor_class` instead
-  warnings.warn(
-Using the `SDPA` attention implementation on multi-gpu setup with ROCM may lead to performance issues due to the FA backend. Disabling it to use alternative backends.
-Python version is above 3.10, patching the collections module.
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  2.65it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00,  3.90it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00,  3.64it/s]
-You are using the default legacy behaviour of the <class 'transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565 - if you loaded a llama tokenizer from a GGUF file you can ignore this message.
-Some kwargs in processor config are unused and will not have any effect: image_tag, add_special_token, ignore_id, sft_format, num_image_tokens, mask_prompt. 
-  0%|          | 0/5000 [00:00<?, ?it/s]generate time=22.08 for prompt: Ma motorcycle parked on the gravel in front of a garage
-
-  0%|          | 1/5000 [00:24<34:23:05, 24.76s/it]  0%|          | 1/5000 [00:40<56:44:39, 40.86s/it]
-Traceback (most recent call last):
-  File "/work1/deming/seliny2/LANTERN/main.py", line 82, in <module>
-    main()
-  File "/work1/deming/seliny2/LANTERN/main.py", line 79, in main
-    task_runner(task_args)
-  File "/work1/deming/seliny2/LANTERN/entrypoints/generate_images.py", line 442, in run_generate_image
-    worker(0, 0, args.e_idx-args.s_idx, args, prompts, len(prompts))    #
-  File "/work1/deming/seliny2/LANTERN/entrypoints/generate_images.py", line 565, in worker
-    latency, accpt= generate_and_save_image(args.output_dir, **generate_image_kwargs)
-  File "/work1/deming/seliny2/LANTERN/entrypoints/generate_images.py", line 276, in generate_and_save_image
-    generated_tokens, latency, accpt  = model.generate(**generate_params)
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
-    return func(*args, **kwargs)
-  File "/work1/deming/seliny2/LANTERN/models/ea_model_januspro.py", line 1017, in generate
-    logits, hidden_state_new, _ = self.tree_decoding(
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
-    return func(*args, **kwargs)
-  File "/work1/deming/seliny2/LANTERN/models/ea_model_januspro.py", line 670, in tree_decoding
-    outputs, tree_logits, hidden_state = self(
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/work1/deming/seliny2/LANTERN/models/ea_model_januspro.py", line 436, in forward
-    outputs = self.base_model.language_model.model(
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_januspro_kv.py", line 1012, in forward
-    layer_outputs = decoder_layer(
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_januspro_kv.py", line 734, in forward
-    hidden_states, self_attn_weights, present_key_value = self.self_attn(
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/work1/deming/seliny2/miniconda3/envs/lantern/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/work1/deming/seliny2/LANTERN/models/kv_variants/modeling_januspro_kv.py", line 638, in forward
-    key_states = past_key_value[0].cat(key_states)
-  File "/work1/deming/seliny2/LANTERN/models/ea_model_januspro.py", line 141, in cat
-    self.current_length.add_(tensor.shape[dim])
-KeyboardInterrupt

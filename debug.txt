@@ -1,6 +1,0 @@
-VQModel loaded from /work1/deming/shared/lumina/Chameleon_7B_mGPT/original_tokenizers/vqgan.ckpt
-masked_logits shape:  torch.Size([2352, 65536])
-Logit num_finite:  tensor(154140672, device='cuda:0')
-cosine_sim_matrix num_finite:  tensor(5531904, device='cuda:0')
-generate time=218.08 for prompt: Ma motorcycle parked on the gravel in front of a garage
-
