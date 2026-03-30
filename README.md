@@ -1,6 +1,6 @@
 ## 🦅 JanusPro-EAGLE: Faster Image Generation with DeepSeek Janus-Pro 🎨 ##
 
-Welcome to JanusPro-EAGLE, where we’ve given the powerhouse DeepSeek Janus-Pro a pair of high-speed wings! By using EAGLE-based Speculative Decoding, we’re slashing image generation times without losing a single pixel of that multimodal magic.
+Welcome to JanusPro-EAGLE, where we’ve given the powerhouse DeepSeek Janus-Pro a pair of high-speed wings! By using EAGLE-based Speculative Decoding, we’re accelerating image generation time without losing a single pixel of that multimodal magic.
 
 Why wait for your masterpieces when you can speculate them into existence? 🚀
 
