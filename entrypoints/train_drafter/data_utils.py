@@ -123,14 +123,22 @@ class CustomDataset(Dataset):
             # Slicing will happen in run_epoch: 
             # predict = model(target_hidden[:-1], input_embeds[:-1])
             # loss = criterion(predict, target_hidden[1:])
+            loss_mask = data["loss_mask"][:self.max_len][None, :]
+            loss_mask = loss_mask[0].tolist()
+            loss_mask[-1] = 0
             
+            target = data["target_hidden"][:, 1:, :]
+            zeropadding = torch.zeros(1, 1, target.shape[2])
+            target = torch.cat((target, zeropadding), dim=1)
+        
             return {
-                "target_hidden": data["target_hidden"],
-                "input_embeds": data["input_embeds"]
+                "target_hidden": target,
+                "input_embeds": data["input_embeds"],
+                "loss_mask": loss_mask,
             }
             
         loss_mask = loss_mask[0].tolist()
-        loss_mask[-1] = 0
+        # loss_mask[-1] = 0
         
         target = hidden_states[:, 1:, :]
         zeropadding = torch.zeros(1, 1, target.shape[2])
@@ -180,10 +188,16 @@ class DataCollatorWithPadding:
             batch_input_embeds = torch.cat([
                 self.paddingtensor(item['input_embeds'], max_len) for item in features
             ])
-
+            max_len = max(len(item['loss_mask']) for item in features) 
+           
+            batch_loss_mask = torch.tensor(
+                [item['loss_mask'] + [0] * (max_len - len(item['loss_mask'])) for item in features])
+            
+            
             return {
                 "target_hidden": batch_target_hidden,
                 "input_embeds": batch_input_embeds,
+                "loss_mask": batch_loss_mask,
             }
 
         else:

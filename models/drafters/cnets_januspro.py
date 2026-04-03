@@ -46,7 +46,8 @@ def cfg_logit_process(
     return logit_uncond + cfg_scale * (logit_cond - logit_uncond)
 
 class Model(MultiModalityCausalLM):
-    def __init__(self, drafter_config, head, top_k, total_tokens, depth, threshold, target_hidden_size=4096):
+    # def __init__(self, drafter_config, head, lm_head, embed_tokens, norm, rotary_emb, top_k, total_tokens, depth, threshold, target_hidden_size=4096):
+    def __init__(self, drafter_config, top_k, total_tokens, depth, threshold, target_hidden_size=4096):
         # 1. Ensure all sub-configs are the correct Object Types
         # This prevents the "'dict' object has no attribute 'cls'" error
         
@@ -81,10 +82,33 @@ class Model(MultiModalityCausalLM):
         self.fusion = torch.nn.Linear(target_hidden_size * 2, self.drafter_h)
         self.fusion_act = torch.nn.SiLU()
 
-        # 4. Attach the base model head
-        self.gen_head = head
-        for param in head.parameters():
-            param.requires_grad = False
+        # # 4. Attach the base model head
+        # self.gen_head = copy.deepcopy(head)  
+        # self.language_model.lm_head = copy.deepcopy(lm_head) 
+        # self.language_model.model.embed_tokens = copy.deepcopy(embed_tokens)
+        # self.language_model.model.norm = copy.deepcopy(norm)  
+        # self.language_model.model.rotary_emb = copy.deepcopy(rotary_emb)   
+        
+        # for param in self.gen_head.parameters():
+        #     param.requires_grad = False
+        # self.gen_head.eval()
+        
+        # for param in self.language_model.lm_head.parameters():
+        #     param.requires_grad = False
+        # self.language_model.lm_head.eval()
+        
+        # for param in self.language_model.model.embed_tokens.parameters():
+        #     param.requires_grad = False
+        # self.language_model.model.embed_tokens.eval()
+        
+        # for param in self.language_model.model.rotary_emb.parameters():
+        #     param.requires_grad = False
+        # self.language_model.model.rotary_emb.eval()
+        
+        # for param in self.language_model.model.norm.parameters():
+        #     param.requires_grad = False
+        # self.language_model.model.norm.eval()
+        
 
     def repeat_hidden(self, hidden: torch.Tensor, repeat_nums: List[int]) -> torch.Tensor:
         """Splits and repeats Cond/Uncond streams for Janus CFG branching."""
@@ -143,6 +167,20 @@ class Model(MultiModalityCausalLM):
     def sample(self, logits, k, temperature):
        
         probabilities = torch.nn.functional.softmax(logits/ temperature, dim=1)
+        
+        bias = []
+        normalized = F.normalize(logits.clone().to(torch.float32), dim=1, eps=1e-6)
+        if normalized.shape[0] > 1 :
+            # Compute cosine similarity matrix: [B, B]
+            cosine_sim_matrix = torch.matmul(normalized, normalized.T)
+            # Keep scores where similarity > threshold
+            high_sim_mask = cosine_sim_matrix > 0.9  # shape [B, B]
+            # Get indices
+            rows, cols = torch.nonzero(high_sim_mask, as_tuple=True)
+            for r,c in zip(rows.tolist(), cols.tolist()):
+                if r != c:
+                    bias.append((r,c))
+                    
 
         sampled_indices = torch.multinomial(probabilities, k, replacement=False)
         sampled_probs = torch.gather(probabilities, 1, sampled_indices)
@@ -156,7 +194,7 @@ class Model(MultiModalityCausalLM):
         sampled_probs[torch.isnan(sampled_probs)] = -1
 
         sampled_probs = torch.clamp(sampled_probs, min=0.0, max=1.0)
-        return sampled_indices, sampled_probs,probabilities
+        return sampled_indices, sampled_probs,probabilities, bias
     
     def init_tree(self):
         self.tree_mask_init = torch.eye(self.top_k, device=self.device)[None, None]
@@ -201,9 +239,12 @@ class Model(MultiModalityCausalLM):
         last_hidden = head(last_hidden)
         last_headout = cfg_logit_process(last_hidden, cfg_scale)   
         
+        bias_list = [ [] for x in range(len(self.tree_buffer['tree_indices'])+1)]
+        
         # last_headout = mask_non_image_logits(last_headout)
         for i in range(len(self.tree_buffer["tree_indices"])):
-            topk_index,topk_prob,op  = self.sample(last_headout, 10, temperature)
+            topk_index,topk_prob,op, bias  = self.sample(last_headout, 10, temperature)
+            bias_list[i] = bias
 
             ss_token.append(topk_index)
             ss_prob.append(topk_prob)
@@ -243,11 +284,12 @@ class Model(MultiModalityCausalLM):
             last_headout  = cfg_logit_process(last_headout, cfg_scale).squeeze(0)  # (n_nodes, V)
 
         # Final level
-        topk_index,topk_prob,op  = self.sample(last_headout, 10, temperature)
+        topk_index,topk_prob,op, bias  = self.sample(last_headout, 10, temperature)
 
         ss_token.append(topk_index)
         ss_prob.append(topk_prob)
         ss_op.append(op)
+        bias_list[len(self.tree_buffer['tree_indices'])] = bias
        
-        return (torch.cat(ss_token), torch.cat(ss_prob), ss_op)
+        return (torch.cat(ss_token), torch.cat(ss_prob), ss_op), bias_list
 

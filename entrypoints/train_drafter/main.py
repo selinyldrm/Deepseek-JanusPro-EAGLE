@@ -26,6 +26,8 @@ from .data_utils import (
     DataCollatorWithPadding,
     DataCollatorWithPaddingForCoupled,
 )
+from transformers import AutoModelForCausalLM
+from models.base_models.januspro.modeling_vlm import MultiModalityCausalLM 
 
 torch.backends.cuda.matmul.allow_tf32 = True
 
@@ -152,11 +154,14 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             if train_mode:
                 optimizer.zero_grad()
             
+            # print("data['target_hidden']: ", data["target_hidden"].shape)
+            # print("data['input_embeds']: ", data["target_hidden"].shape)
+        
             # drafter pass here
             if args.model == "januspro":
                 predict, _= model(
-                    hidden_states=data["target_hidden"][:, :-1, :] , 
-                    input_embeds=data["input_embeds"][:, :-1, :]
+                    hidden_states=data["target_hidden"] , # full sequence both
+                    input_embeds=data["input_embeds"], # full_embeds
                 )
             else:
                 predict = model(data["hidden_states"], input_ids=data["input_ids"], attention_mask=data["attention_mask"])
@@ -165,7 +170,7 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
             # target pass here
             with torch.no_grad():
                 if args.model == "januspro":
-                    hidden_states = data["target_hidden"][:, 1:, :]
+                    hidden_states = data["target_hidden"]
                     target_head = head(hidden_states) # [B, 576, 16384]
                     if args.cfg_loss:
                         target_head = target_head[1::2] + args.cfg_scale * (target_head[0::2] - target_head[1::2])
@@ -187,6 +192,20 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 target_p = nn.Softmax(dim=-1)(target_head).detach()
                 
             out_head = head(predict)
+            
+            n_target_logits = F.normalize(target_head, dim=2, eps=1e-6) .to(torch.float32)
+            cosine_sim_matrix = torch.bmm(n_target_logits, n_target_logits.transpose(1, 2))
+            B, L, _ = cosine_sim_matrix.shape
+
+            thresh = 0.625
+            # build upper-triangular mask (i < j)
+            upper_mask = torch.triu(torch.ones((L, L), device=cosine_sim_matrix.device), diagonal=1)  # [L, L]
+            upper_mask = upper_mask.unsqueeze(0).expand(B, L, L)  # broadcast to [B, L, L]
+
+            # combine with threshold condition
+            logit_sim_mask = (upper_mask.bool() & (cosine_sim_matrix > thresh)).float()
+            token_weight_mask = (logit_sim_mask.sum(dim=2, keepdim=True) > 0).float()  # [B, L, 1]
+
             if args.model == "januspro":
                 if args.cfg_loss:
                     out_head = out_head[1::2] + args.cfg_scale * (out_head[0::2] - out_head[1::2])
@@ -208,10 +227,23 @@ def run_epoch(args, model, data_loader, optimizer, scheduler, criterion, head, a
                 plogp = target_p * out_logp
                 ploss = -torch.sum(torch.sum(p_loss_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
 
-                vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["target"]), 2)) / (loss_mask.sum() + 1e-5)
+                vloss = torch.sum(torch.mean(loss_mask * criterion(predict, data["hidden_states"]), 2)) / (loss_mask.sum() + 1e-5)
             else:
-                ploss = -torch.sum(target_p * out_logp, dim=-1).mean()
-                vloss = criterion(predict, data["target_hidden"][:, 1:, :])
+                loss_mask = data["loss_mask"][:, :, None]
+                if args.cfg_loss:
+                    p_loss_mask = loss_mask[::2]
+                else:
+                    p_loss_mask = loss_mask
+
+                p_loss_mask = p_loss_mask[:, :token_weight_mask.shape[1], :]
+                
+                weight = 2.0
+                weighted_mask = p_loss_mask * (1 + token_weight_mask * (weight - 1))  # [B, L, 1]
+            
+                plogp = target_p * out_logp
+                ploss = -torch.sum(torch.sum(weighted_mask * plogp, 2)) / (p_loss_mask.sum() + 1e-5)
+                
+                vloss = criterion(predict, data["target_hidden"])
                 vloss = vloss.mean()
                 # 4. Total Combined Loss
                 # args.p_w (Probability Weight) balances regression vs classification
@@ -308,77 +340,7 @@ def run_train_drafter(args):
     else:
         raise ValueError("Invalid model name.")
 
-    ### LOAD `lm_head` ########################################################################
-    # head = torch.nn.Linear(base_config.gen_head_config.params.n_embed, base_config.language_config.vocab_size, bias=False)
-    from janus.models.modeling_vlm import vision_head
-    head = vision_head(base_config.gen_head_config.params)
-    
-    def load_head_weights(head, base_model_path, drafter_h=4096):
-        # 1. Path to the shard containing the head (usually shard 00002)
-        # Check for both .safetensors (modern) or .bin (legacy)
-        shard_name = "pytorch_model-00001-of-00002.bin" 
-        shard_path = os.path.join(base_model_path, shard_name)
-        
-        # 2. Load the weights to CPU
-        state_dict = torch.load(shard_path, map_location="cpu", weights_only=True)
-        
-        # 3. Load the Projector (The first layer of the head)
-        proj_w = state_dict["gen_head.output_mlp_projector.weight"]
-        proj_b = state_dict["gen_head.output_mlp_projector.bias"]
-        
-        # Slicing the input dimension (dim 1) to match Drafter width
-        if proj_w.shape[1] != drafter_h:
-            proj_w = proj_w[:, :drafter_h].contiguous()
-        
-        head.output_mlp_projector.weight.data.copy_(proj_w)
-        head.output_mlp_projector.bias.data.copy_(proj_b)
-        for param in head.output_mlp_projector.parameters():
-            param.requires_grad = False
-        
-        # 4. Load the Vision Head (The final classification layer)
-        # This remains [16384, 4096], no slicing needed.
-        head.vision_head.weight.data.copy_(state_dict["gen_head.vision_head.weight"])
-        head.vision_head.bias.data.copy_(state_dict["gen_head.vision_head.bias"])
-        for param in head.vision_head.parameters():
-            param.requires_grad = False
-        
-        head.eval() # Set to evaluation mode
-        return head
-        
-    # try:
-    #     with open(os.path.join(args.base_path, "model.safetensors.index.json"), "r") as f:
-    #         index_json = json.loads(f.read())
-    #         head_path = index_json["weight_map"]["lm_head.weight"]
-    #     with safe_open(os.path.join(args.base_path, head_path),
-    #                 framework="pt",
-    #                 device="cpu") as f:
-    #         tensor_slice = f.get_slice("lm_head.weight")
-    #         _, hidden_dim = tensor_slice.get_shape()
-    #         tensor = tensor_slice[:, :hidden_dim].float()
-    # except:
-    #     try:
-    #         head_path = "model.safetensors"
-    #         with safe_open(os.path.join(args.base_path, head_path),
-    #                     framework="pt",
-    #                     device="cpu") as f:
-    #             tensor_slice = f.get_slice("lm_head.weight")
-    #             vocab_size, hidden_dim = tensor_slice.get_shape()
-    #             tensor = tensor_slice[:, :hidden_dim].float()
-    #     except:
-    #         if args.model == "januspro":
-    #             head_path = "pytorch_model-00001-of-00002.bin"
-    #             weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
-    #             head = vision_head(weights["vision_head"])
-    #         else:
-    #             head_path = "pytorch_model.bin"
-    #             weights = torch.load(os.path.join(args.base_path, head_path), weights_only=True)
-    #             tensor = weights["lm_head.weight"].float()
-    head = load_head_weights(head, args.base_path)
-    # head.weight.data = tensor
-    # head.eval()
 
-    for param in head.parameters():
-        param.requires_grad = False
     ###########################################################################################
 
     if args.data_noise == "uniform":
@@ -421,14 +383,64 @@ def run_train_drafter(args):
 
     config = EConfig.from_pretrained(args.config_path)
     # ckpt_path = "/work1/deming/shared/llamagen/trained-model-temp/llamagen2_lr0.0001_p_w0.1_bsz4_gradacc_1_epochs20_mscoco2017train30k/state_15/model.safetensors"
-    model = Model(config, head)
-    model.gen_head = head
-    for param in model.gen_head.parameters():
-        param.requires_grad = False
+    # model = Model(config, head)
     
-    # from safetensors.torch import load_file
-    # state_dict = load_file(ckpt_path)
-    # model.load_state_dict(state_dict, strict=True)
+    def load_target_except_decoder(base_model_path):
+        """
+        Load all shard .bin files manually (no index file),
+        remove decoder layers, and return cloned state_dict.
+        """
+        import glob
+
+        # ✅ Find all shard files
+        shard_files = sorted(
+            glob.glob(os.path.join(base_model_path, "pytorch_model-*.bin"))
+        )
+
+        state_dict = {}
+        for shard_path in shard_files:
+            shard_state = torch.load(shard_path, map_location="cpu")
+            state_dict.update(shard_state)
+        print("Targets's full state_dict:", state_dict.keys())
+
+        def is_decoder(k):
+            return k.startswith("language_model.model.layers.")
+
+        filtered_state_dict = {
+            k: v.detach().clone()
+            for k, v in state_dict.items()
+            if not is_decoder(k)
+        }
+
+        return filtered_state_dict
+
+    filtered_target_state_dict = load_target_except_decoder(args.base_path)
+    model = Model(
+            config,
+            top_k   = 10,
+            total_tokens = 59,
+            depth   = 5,
+            threshold = 1.0,
+        ).to(torch.bfloat16).cuda()
+    missing, unexpected = model.load_state_dict(
+        filtered_target_state_dict,
+        strict=False
+    )
+    head = model.gen_head
+    print("Missing keys (expected decoder):", len(missing))
+    print("Unexpected keys:", unexpected)
+    # for param in model.language_model.model.layers.parameters():
+    #     param.requires_grad = True
+    # for param in model.fusion.parameters():
+    #     param.requires_grad = True
+    # for param in model.fusion_act.parameters():
+    #     param.requires_grad = True
+    for name, param in model.named_parameters():
+        if name in filtered_target_state_dict:
+            param.requires_grad = False   # ❄️ loaded → freeze
+        else:
+            print(f"{name} is trainable.")
+            param.requires_grad = True    # 🔥 not loaded → train
 
     criterion = nn.SmoothL1Loss(reduction="none")
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95))

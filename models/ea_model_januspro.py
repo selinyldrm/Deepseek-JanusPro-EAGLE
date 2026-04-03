@@ -280,7 +280,35 @@ def sample(
 # ---------------------------------------------------------------------------
 # Main EaModel for Janus-Pro
 # ---------------------------------------------------------------------------
+def load_target_except_decoder(base_model_path):
+    """
+    Load all shard .bin files manually (no index file),
+    remove decoder layers, and return cloned state_dict.
+    """
+    import glob
 
+    # ✅ Find all shard files
+    shard_files = sorted(
+        glob.glob(os.path.join(base_model_path, "pytorch_model-*.bin"))
+    )
+
+    state_dict = {}
+    for shard_path in shard_files:
+        shard_state = torch.load(shard_path, map_location="cpu")
+        state_dict.update(shard_state)
+    print("Model's full state_dict:", state_dict)
+
+    def is_decoder(k):
+        return k.startswith("language_model.model.layers.")
+
+    filtered_state_dict = {
+        k: v.detach().clone()
+        for k, v in state_dict.items()
+        if not is_decoder(k)
+    }
+
+    return filtered_state_dict
+    
 class EaModel(nn.Module):
     """EAGLE speculative decoding for Janus-Pro.
 
@@ -304,39 +332,42 @@ class EaModel(nn.Module):
     ):
         super().__init__()
         self.base_model = base_model.eval()
+        for param in self.base_model.parameters():
+            param.requires_grad = False
+            
         self.processor  = processor
         self.config     = base_model.config
         self.hidden_size = base_model.language_model.config.hidden_size
         self.vocab_size  = base_model.language_model.config.vocab_size
 
+        base_state_dict = base_model.state_dict()
+        filtered_target_dict = {
+            k: v.detach().clone()
+            for k, v in base_state_dict.items()
+            if not k.startswith("language_model.model.layers.")
+        }
+        
         self.ea_layer = Model(
             drafter_config,
-            base_model.gen_head,
             top_k ,
             total_tokens,
             depth,
             threshold,
         ).eval()
         
+        missing, unexpected = self.ea_layer.load_state_dict(
+            filtered_target_dict,
+            strict=False
+        )
+        
         self.ea_layer.load_state_dict(ea_layer_state_dict, strict=True)
+        
         device = "cuda"
         self.ea_layer.to(self.base_model.dtype).to(device)
         self.ea_layer.init_tree()
         self.ea_layer.to(base_model.language_model.dtype).to(device)
         self.device = device
-        
-        for param in self.base_model.parameters():
-            param.requires_grad = False
-            
-        for param in self.base_model.gen_vision_model.parameters():
-            param.requires_grad = False
-        for param in self.base_model.language_model.parameters():
-            param.requires_grad = False
-        for param in self.base_model.gen_embed.parameters():
-            param.requires_grad = False
-        for param in self.base_model.vision_model.parameters():
-            param.requires_grad = False
-            
+    
         # Check if gen_head is on a different device (model parallelism)
         try:
             head_device = base_model.device
@@ -364,19 +395,18 @@ class EaModel(nn.Module):
             torch_dtype=torch.bfloat16, **kwargs
         ).cuda().eval()
         
+        from safetensors.torch import load_file
+
+        load_model_path = os.path.join(drafter_model_path, "model.safetensors")
+        ea_state_dict = load_file(load_model_path)
         
         drafter_config = AutoConfig.from_pretrained(drafter_model_path)
-        
-        load_model_path = os.path.join(drafter_model_path, "model.safetensors")
-        if not os.path.exists(load_model_path):
-            load_model_path = hf_hub_download(drafter_model_path, "model.safetensors")
-        ea_layer_state_dict = load_file(load_model_path)
-
         processor = VLChatProcessor.from_pretrained(base_model_path)
+        
         model = cls(
             base_model,
             drafter_config,
-            ea_layer_state_dict,
+            ea_state_dict,
             processor,
             top_k, total_tokens, depth, threshold)
 
@@ -618,14 +648,14 @@ class EaModel(nn.Module):
         self.ea_layer.init_tree_v1(tree_choices)
         self.base_model.tree_mask = tree_attn_mask
         
-        tree_logits = self.ea_layer.topK_genrate(
+        tree_logits, bias = self.ea_layer.topK_genrate(
             hidden_state     = hidden_states[:, -1:, :],
             image_embeds     = inputs_embeds[:, self.prompt_len:, :],
             head             = self.base_model.gen_head,
             cfg_scale        = cfg_scale,
             temperature      = temperature,
         )
-        return tree_logits, cfg_logits, sample_token
+        return tree_logits, cfg_logits, sample_token, bias
        
     
     # ------------------------------------------------------------------
@@ -708,17 +738,15 @@ class EaModel(nn.Module):
         )
         cart_candidates = tree_candidates_ext[retrieve_indices]
 
+        candidates_tree_prob = tree_logits[1]
         candidates_prob = torch.cat(
-            [torch.ones(1, device=tree_logits[1].device, dtype=torch.float32),
-                tree_logits[1].view(-1)],
-            dim=-1
-        )
-        tree_prob_ext = torch.cat(
-            [candidates_prob[tree_indices],
-                torch.ones(1, dtype=torch.float32, device=candidates_prob.device)],
-            dim=0
-        )
-        cart_candidates_prob = tree_prob_ext[retrieve_indices]
+            [torch.ones(1, device=candidates_tree_prob.device, dtype=torch.float32), candidates_tree_prob.view(-1)],
+            dim=-1)
+
+        tree_candidates_prob = candidates_prob[tree_indices]
+        tree_candidates_prob_ext = torch.cat(
+            [tree_candidates_prob, torch.ones((1), dtype=torch.float32, device=tree_candidates_prob.device)], dim=0)
+        cart_candidates_prob = tree_candidates_prob_ext[retrieve_indices]
         
          # Unsqueeze the tree candidates for dimension consistency.
         tree_candidates = tree_candidates.unsqueeze(0)
@@ -735,6 +763,7 @@ class EaModel(nn.Module):
         logits,
         tree_logits,
         temperature,
+        bias_list,
         retrieve_indices,
         candidates,
         cart_candidates_prob,
@@ -769,12 +798,22 @@ class EaModel(nn.Module):
             past_nodes  = l_node_counts[i]
             # if i < len(bias_list) and len(bias_list[i]):
             #     m_bias_list = copy.deepcopy(bias_list[i])
-            #     m_bias_list = [
-            #         (a + past_nodes, b + past_nodes, dp, cs)
-            #         for a, b, dp, cs in m_bias_list
-            #     ]
-
+            #     m_bias_list = [(a + past_nodes, b + past_nodes) for a, b in m_bias_list]
+            
+    
             candidates_set = []
+            
+            
+            # gt_logits_fake = logits[fi, i][None]
+            # # print("gt_logits_fake.shape: ", gt_logits_fake.shape)
+            # normalized_fake = F.normalize(gt_logits_fake, dim=1, eps=1e-6).to(torch.float32)
+            # normalized_curr = F.normalize(logits[fi, i - 1][None], dim=1, eps=1e-6).to(torch.float32)
+            # lev_sim_score = torch.matmul(normalized_curr, normalized_fake.T).squeeze()
+            # p = F.log_softmax(gt_logits, dim=-1)
+            # kl = F.kl_div(p, gtp, reduction='batchmean')  # computes KL(P || Q)
+            # # print(f"curr_tree_node_idx {curr_tree_node_idx} with {i}-{j} : lev_sim_score {lev_sim_score}")
+            # if lev_sim_score > 0.625 and kl < 4.0 :
+            #     gtp += gtp * lev_sim_score
 
             for j in range(candidates.shape[0]):
                 if not is_eq[j]:
@@ -782,6 +821,7 @@ class EaModel(nn.Module):
 
                 x  = candidates[j, i]
                 xi = x.item()
+                curr_tree_node_idx = retrieve_indices[j,i]
 
                 if xi in candidates_set or xi == -1:
                     continue
@@ -789,21 +829,22 @@ class EaModel(nn.Module):
 
                 r  = random.random()
                 px = gtp[xi]
+                # px_orig = px.clone()
 
                 qx = cart_candidates_prob[j, i]
+                
                 if qx <= 0:
                     continue
-
-                # Neighbor bias boost from bias_list
-                if px < qx and m_bias_list is not None:
-                    curr_node = retrieve_indices[j, i]
-                    for a, b, draft_prob, cosine_sim in m_bias_list:
-                        if a == curr_node:
-                            similar_xi = tree_candidates[0][b]
-                            px = min(qx, px + r * gtp[similar_xi])
-                            break
-
+                                
+                # if m_bias_list is not None and kl < 1.0:
+                #     for bias_idx, tpl in enumerate(m_bias_list) :
+                #         id1,id2 = tpl
+                #         if id1 == curr_tree_node_idx:
+                #             similar_xi = tree_candidates[0][id2]
+                #             px = min(qx, px + r * gtp[similar_xi])     
+                            
                 acp = px / qx
+                
                 if r <= acp:
                     accept_cand    = torch.cat((accept_cand, x[None]), dim=0)
                     accept_length += 1
@@ -817,7 +858,14 @@ class EaModel(nn.Module):
                         mask   = tree_candidates[0][b]
                         q[mask]= 0
                         q      = q / q.sum()
-
+                    
+                    # if m_bias_list is not None and kl < 1.0:
+                    #     for bias_idx, tpl in enumerate(m_bias_list) :
+                    #         id1,id2 = tpl
+                    #         if id1 == curr_tree_node_idx:
+                    #             similar_xi = tree_candidates[0][id2]
+                    #             gtp[similar_xi] = 0
+                    
                     gtp = gtp - q
                     gtp[gtp < 0] = 0
                     if gtp.sum() == 0:
@@ -888,14 +936,14 @@ class EaModel(nn.Module):
         new_token_embed = self.base_model.prepare_gen_img_embeds(token)
         ea_inputs_embeds = torch.concat([inputs_embeds, new_token_embed], dim = 1) # seq dimension
         
-        tree_logits = self.ea_layer.topK_genrate(
+        tree_logits, bias = self.ea_layer.topK_genrate(
             hidden_state     = accept_hs[:, -1:, :],
             image_embeds     = ea_inputs_embeds[:, self.prompt_len:, :],
             head             = self.base_model.gen_head,
             cfg_scale        = cfg_scale,
         )
         new_token += accept_length + 1
-        return input_ids, tree_logits, new_token, token, inputs_embeds
+        return input_ids, tree_logits, new_token, token, inputs_embeds, bias
 
     # ------------------------------------------------------------------
     # Main generate loop — mirrors generate() from ea2_model_llamagen.py
@@ -979,7 +1027,7 @@ class EaModel(nn.Module):
         self.tree_choices = tree_choices
         self.tree_buffers = tree_buffers
         
-        tree_logits, logits, sample_token = self.initialize_tree_v1(
+        tree_logits, logits, sample_token, bias = self.initialize_tree_v1(
             inputs_embeds, tokens, tree_choices, past_key_values, tree_buffers['tree_attn_mask'], temperature, top_k, top_p, cfg_scale
         )
          # generated_tokens accumulates accepted image tokens
@@ -1029,6 +1077,7 @@ class EaModel(nn.Module):
                 logits,
                 tree_logits,
                 temperature,
+                bias,
                 tree_buffers["retrieve_indices"],
                 candidates,
                 cart_candidates_prob,
@@ -1040,14 +1089,14 @@ class EaModel(nn.Module):
             # accept_length = 0
             # best_candidate = 0
             # sample_p = torch.softmax(logits[0, 0] / temperature, dim=-1)
-            
             accept_list.append(accept_length)
+            print("accept_length: ", accept_length)
             # Store accepted tokens
             accepted_toks = candidates[None, best_candidate, :accept_length + 1] 
             end_pos = min(new_token + accept_length + 1, max_length)
             fill_len = end_pos - new_token
             generated_tokens[:, new_token:end_pos] = accepted_toks[:, :fill_len]
-            input_ids, tree_logits, new_token, sample_token, inputs_embeds = \
+            input_ids, tree_logits, new_token, sample_token, inputs_embeds, bias = \
                 self.update_inference_inputs(
                     idx,
                     input_ids,
